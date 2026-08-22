@@ -1,0 +1,20 @@
+{
+  "name": "KONTEXT Memory Benchmark",
+  "version": "0.1",
+  "datasets": [10000, 100000, 1000000, 10000000, 100000000],
+  "metrics": [
+    "latency_p50_ms", "latency_p95_ms", "latency_p99_ms",
+    "recall_at_1", "recall_at_5", "recall_at_10", "recall_at_15",
+    "temporal_accuracy", "knowledge_update_accuracy",
+    "multi_session_recall", "cross_agent_recall",
+    "context_tokens_returned", "cache_hit_rate",
+    "cold_retrieval_ms", "warm_retrieval_ms"
+  ],
+  "tiers": {
+    "L0": "hot_memory",
+    "L1": "structured_retrieval",
+    "L2": "hybrid_retrieval",
+    "L3": "knowledge_graph"
+  },
+  "targets": {"L0_p95_ms": 5, "L1_p95_ms": 20}
+}

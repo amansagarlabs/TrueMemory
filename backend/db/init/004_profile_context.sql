@@ -1,0 +1,4 @@
+ALTER TABLE user_profiles
+    ADD COLUMN IF NOT EXISTS company TEXT,
+    ADD COLUMN IF NOT EXISTS location TEXT,
+    ADD COLUMN IF NOT EXISTS website TEXT;

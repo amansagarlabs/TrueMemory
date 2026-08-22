@@ -1,0 +1,27 @@
+# Core API
+fastapi==0.115.6
+starlette>=0.36.3,<1.0.0
+uvicorn[standard]==0.34.0
+python-multipart==0.0.20
+python-dotenv>=1.0.1
+Pillow>=11.1.0,<13.0.0
+pytesseract>=0.3.13,<0.4.0
+
+# Step 3+ — PDF & ML (installed now so venv is ready for later steps)
+pymupdf==1.25.2
+sentence-transformers==3.3.1
+pymilvus==2.5.4
+httpx==0.28.1
+cryptography>=43.0.0,<50.0.0
+tiktoken==0.8.0
+psycopg[binary]==3.2.9
+
+# AmanCrawl— Web Intelligence
+beautifulsoup4==4.15.0
+lxml>=5.3,<6.2
+crawl4ai>=0.8.9
+playwright>=1.40.0
+
+# CrewAI — Multi-agent orchestration
+crewai>=1.14.0
+crewai-tools>=0.14.0

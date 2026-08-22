@@ -1,0 +1,59 @@
+<svg width="1200" height="1600" viewBox="0 0 1200 1600" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <filter id="grain" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="8" stitchTiles="stitch" result="noise" />
+      <feColorMatrix in="noise" type="matrix" values="
+        1 0 0 0 0
+        0 1 0 0 0
+        0 0 1 0 0
+        0 0 0 0.12 0" />
+    </filter>
+
+    <filter id="soften" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="80" />
+    </filter>
+
+    <radialGradient id="base" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(230 180) rotate(58) scale(1400 1600)">
+      <stop offset="0" stop-color="#FFFDF8" />
+      <stop offset="0.44" stop-color="#FFF2E0" />
+      <stop offset="1" stop-color="#F6E8D7" />
+    </radialGradient>
+
+    <radialGradient id="orangeGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(920 300) rotate(120) scale(520 620)">
+      <stop offset="0" stop-color="#FFB15B" stop-opacity="0.96" />
+      <stop offset="0.4" stop-color="#FF9A35" stop-opacity="0.55" />
+      <stop offset="1" stop-color="#FF9A35" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="pinkGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(900 1060) rotate(112) scale(470 540)">
+      <stop offset="0" stop-color="#FF5B97" stop-opacity="0.88" />
+      <stop offset="0.45" stop-color="#FF7DAD" stop-opacity="0.5" />
+      <stop offset="1" stop-color="#FF7DAD" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="coralGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(120 1420) rotate(52) scale(440 420)">
+      <stop offset="0" stop-color="#FF6A45" stop-opacity="0.95" />
+      <stop offset="0.45" stop-color="#FF824F" stop-opacity="0.62" />
+      <stop offset="1" stop-color="#FF824F" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="creamGlow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(500 790) rotate(92) scale(560 660)">
+      <stop offset="0" stop-color="#FFF8ED" stop-opacity="1" />
+      <stop offset="1" stop-color="#FFF8ED" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="1600" fill="url(#base)" />
+  <rect width="1200" height="1600" fill="url(#grain)" opacity="0.38" />
+
+  <g filter="url(#soften)">
+    <ellipse cx="900" cy="300" rx="340" ry="380" fill="url(#orangeGlow)" />
+    <ellipse cx="920" cy="1090" rx="380" ry="400" fill="url(#pinkGlow)" />
+    <ellipse cx="130" cy="1450" rx="320" ry="300" fill="url(#coralGlow)" />
+    <ellipse cx="470" cy="820" rx="420" ry="440" fill="url(#creamGlow)" />
+  </g>
+
+  <g opacity="0.18" filter="url(#grain)">
+    <rect width="1200" height="1600" fill="#FFFFFF" />
+  </g>
+</svg>

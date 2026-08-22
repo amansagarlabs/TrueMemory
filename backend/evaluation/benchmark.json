@@ -1,0 +1,131 @@
+[
+  {
+    "id": "social-greeting",
+    "question": "hii",
+    "expected": {"mode": "social", "needs_web": false, "max_tool_calls": 0},
+    "critical": true
+  },
+  {
+    "id": "utility-current-date",
+    "question": "What is the current date?",
+    "expected": {"mode": "utility", "needs_web": false, "max_tool_calls": 0},
+    "critical": true
+  },
+  {
+    "id": "utility-current-time",
+    "question": "What time is it right now?",
+    "expected": {"mode": "utility", "needs_web": false},
+    "critical": true
+  },
+  {
+    "id": "stable-explanation",
+    "question": "Explain dependency injection.",
+    "expected": {"mode": "direct", "needs_web": false, "web_allowed": false, "source": {"primary": "model_knowledge", "fallback": "model_knowledge"}},
+    "critical": true
+  },
+  {
+    "id": "current-office-holder",
+    "question": "Who is the CEO of OpenAI?",
+    "expected": {"mode": "search", "needs_web": true, "needs_citations": true},
+    "critical": true
+  },
+  {
+    "id": "current-recommendation",
+    "question": "What are the best frameworks of 2026?",
+    "expected": {"mode": "search", "needs_web": true, "needs_citations": true},
+    "critical": true
+  },
+  {
+    "id": "memory-personal-name",
+    "question": "What is my name?",
+    "expected": {"mode": "memory", "needs_web": false},
+    "critical": true
+  },
+  {
+    "id": "memory-personal-occupation",
+    "question": "what i do?",
+    "expected": {"mode": "memory", "needs_web": false, "web_allowed": false, "domain": "professional", "subject": {"type": "current_user"}},
+    "critical": true
+  },
+  {
+    "id": "memory-professional-skills",
+    "question": "What are my skills?",
+    "expected": {"mode": "memory", "needs_web": false, "web_allowed": false, "domain": "professional", "subject": {"type": "current_user"}},
+    "critical": true
+  },
+  {
+    "id": "memory-conversation-recall",
+    "question": "What did we discuss about Docker?",
+    "expected": {"mode": "memory", "needs_web": false, "web_allowed": false, "source": {"primary": "conversation", "fallback": "user_memory"}},
+    "critical": true
+  },
+  {
+    "id": "current-next-version",
+    "question": "What is the latest Next.js version?",
+    "expected": {"mode": "search", "needs_web": true, "web_allowed": true, "search_mode": "documentation_search"},
+    "critical": true
+  },
+  {
+    "id": "document-summary",
+    "question": "Summarize the PDF I uploaded.",
+    "doc_id": "doc_fixture",
+    "expected": {"mode": "document", "needs_web": false, "needs_citations": true},
+    "critical": true
+  },
+  {
+    "id": "known-url-scrape",
+    "question": "Read https://example.com/pricing",
+    "expected": {"mode": "scrape", "needs_web": true, "target_urls": ["https://example.com/pricing"]},
+    "critical": true
+  },
+  {
+    "id": "site-map",
+    "question": "List all documentation pages on https://example.com",
+    "expected": {"mode": "map", "needs_web": true, "target_urls": ["https://example.com"]},
+    "critical": true
+  },
+  {
+    "id": "bounded-crawl",
+    "question": "Crawl the docs at https://example.com/docs",
+    "expected": {"mode": "crawl", "needs_web": true, "requires_confirmation": true, "max_tool_calls": 10},
+    "critical": true
+  },
+  {
+    "id": "multi-step-comparison",
+    "question": "Compare current pricing from these three vendors with citations.",
+    "expected": {"mode": "agent", "needs_web": true, "needs_citations": true, "requires_confirmation": true, "max_tool_calls": 8},
+    "critical": true
+  },
+  {
+    "id": "explicit-no-web",
+    "question": "Do not browse; explain what a vector database is.",
+    "expected": {"mode": "direct", "needs_web": false},
+    "critical": true
+  },
+  {
+    "id": "explicit-search-mode",
+    "question": "Explain the latest JavaScript runtime changes.",
+    "requested_mode": "search",
+    "expected": {"mode": "search", "needs_web": true, "needs_citations": true},
+    "critical": false
+  },
+  {
+    "id": "thinking-auto-routing",
+    "question": "What are the best frameworks of 2026?",
+    "requested_mode": "auto",
+    "expected": {"mode": "search", "needs_web": true},
+    "critical": true
+  },
+  {
+    "id": "live-cricket-score",
+    "question": "Cricket live updates",
+    "expected": {"mode": "search", "needs_web": true, "needs_fresh_data": true, "live_data_kind": "cricket", "max_tool_calls": 3},
+    "critical": true
+  },
+  {
+    "id": "generic-live-event",
+    "question": "Give me live updates from the launch event",
+    "expected": {"mode": "search", "needs_web": true, "needs_fresh_data": true, "live_data_kind": "event", "max_tool_calls": 3},
+    "critical": true
+  }
+]

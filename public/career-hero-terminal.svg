@@ -1,0 +1,29 @@
+<svg width="1600" height="740" viewBox="0 0 1600 740" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="740" rx="24" fill="#37312C"/>
+  <rect x="0" y="0" width="1600" height="40" rx="24" fill="#4A443E"/>
+  <circle cx="24" cy="20" r="7" fill="#F28C6B"/>
+  <circle cx="48" cy="20" r="7" fill="#F3C86A"/>
+  <circle cx="72" cy="20" r="7" fill="#73D483"/>
+  <rect x="1180" y="10" width="280" height="20" rx="10" fill="#5A534E"/>
+  <text x="1215" y="25" fill="#9A928B" font-family="monospace" font-size="14">Search sessions, agents, files...</text>
+  <text x="26" y="88" fill="#7AA3FF" font-family="monospace" font-size="24" font-weight="700">CAREER PIPELINE</text>
+  <text x="26" y="126" fill="#A9A4A0" font-family="monospace" font-size="20">ALL (32)   EVALUATED (20)   APPLIED (5)   INTERVIEW (0)   TOP ≥4 (12)   SKIP (0)</text>
+  <rect x="18" y="146" width="1564" height="10" rx="5" fill="#2F3F8D" fill-opacity="0.9"/>
+  <text x="26" y="198" fill="#7AA3FF" font-family="monospace" font-size="18">Applied: 5</text>
+  <text x="170" y="198" fill="#C4BFB8" font-family="monospace" font-size="18">Evaluated: 20   Rejected: 2   Discarded: 5</text>
+  <text x="26" y="232" fill="#8F8A84" font-family="monospace" font-size="17">[Sort: score]   [View: grouped]   32 shown</text>
+  <rect x="18" y="262" width="1564" height="2" fill="#7A7168"/>
+  <text x="26" y="298" fill="#D9D4CC" font-family="monospace" font-size="18" font-weight="700">APPLIED (5)</text>
+  <text x="26" y="334" fill="#CFC9C1" font-family="monospace" font-size="17">4.4  Prevail        Mid-Level Full Stack Developer (Ruby on Rails)</text>
+  <text x="26" y="364" fill="#CFC9C1" font-family="monospace" font-size="17">4.4  VC Lab         Senior Ruby on Rails Engineer (Remote)</text>
+  <text x="26" y="394" fill="#CFC9C1" font-family="monospace" font-size="17">4.2  Doximity       Software Engineer (Ruby/Rails), Advertising Platform</text>
+  <text x="26" y="424" fill="#CFC9C1" font-family="monospace" font-size="17">4.1  Corporate Tools LLC   Senior Software Engineer (Ruby on Rails)</text>
+  <text x="26" y="454" fill="#CFC9C1" font-family="monospace" font-size="17">4.0  Kooth Digital Health   Senior Full Stack Engineer I</text>
+  <rect x="18" y="478" width="1564" height="2" fill="#7A7168"/>
+  <text x="26" y="514" fill="#D9D4CC" font-family="monospace" font-size="18" font-weight="700">EVALUATED (20)</text>
+  <text x="26" y="550" fill="#CFC9C1" font-family="monospace" font-size="17">4.0  Mudflap        Software Engineer, Ruby on Rails</text>
+  <text x="26" y="580" fill="#CFC9C1" font-family="monospace" font-size="17">3.8  Maximus Health Senior Fullstack Engineer (Remote)</text>
+  <text x="26" y="610" fill="#CFC9C1" font-family="monospace" font-size="17">3.8  Brightline     Full Stack Ruby on Rails Staff Engineer</text>
+  <text x="26" y="640" fill="#CFC9C1" font-family="monospace" font-size="17">3.7  ReadySet       Product Engineer, Growth</text>
+  <text x="26" y="670" fill="#CFC9C1" font-family="monospace" font-size="17">3.7  Pylon          Senior Product Engineer</text>
+</svg>

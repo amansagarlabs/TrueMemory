@@ -1,0 +1,43 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# Next.js
+/.next/
+/out/
+/playwright-report/
+/test-results/
+
+# Environment — never commit secrets
+.env
+.env.local
+.env.*.local
+*zilliz*
+*username-password*
+
+# Python backend
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+*.py[cod]
+backend/uploads/*
+!backend/uploads/.gitkeep
+backend/**/data/*.db
+backend/data/agent-skills/*
+!backend/data/agent-skills/.gitkeep
+
+# Misc
+.DS_Store
+*.pem
+npm-debug.log*
+.vercel
+*.tsbuildinfo
+.qodo/
+.agents/
+.playwright-cli/
+.vscode/
+debug.log
+browser-compat/node_modules/
+packages/truememory-memory/build/
+packages/truememory-memory/src/*.egg-info/

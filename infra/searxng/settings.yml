@@ -1,0 +1,16 @@
+use_default_settings: true
+
+general:
+  instance_name: Kaidon Search
+
+server:
+  bind_address: 0.0.0.0
+  port: 8080
+  # Replace this value in a production deployment with a secret mounted into
+  # the container. This file is only a local-development baseline.
+  secret_key: change-this-in-production
+
+search:
+  formats:
+    - html
+    - json
