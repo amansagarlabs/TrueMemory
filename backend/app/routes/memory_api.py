@@ -122,8 +122,10 @@ async def list_memories(scope: str = "general", limit: int = 50, workspace_id: s
 async def write_memory(payload: MemoryWrite, auth: AuthContext = Depends(require_scope("memory"))):
     scope = _effective_scope(auth, payload.scope.strip() or "general")
     _authorize_bindings(auth, workspace_id=payload.workspace_id, agent_id=payload.agent_id)
-    _client().remember(user_id=_user(auth), scope=scope, key=payload.key, content=payload.content, source=payload.source, valid_from=payload.valid_from, valid_until=payload.valid_until, confidence=payload.confidence, workspace_id=payload.workspace_id, agent_id=payload.agent_id)
-    return {"saved": True, "key": payload.key.strip(), "scope": scope}
+    key = payload.key.strip()
+    _client().remember(user_id=_user(auth), scope=scope, key=key, content=payload.content, source=payload.source, valid_from=payload.valid_from, valid_until=payload.valid_until, confidence=payload.confidence, workspace_id=payload.workspace_id, agent_id=payload.agent_id)
+    storage_scope = _client()._storage_scope(scope, workspace_id=payload.workspace_id, agent_id=payload.agent_id)
+    return {"saved": True, "id": f"profile:{storage_scope}:{key}", "key": key, "scope": scope}
 
 
 async def _recall(payload: MemoryRecall, auth: AuthContext) -> dict:
