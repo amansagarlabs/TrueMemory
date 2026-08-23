@@ -1,4 +1,12 @@
-# Kontext Docs Index
+# TrueMemory Docs Index
+
+Public documentation entry point: [/docs](/docs)
+
+Agent context exports: [/llms.txt](/llms.txt) and [/llms-full.txt](/llms-full.txt)
+
+Documentation architecture: [TrueMemory Documentation Architecture](./architecture/TRUEMEMORY_DOCS_ARCHITECTURE.md)
+
+The legacy files below are retained as historical repository sources. Product claims should be checked against the current implementation and the TrueMemory route audit before publication.
 
 Canonical source-of-truth files for Kontext:
 

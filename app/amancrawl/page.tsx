@@ -801,7 +801,7 @@ export default function AmanCrawlPage() {
       {/* ── Promo Banner ──────────────────────────────────────────────── */}
       {showPromoBanner && (
         <div className="relative bg-[#fa5a19] px-4 py-2.5 text-center text-sm font-medium text-white">
-          <span>Kontext Web is live. Search, scrape, map, crawl, and extract with one API.</span>
+          <span>TrueMemory Web retrieval is live. Search, scrape, map, crawl, and extract with one API.</span>
           <Link href="#pricing" className="ml-2 underline underline-offset-2 hover:text-white/80">
             Try it now →
           </Link>
@@ -867,7 +867,7 @@ export default function AmanCrawlPage() {
 
           <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-[#f6e879]/35 bg-[#f6e879]/5 px-3 py-1.5 text-xs font-semibold text-[#f6e879]">
             <Sparkles aria-hidden="true" className="size-3.5 drop-shadow-[0_0_8px_rgba(246,232,121,0.7)]" />
-            Kontext Web <span className="text-white/25">/</span> Built for agent loops
+            TrueMemory Web <span className="text-white/25">/</span> Built for agent loops
           </div>
 
           <h1 className="text-balance text-5xl font-medium tracking-[-0.06em] text-[#f3f1e8] sm:text-6xl lg:text-7xl">
@@ -1274,7 +1274,7 @@ export default function AmanCrawlPage() {
                   </span>
                   <p className="text-sm font-semibold text-white/75">Your live web result will appear here</p>
                   <p className="mt-1 max-w-sm text-xs leading-5 text-white/35">
-                    Enter a URL or search query above. Kontext Web will return a readable answer, source links, and the raw response.
+                    Enter a URL or search query above. TrueMemory Web will return a readable answer, source links, and the raw response.
                   </p>
                 </div>
               )}
@@ -1369,7 +1369,7 @@ export default function AmanCrawlPage() {
                 One API for every web task
               </h2>
               <p className="mt-4 text-base leading-7 text-[#666666] dark:text-white/70">
-                Kontext Web exposes search, scrape, map, crawl, and agent extraction through REST,
+                TrueMemory Web exposes search, scrape, map, crawl, and agent extraction through REST,
                 TypeScript, Python, and MCP.
               </p>
               <div className="mt-6 flex gap-3">
@@ -1459,14 +1459,14 @@ console.log(result.json);
             <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#fa5a19] text-white">
               <Zap className="h-3.5 w-3.5" />
             </span>
-            <span className="text-sm font-semibold text-[#201510] dark:text-white">Kontext</span>
+            <span className="text-sm font-semibold text-[#201510] dark:text-white">TrueMemory</span>
           </div>
           <div className="flex gap-6 text-sm text-[#666666] dark:text-white/50">
             <Link href="/" className="hover:text-[#201510] dark:hover:text-white">Home</Link>
             <Link href="/docs" className="hover:text-[#201510] dark:hover:text-white">Docs</Link>
             <Link href="https://github.com" className="hover:text-[#201510] dark:hover:text-white">GitHub</Link>
           </div>
-          <p className="text-xs text-[#999999] dark:text-white/30">© 2026 Kontext. All rights reserved.</p>
+          <p className="text-xs text-[#999999] dark:text-white/30">© 2026 TrueMemory. All rights reserved.</p>
         </div>
       </footer>
 

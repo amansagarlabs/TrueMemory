@@ -33,7 +33,7 @@ export default function NotFound() {
             aria-hidden="true"
             className="size-7 rounded-full bg-[linear-gradient(135deg,#fff5a5,#f6e66c_42%,#f27a28)] shadow-[0_0_0_1px_rgba(23,18,15,0.08)]"
           />
-          kontext
+          TrueMemory
         </Link>
         <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-black/40 dark:text-white/35">
           Route not found
@@ -81,7 +81,7 @@ export default function NotFound() {
 
       <footer className="relative z-10 flex items-end justify-between gap-4 font-mono text-[9px] uppercase tracking-[0.14em] text-black/35 dark:text-white/25">
         <span>Error / 404</span>
-        <span className="text-right">Kontext navigation layer</span>
+        <span className="text-right">TrueMemory navigation layer</span>
       </footer>
     </main>
   );

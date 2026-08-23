@@ -56,7 +56,7 @@ type ConnectorDef = {
 const PLATFORMS: PlatformDef[] = [
   {
     id: "truememory-memory",
-    name: "Kontext Memory",
+    name: "TrueMemory",
     description: "AI-powered memory and knowledge management system",
     icon: <Brain aria-hidden="true" className="size-5" />,
     color: "#f6e879",
@@ -64,7 +64,7 @@ const PLATFORMS: PlatformDef[] = [
   },
   {
     id: "AmanCrawl",
-    name: "Kontext Crawl",
+    name: "Web retrieval",
     description: "Web crawling and data extraction platform",
     icon: <Globe aria-hidden="true" className="size-5" />,
     color: "#67d9bd",
@@ -80,7 +80,7 @@ const PLATFORMS: PlatformDef[] = [
   },
   {
     id: "aman-crawl",
-    name: "Kontext Web",
+    name: "TrueMemory Web",
     description: "Search, extract, map, crawl, and ground answers in web sources",
     icon: <Webhook aria-hidden="true" className="size-5" />,
     color: "#f06418",
@@ -211,14 +211,14 @@ export default function IntegrationsPage() {
           </Link>
           <Link href="/" className="flex items-center gap-2.5 text-[17px] font-semibold tracking-[-0.03em]">
             <span aria-hidden="true" className="size-6 rounded-full bg-[linear-gradient(135deg,#fff5a5,#f6e66c_42%,#f27a28)]" />
-            kontext
+            TrueMemory
           </Link>
         </header>
 
         <div className="mt-7">
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#f6e879]">Integrations</p>
           <h1 className="mt-3 font-heading text-3xl font-medium tracking-[-0.05em] sm:text-4xl">Connect your tools</h1>
-          <p className="mt-2 max-w-xl text-sm text-white/45">Manage platform integrations and third-party connectors to extend Kontext capabilities.</p>
+          <p className="mt-2 max-w-xl text-sm text-white/45">Manage TrueMemory connections and supported platform integrations.</p>
         </div>
 
         {/* Platform Integrations */}
@@ -233,7 +233,7 @@ export default function IntegrationsPage() {
               Refresh
             </button>
           </div>
-          <p className="mt-1 text-sm text-white/40">Core Kontext platforms — checks real backend connectivity.</p>
+          <p className="mt-1 text-sm text-white/40">Core TrueMemory connections — checks real backend connectivity.</p>
 
           <div className="mt-5 grid gap-4 sm:grid-cols-2">
             {PLATFORMS.map((platform) => {

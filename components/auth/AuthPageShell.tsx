@@ -34,7 +34,7 @@ export default function AuthPageShell({
 
           <GlassBrandPanel
             eyebrow="Your work, remembered."
-            title="Start every session with Kontext."
+            title="Start every session with TrueMemory."
             description="Sign in once. Keep documents, decisions, and agent actions connected across every workspace."
             chips={["Source linked", "Permission aware", "Always retrievable"]}
           />
@@ -55,7 +55,7 @@ export default function AuthPageShell({
               className="inline-flex items-center gap-1.5 text-sm font-semibold tracking-[-0.03em] text-foreground dark:text-white"
             >
               <ContextMark aria-hidden="true" className="size-8 text-[#e45f18]" />
-              kontext
+              TrueMemory
             </Link>
           </header>
 

@@ -14,7 +14,7 @@ export function AnnouncementBar() {
       <div className="mx-auto flex max-w-[1240px] items-center justify-between px-5 py-2.5 sm:px-8">
         <div className="flex flex-1 items-center justify-center gap-3 text-[13px]">
           <span className="text-[var(--text-2)]">
-            kontext for the agent era: memory, retrieval, and trusted action in one workspace.
+            TrueMemory for the agent era: memory, retrieval, and trusted action in one layer.
           </span>
           <Link
             href="/chat"

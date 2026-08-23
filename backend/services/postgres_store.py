@@ -263,6 +263,19 @@ def list_workspaces(settings, *, user_id: str) -> list[dict[str, Any]]:
             return list(cur.fetchall())
 
 
+def delete_workspace(settings, *, workspace_id: str, user_id: str) -> bool:
+    """Delete an owned Space and its cascade-owned context."""
+    with _connect(settings) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                "DELETE FROM workspaces WHERE id = %s AND owner_user_id = %s RETURNING id",
+                (workspace_id, user_id),
+            )
+            deleted = cur.fetchone() is not None
+            conn.commit()
+            return deleted
+
+
 def get_project_for_user(
     settings, *, project_id: str, user_id: str, workspace_id: str | None = None
 ) -> dict[str, Any] | None:

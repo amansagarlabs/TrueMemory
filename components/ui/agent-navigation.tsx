@@ -51,7 +51,7 @@ export function AgentNavigation({
       <div className="flex h-14 items-center justify-between gap-3 px-4 sm:px-6">
         <Link href="/" className="flex items-center gap-1.5 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6821f]">
           <ContextMark aria-hidden="true" className="size-9 text-[#e45f18]" />
-          <span className="text-sm font-semibold tracking-[-0.03em] text-[#18201d] dark:text-white">kontext</span>
+          <span className="text-sm font-semibold tracking-[-0.03em] text-[#18201d] dark:text-white">TrueMemory</span>
           <span className="hidden rounded-full border border-[#a7bdb6] bg-[#CAE0DA] px-2 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.12em] text-[#31564d] sm:inline">Agent workspace</span>
         </Link>
 

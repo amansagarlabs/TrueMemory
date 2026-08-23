@@ -23,9 +23,9 @@ export function GlassBrandPanel({
   title,
   description,
   chips,
-  topLabel = "Kontext access",
+  topLabel = "TrueMemory access",
   topMeta = "01 / memory",
-  brandLabel = "Kontext",
+  brandLabel = "TrueMemory",
 }: GlassBrandPanelProps) {
   return (
     <div className="relative z-10 flex h-full min-h-0 flex-col justify-between py-10 pl-5 pr-10 xl:py-14 xl:pl-7 xl:pr-14">

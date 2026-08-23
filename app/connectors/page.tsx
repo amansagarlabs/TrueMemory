@@ -112,7 +112,7 @@ const CONNECTORS: ConnectorDefinition[] = [
     name: "OpenAI",
     domain: "openai.com",
     brandIcon: "openai",
-    description: "Use GPT models and embeddings in Kontext workflows.",
+    description: "Use GPT models and embeddings in TrueMemory workflows.",
     category: "AI providers",
     icon: Bot,
     accent: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
@@ -189,7 +189,7 @@ const CONNECTORS: ConnectorDefinition[] = [
     name: "Weaviate",
     domain: "weaviate.io",
     brandIcon: "weaviate",
-    description: "Connect Kontext to a hosted vector search endpoint.",
+    description: "Connect TrueMemory to a hosted vector search endpoint.",
     category: "Data",
     icon: Database,
     accent: "bg-yellow-500/12 text-yellow-700 dark:text-yellow-400",
@@ -213,7 +213,7 @@ const CONNECTORS: ConnectorDefinition[] = [
   {
     id: "webhook",
     name: "Custom webhook",
-    description: "Send Kontext events to any HTTPS endpoint.",
+    description: "Send TrueMemory events to any HTTPS endpoint.",
     category: "Developer tools",
     icon: Webhook,
     accent: "bg-rose-500/12 text-rose-700 dark:text-rose-400",
@@ -445,7 +445,7 @@ export default function ConnectorsPage() {
         url || undefined,
       );
       if (!result.connected) {
-        setError(result.error || "Kontext could not verify this connection.");
+        setError(result.error || "TrueMemory could not verify this connection.");
         return;
       }
 
@@ -535,14 +535,13 @@ export default function ConnectorsPage() {
           <div className="absolute inset-0 bg-[linear-gradient(90deg,#0d0b08_0%,rgba(13,11,8,.95)_52%,transparent)]" />
           <div className="relative z-10 max-w-2xl">
             <p className="font-mono text-[10px] uppercase tracking-[.18em] text-[#f6e879]">
-              Context layer / Connectors
+              TrueMemory / Connections
             </p>
             <h1 className="mt-3 font-heading text-4xl tracking-[-.055em]">
-              Connect your workspace.
+              Connect what uses your memory.
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-7 text-white/45">
-              Give Kontext controlled access to the models, knowledge, data,
-              and developer tools your work depends on.
+              Connect supported agents, applications, data sources, and developer tools to the memory Spaces they use. Every connector is tested before it is enabled.
             </p>
           </div>
         </section>
@@ -671,7 +670,7 @@ export default function ConnectorsPage() {
               <div className="space-y-4 px-6 py-6">
                 {selected.id === "github" ? (
                   <div className="rounded-xl border border-violet-400/20 bg-violet-400/[0.06] px-4 py-4 text-sm leading-6 text-white/70">
-                    Connect your GitHub account to search repositories and use authorized code, issues, and pull requests as project context. Kontext never exposes your GitHub token to the browser.
+                    Connect your GitHub account to search repositories and use authorized code, issues, and pull requests as project context. TrueMemory never exposes your GitHub token to the browser.
                   </div>
                 ) : selected.needsKey ? (
                   <div>
@@ -954,7 +953,7 @@ function SkillsView() {
           <DialogHeader>
             <DialogTitle>Create a skill</DialogTitle>
             <DialogDescription className="text-white/50">
-              Add reusable instructions that Kontext can load when a request matches.
+              Add reusable instructions that TrueMemory can load when a request matches.
             </DialogDescription>
           </DialogHeader>
           <form className="space-y-4" onSubmit={submitSkill}>

@@ -510,7 +510,7 @@ export default function V2Home() {
               </span>
               <span>SOC-2 Type II</span>
             </div>
-            <span>© 2026 Kontext</span>
+            <span>© 2026 TrueMemory</span>
           </div>
         </div>
       </footer>

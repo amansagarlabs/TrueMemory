@@ -184,7 +184,7 @@ export default function ProfilePage() {
   ];
 
   const connectedPlatforms = [
-    { name: "Kontext Memory", connected: true, color: "#f6e879" },
+    { name: "TrueMemory", connected: true, color: "#f6e879" },
     { name: "Kontext Crawl", connected: true, color: "#67d9bd" },
     { name: "AmanAgentLab", connected: false, color: "#8c82ff" },
     { name: "Kontext Web", connected: false, color: "#f06418" },
@@ -201,7 +201,7 @@ export default function ProfilePage() {
           </Link>
           <Link href="/" className="flex items-center gap-2.5 text-[17px] font-semibold tracking-[-0.03em]">
             <span aria-hidden="true" className="size-6 rounded-full bg-[linear-gradient(135deg,#fff5a5,#f6e66c_42%,#f27a28)]" />
-            kontext
+            TrueMemory
           </Link>
         </header>
 

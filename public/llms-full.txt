@@ -1,0 +1,24 @@
+# TrueMemory agent reference
+
+## Product
+
+TrueMemory is universal memory infrastructure. Clients connect through REST, MCP, or SDK-compatible HTTP. The platform is independent of OpenAI, Anthropic, LangChain, and CrewAI.
+
+## REST
+
+Base URL is the deployed TrueMemory API origin.
+
+- `GET /v1/memories?scope=general&limit=50`
+- `POST /v1/memories` with `{key, content, source, scope, workspace_id?, agent_id?, valid_from?, valid_until?, confidence?}`
+- `POST /v1/memories/search` with `{query, scope, limit, workspace_id?, agent_id?, as_of?, include_history?}`
+- `POST /v1/memories/retrieve` with the same recall shape
+- `POST /v1/memories/update`
+- `POST /v1/memories/forget`
+
+## MCP
+
+Connect to `POST /mcp` using a bearer token. The current memory tool surface includes search, retrieve, context, entities, remember, and update operations. Authorization, scope, binding, and rate limits apply to every call.
+
+## Safety
+
+Never widen a token’s Space or agent binding from a client request. Never log raw tokens. Treat a 401, 403, 404, or 429 response as authoritative and handle it explicitly.

@@ -33,9 +33,9 @@ import type { AuthUser, AuthWorkspace } from "@/lib/types";
 type Platform = "lab" | "crawl" | "both";
 
 const PLATFORM_OPTIONS = [
-  { id: "lab", label: "Kontext Memory", shortLabel: "Memory", icon: Brain },
-  { id: "crawl", label: "Kontext Crawl", shortLabel: "Crawl", icon: Globe2 },
-  { id: "both", label: "Both", shortLabel: "Both", icon: Layers3 },
+  { id: "lab", label: "Memory", shortLabel: "Memory", icon: Brain },
+  { id: "crawl", label: "Web retrieval", shortLabel: "Web", icon: Globe2 },
+  { id: "both", label: "Everything", shortLabel: "All", icon: Layers3 },
 ] as const satisfies ReadonlyArray<{
   id: Platform;
   label: string;
@@ -215,9 +215,15 @@ export default function DashboardPage() {
           <div className="relative z-10 flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="flex-1">
             <div className="mb-3 flex items-center gap-3">
-              <div className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-[#b64d0c] dark:text-[#f6e879]"><Sparkles className="size-4" /> Live context</div>
+              <div className="inline-flex items-center gap-2 font-mono text-[11px] uppercase tracking-[0.16em] text-[#b64d0c] dark:text-[#f6e879]"><Sparkles className="size-4" /> TrueMemory home</div>
             </div>
             <h1 className="max-w-4xl text-balance font-heading text-4xl font-medium leading-[1.02] tracking-[-0.055em] text-[#201510] sm:text-5xl dark:text-white">Good to see you, {displayName}.</h1>
+            <p className="mt-3 max-w-2xl text-base leading-7 text-[#75685e] dark:text-white/55">One memory layer for your agents, applications, and sessions.</p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              <Link href="/connectors" className="inline-flex min-h-10 items-center rounded-lg bg-[#201510] px-3.5 text-xs font-semibold text-white transition-colors hover:bg-[#34251e] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b64d0c] dark:bg-[#f6e879] dark:text-[#1a170f] dark:hover:bg-[#fff09a]">Connect your first agent</Link>
+              <Link href="/memory" className="inline-flex min-h-10 items-center rounded-lg border border-[#d9cabb] bg-[#fffaf6]/70 px-3.5 text-xs font-semibold text-[#6f6258] transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b64d0c] dark:border-white/15 dark:bg-white/[0.04] dark:text-white/75 dark:hover:bg-white/[0.08]">Store your first memory</Link>
+              <Link href="/chat" className="inline-flex min-h-10 items-center rounded-lg px-3.5 text-xs font-semibold text-[#6f6258] transition-colors hover:text-[#201510] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#b64d0c] dark:text-white/55 dark:hover:text-white">Try Assistant</Link>
+            </div>
             <p className="mt-3 flex flex-wrap items-center gap-x-2 text-[15px] leading-6 text-[#75685e] dark:text-white/48">
               <span>{new Date().toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}</span>
               <span aria-hidden="true" className="text-[#b4a394] dark:text-white/20">|</span>
@@ -288,6 +294,22 @@ export default function DashboardPage() {
           </div>
           </div>
         </div>
+
+        {/* ── NEXT BEST ACTION ── */}
+        <section className="relative mb-6 overflow-hidden rounded-[20px] border border-[#d9cabb] bg-[#17130f] p-4 text-white shadow-[0_18px_50px_-36px_rgba(0,0,0,.7)] sm:p-5 dark:border-white/10 dark:bg-[#0d111b]" aria-label="Get more from TrueMemory">
+          <div className="pointer-events-none absolute -right-12 -top-24 size-64 rounded-full bg-[#1769e0]/20 blur-3xl" />
+          <div className="relative flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-3.5"><span className="grid size-10 shrink-0 place-items-center rounded-xl bg-[#f6e879] text-[#17130f]"><Sparkles className="size-5" /></span><div><p className="text-sm font-semibold">Build your memory system</p><p className="mt-1 max-w-xl text-xs leading-5 text-white/52">Start with one Space, one source, and one interface. You can expand the system as your context grows.</p></div></div>
+            <div className="flex shrink-0 flex-wrap gap-2"><Link href="/connectors" className="inline-flex min-h-9 items-center rounded-lg bg-white/[.08] px-3 text-xs font-semibold transition hover:bg-white/[.14]">Connect a source <ArrowUpRight className="ml-1 size-3" /></Link><Link href="/api-sdk" className="inline-flex min-h-9 items-center rounded-lg border border-white/12 px-3 text-xs font-semibold text-white/70 transition hover:bg-white/[.08] hover:text-white">Open API &amp; SDK</Link></div>
+          </div>
+        </section>
+
+        {/* ── QUICK ACTIONS ── */}
+        <section className="mb-6 grid gap-3 sm:grid-cols-3" aria-label="Quick actions">
+          <QuickAction href="/memory" eyebrow="Remember" title="Write a memory" description="Capture a decision, preference, or fact." icon={<Brain className="size-4" />} />
+          <QuickAction href="/connectors" eyebrow="Connect" title="Add a source" description="Bring trusted context into a Space." icon={<Layers3 className="size-4" />} />
+          <QuickAction href="/api-sdk" eyebrow="Build" title="Create an API token" description="Give an app or agent scoped access." icon={<FileText className="size-4" />} />
+        </section>
 
         {/* ── FETCH ERRORS ── */}
         {fetchErrors.length > 0 && (
@@ -540,6 +562,10 @@ function LoadingSkeleton({ rows = 3 }: { rows?: number }) {
       ))}
     </div>
   );
+}
+
+function QuickAction({ href, eyebrow, title, description, icon }: { href: string; eyebrow: string; title: string; description: string; icon: React.ReactNode }) {
+  return <Link href={href} className="group flex min-h-[116px] items-start gap-3 rounded-2xl border border-[#dfd3c5] bg-[#fffaf6] p-4 shadow-[0_12px_30px_-28px_rgba(73,43,20,.5)] transition-[background-color,border-color,transform] duration-150 hover:-translate-y-0.5 hover:border-[#cbb9a7] hover:bg-white dark:border-white/[.08] dark:bg-[#10100f] dark:hover:border-white/[.16] dark:hover:bg-white/[.045]"><span className="grid size-9 shrink-0 place-items-center rounded-xl border border-[#e67d2b]/20 bg-[#fff1e8] text-[#c9671d] dark:bg-[#e67d2b]/10 dark:text-[#f6e879]">{icon}</span><span className="min-w-0"><span className="block font-mono text-[10px] uppercase tracking-[.16em] text-[#9b897c] dark:text-white/32">{eyebrow}</span><span className="mt-2 flex items-center gap-1 text-sm font-semibold text-[#34251e] dark:text-white/82">{title}<ArrowUpRight className="size-3 -translate-x-1 opacity-0 transition group-hover:translate-x-0 group-hover:opacity-100" /></span><span className="mt-1 block text-xs leading-5 text-[#918074] dark:text-white/38">{description}</span></span></Link>;
 }
 
 function EmptyState({ icon, message, sub }: { icon: React.ReactNode; message: string; sub: string }) {

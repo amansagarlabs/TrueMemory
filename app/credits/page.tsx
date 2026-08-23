@@ -109,10 +109,10 @@ export default function CreditsPage() {
 
   const cards = useMemo(() => {
     const resources = [
-      { id: "crawl:scrape", label: "Scrapes", fallbackLimit: 1000, accent: "#f06418" },
-      { id: "crawl:map", label: "Maps", fallbackLimit: 500, accent: "#e9b8ff" },
-      { id: "crawl:search", label: "Searches", fallbackLimit: 1000, accent: "#9ee7d8" },
-      { id: "crawl:crawl", label: "Crawls", fallbackLimit: 200, accent: "#f6e879" },
+      { id: "crawl:scrape", label: "Scrapes", fallbackLimit: 0, accent: "#f06418" },
+      { id: "crawl:map", label: "Maps", fallbackLimit: 0, accent: "#e9b8ff" },
+      { id: "crawl:search", label: "Searches", fallbackLimit: 0, accent: "#9ee7d8" },
+      { id: "crawl:crawl", label: "Crawls", fallbackLimit: 0, accent: "#f6e879" },
     ];
     return resources.map((resource) => {
       const bucket = formatBucket(usage[resource.id], resource.fallbackLimit);
@@ -137,13 +137,7 @@ export default function CreditsPage() {
       codex: "#e9b8ff",
       claude: "#9ee7d8",
     } as Record<string, string>;
-    const seeds = providers?.length
-      ? providers
-      : [
-          { provider: "openrouter", used: 0, cost_cents: 0 },
-          { provider: "codex", used: 0, cost_cents: 0 },
-          { provider: "claude", used: 0, cost_cents: 0 },
-        ];
+    const seeds = providers ?? [];
     return seeds.map((provider) => ({
       provider: provider.provider,
       title: provider.provider.charAt(0).toUpperCase() + provider.provider.slice(1),
@@ -177,9 +171,9 @@ export default function CreditsPage() {
             <PaperDither className="inset-y-0 right-0 w-[62%] opacity-75" dark={{ colorBack: "#0c0a0800", colorFront: "#f06418" }} light={{ colorBack: "#fffaf6", colorFront: "#d86516" }} eager maxPixelCount={1000 * 500} scale={0.78} shape="warp" size={2.2} speed={0.14} type="4x4" />
             <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,#0c0a08_0%,rgba(12,10,8,0.95)_48%,rgba(12,10,8,0.12)_100%)]" />
             <div className="relative z-10 max-w-2xl">
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#f6e879]">Credits</p>
-              <h1 className="mt-3 font-heading text-4xl font-medium tracking-[-0.055em] sm:text-5xl">One usage ledger for every <span className="text-[#f6e879]">web action.</span></h1>
-              <p className="mt-4 max-w-xl text-sm leading-6 text-white/45 sm:text-base">This page is driven from the authenticated backend usage summary, so the numbers match what the server enforces for your account.</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#f6e879]">TrueMemory / Usage</p>
+              <h1 className="mt-3 font-heading text-4xl font-medium tracking-[-0.055em] sm:text-5xl">Understand how your memory layer is used.</h1>
+              <p className="mt-4 max-w-xl text-sm leading-6 text-white/45 sm:text-base">Usage is loaded from the authenticated backend and reflects the limits enforced for your account.</p>
               <div className="mt-7 flex flex-wrap items-center gap-3">
                 <span className="inline-flex items-center gap-2 rounded-full border border-[#f6e879]/25 bg-[#f6e879]/10 px-3 py-2 font-mono text-[10px] uppercase tracking-[0.14em] text-[#f6e879]">
                   <Sparkles aria-hidden="true" className="size-3.5" />

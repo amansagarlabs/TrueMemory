@@ -94,7 +94,7 @@ export default function LibraryPage() {
               Knowledge library
             </p>
             <h1 className="mt-3 text-balance font-heading text-4xl font-medium tracking-[-0.055em] sm:text-5xl">
-              Everything you have given Kontext.
+              Everything you have given TrueMemory.
             </h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-black/55 dark:text-white/45">
               Browse documents, datasets, code, and indexed material that can be
@@ -172,7 +172,7 @@ export default function LibraryPage() {
                   </h2>
                   <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-black/45 dark:text-white/35">
                     {artifacts.length === 0
-                      ? "Upload your first document to make it available across Kontext."
+                      ? "Upload your first document to make it available across TrueMemory."
                       : "Try another search term or file category."}
                   </p>
                   {artifacts.length === 0 && (

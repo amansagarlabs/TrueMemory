@@ -30,3 +30,11 @@ export async function persistWorkspace(
   const data = await response.json();
   return data.item as AuthWorkspace;
 }
+
+export async function deleteWorkspace(workspaceId: string): Promise<void> {
+  const response = await fetch(`${API_URL}/api/workspaces/${encodeURIComponent(workspaceId)}`, {
+    method: "DELETE",
+    headers: buildAuthHeaders("Kontext Memory"),
+  });
+  if (!response.ok) throw new Error(`Space could not be deleted (${response.status}).`);
+}

@@ -45,7 +45,7 @@ const FEATURES = [
     eyebrow: "Delegate",
     title: "Start with the outcome",
     description:
-      "Give Kontext a goal. It retrieves the right code, keeps the work durable, and reports progress without forcing you into an editor.",
+      "Give TrueMemory Assistant a goal. It retrieves the right code, keeps the work durable, and reports progress without forcing you into an editor.",
   },
   {
     icon: Network,
@@ -109,7 +109,7 @@ export function CodingOnboarding({
               <Sparkles className="size-4" />
             </span>
             <div>
-              <p className="text-[12px] font-semibold tracking-[-0.01em] text-white/88">Kontext Coding</p>
+              <p className="text-[12px] font-semibold tracking-[-0.01em] text-white/88">TrueMemory Assistant / Coding</p>
               <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-white/30">Agent-native workspace</p>
             </div>
           </div>
@@ -207,7 +207,7 @@ export function CodingOnboarding({
             <Onboarding.Header className="mb-7 text-left">
               <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#ff966b]">Required source</p>
               <h1 className="mt-3 text-[34px] font-semibold tracking-[-0.04em] text-white">Connect a Git repository</h1>
-              <p className="mt-3 text-[14px] leading-6 text-white/42">Kontext fingerprints and indexes versioned source before it accepts a task. Unversioned folders stay blocked.</p>
+              <p className="mt-3 text-[14px] leading-6 text-white/42">TrueMemory Assistant fingerprints and indexes versioned source before it accepts a task. Unversioned folders stay blocked.</p>
             </Onboarding.Header>
             <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
               <section className="min-h-64 overflow-hidden rounded-[18px] border border-white/[0.08] bg-[#111418]">

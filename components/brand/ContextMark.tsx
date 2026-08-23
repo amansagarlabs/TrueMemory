@@ -7,7 +7,7 @@ export function ContextMark({ className, ...props }: SVGProps<SVGSVGElement>) {
       className={className}
       fill="none"
       role="img"
-      aria-label="Kontext"
+      aria-label="TrueMemory"
       {...props}
     >
       {Array.from({ length: 6 }, (_, index) => (

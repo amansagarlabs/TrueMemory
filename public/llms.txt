@@ -1,0 +1,24 @@
+# TrueMemory
+
+> Universal memory infrastructure for AI and software.
+
+TrueMemory is the memory layer for agents, applications, models, sessions, and Spaces. TrueMemory Assistant is a first-party client built on the platform.
+
+## Current interfaces
+
+- REST API: `/v1/memories`, `/v1/memories/search`, `/v1/memories/retrieve`, `/v1/memories/update`, `/v1/memories/forget`
+- MCP: `POST /mcp`
+- API & SDK guide: `/api-sdk`
+- Human and agent documentation: `/docs`
+
+## Authentication
+
+Use an authenticated API token with the `memory` scope. Tokens can be bound to a Space (`workspace_id`) and agent (`agent_id`). Bindings are enforced by the API boundary.
+
+## Memory model
+
+Memory supports scoped keys and content, source/provenance, confidence, temporal validity, search, retrieval, revision, forgetting, and history-aware access where available.
+
+## Source status
+
+This file describes the current repository implementation. Historical claims that are not verified by repository material are intentionally omitted.

@@ -12,6 +12,7 @@ from services.postgres_store import (
     postgres_enabled,
     resolve_user_id,
     upsert_workspace,
+    delete_workspace,
 )
 
 router = APIRouter(prefix="/api/workspaces", tags=["workspaces"])
@@ -59,3 +60,19 @@ async def put_workspace(
     except ValueError as exc:
         raise HTTPException(status_code=409, detail=str(exc)) from exc
     return {"item": item}
+
+
+@router.delete("/{workspace_id}")
+async def remove_workspace(
+    workspace_id: UUID,
+    auth: AuthContext = Depends(require_auth),
+):
+    settings = get_settings()
+    if not postgres_enabled(settings):
+        raise HTTPException(status_code=503, detail="Workspace storage is unavailable.")
+    user_id = resolve_user_id(settings, str(auth.user_id))
+    if not user_id:
+        raise HTTPException(status_code=404, detail="User could not be resolved.")
+    if not delete_workspace(settings, workspace_id=str(workspace_id), user_id=user_id):
+        raise HTTPException(status_code=404, detail="Workspace was not found.")
+    return {"deleted": True, "workspace_id": str(workspace_id)}

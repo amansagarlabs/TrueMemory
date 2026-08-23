@@ -189,7 +189,7 @@ export function AgentEcosystem() {
             <Sparkles aria-hidden="true" className="absolute right-5 top-5 size-3 text-[#f6e879]" />
           </div>
           <div className="mt-4 text-center lg:absolute lg:top-[138px] lg:w-52">
-            <p className="text-sm font-semibold text-[#24261f] dark:text-[#f2f1e8]">kontext</p>
+            <p className="text-sm font-semibold text-[#24261f] dark:text-[#f2f1e8]">TrueMemory</p>
             <p className="mt-1 text-xs text-[#666b61] dark:text-[#93978f]">One observable agent loop</p>
             <AnimatePresence mode="wait">
               {activeNode !== null && (

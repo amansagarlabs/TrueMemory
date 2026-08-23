@@ -45,7 +45,7 @@ export function SiteFooter() {
           <div>
             <div className="flex items-center gap-3 text-[#11140f] dark:text-white">
               <BrandMark />
-              <span className="text-[15px] font-semibold">kontext</span>
+              <span className="text-[15px] font-semibold">TrueMemory</span>
             </div>
             <p className="mt-5 max-w-md text-pretty text-base font-medium leading-7 text-[#353a32] dark:text-[#e4e7df]">
               The context layer for agents that need to remember, retrieve, and act with confidence.
@@ -111,7 +111,7 @@ export function SiteFooter() {
           </div>
         </div>
         <div className="flex flex-col gap-3 pt-6 font-mono text-[10px] uppercase tracking-[0.14em] text-[#687064] sm:flex-row sm:items-center sm:justify-between">
-          <span>&copy; 2026 Aman Agent Lab</span>
+          <span>&copy; 2026 TrueMemory</span>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <span className="inline-flex items-center gap-2">
               <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
@@ -124,7 +124,7 @@ export function SiteFooter() {
           </div>
         </div>
         <div className="footer-dither-wordmark select-none overflow-hidden pt-14 text-center text-[clamp(4.5rem,14vw,12rem)] font-medium leading-[0.76] tracking-[0.04em]" aria-label="Kontext">
-          KONTEXT
+          TRUEMEMORY
         </div>
       </div>
     </footer>

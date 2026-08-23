@@ -31,6 +31,7 @@ import {
 import {
   Archive,
   Activity,
+  Code2,
   ChevronDown,
   ChevronRight,
   GalleryVerticalEnd,
@@ -98,8 +99,17 @@ type ConversationDialogState =
   | null;
 
 const CHAT_NAVIGATION = [
-  { label: "Projects", href: "/projects", icon: IconFolder },
-  { label: "Connectors", href: "/connectors", icon: IconApps },
+  { label: "Assistant", href: "/chat", icon: IconRobot },
+] as const;
+
+const PRIMARY_NAVIGATION = [
+  { label: "Home", href: "/dashboard", icon: IconDashboard },
+  { label: "Memory", href: "/memory", icon: IconBrain },
+  { label: "Spaces", href: "/workspaces", icon: IconStack2 },
+  { label: "Connections", href: "/connectors", icon: IconApps },
+  { label: "API & SDK", href: "/api-sdk", icon: Code2 },
+  { label: "Activity", href: "/activity", icon: Activity },
+  { label: "Usage", href: "/credits", icon: IconChartBar },
 ] as const;
 
 type SidebarNavItem = {
@@ -614,11 +624,26 @@ export function ChatAppSidebar({
                 />
               </div>
 
-              {CHAT_NAVIGATION.map((item) => (
+              {PRIMARY_NAVIGATION.map((item) => (
                 <SidebarMenuItem key={item.label}>
                   <SidebarMenuButton
                     render={<Link href={item.href} />}
                     isActive={pathname === item.href}
+                    tooltip={item.label}
+                    className="h-9 rounded-lg px-2.5 text-[13px] font-medium group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
+                  >
+                    <item.icon className="size-4 shrink-0 text-sidebar-foreground/72" stroke="1.8" />
+                    <span className="text-[13px] group-data-[collapsible=icon]:hidden">{item.label}</span>
+                  </SidebarMenuButton>
+              </SidebarMenuItem>
+              ))}
+
+              <SidebarSeparator className="my-1" />
+              {CHAT_NAVIGATION.map((item) => (
+                <SidebarMenuItem key={item.label}>
+                  <SidebarMenuButton
+                    render={<Link href={item.href} />}
+                    isActive={isNavActive(item.href)}
                     tooltip={item.label}
                     className="h-9 rounded-lg px-2.5 text-[13px] font-medium group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
                   >
@@ -627,18 +652,6 @@ export function ChatAppSidebar({
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
-
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  render={<Link href="/dashboard" />}
-                  isActive={pathname === "/dashboard"}
-                  tooltip="Dashboard"
-                  className="h-9 rounded-lg px-2.5 text-[13px] font-medium group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
-                >
-                  <IconDashboard className="size-4 shrink-0 text-sidebar-foreground/72" stroke="1.8" />
-                  <span className="group-data-[collapsible=icon]:hidden">Dashboard</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
 
               <SidebarMenuItem className="mt-1">
                 <DropdownMenu>

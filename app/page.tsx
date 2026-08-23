@@ -42,7 +42,7 @@ const capabilities = [
     number: "01",
     title: "Bring your work in",
     description:
-      "Drop in the documents, notes, and project artifacts your team already relies on. kontext extracts structure, preserves the source, and makes the useful parts retrievable.",
+      "Drop in the documents, notes, and project artifacts your team already relies on. TrueMemory extracts structure, preserves the source, and makes the useful parts retrievable.",
     icon: FileText,
     detail: "PDF · Markdown · Web",
   },
@@ -125,7 +125,7 @@ function PrinciplePreview({ index }: { index: number }) {
                 <Database aria-hidden="true" className="size-4" />
               </span>
               <div>
-                <p className="text-[11px] font-semibold text-[#30342d] dark:text-[#f0f2e9]">Kontext.local</p>
+                <p className="text-[11px] font-semibold text-[#30342d] dark:text-[#f0f2e9]">TrueMemory.local</p>
                 <p className="mt-0.5 font-mono text-[9px] text-[#777d70] dark:text-[#8e9589]">127.0.0.1 · private</p>
               </div>
             </div>
@@ -186,7 +186,7 @@ function PrinciplePreview({ index }: { index: number }) {
 
 const faqs = [
   [
-    "Is kontext another chatbot?",
+    "Is TrueMemory another chatbot?",
     "No. Chat is one interface to a persistent memory and workspace layer built around your projects, artifacts, and decisions.",
   ],
   [
@@ -199,7 +199,7 @@ const faqs = [
   ],
   [
     "Can I self-host it?",
-    "Yes. kontext is designed as an open-source stack with a Next.js interface, FastAPI services, and pluggable storage.",
+    "No. TrueMemory is memory infrastructure: an open-source stack with a Next.js interface, FastAPI services, and pluggable storage.",
   ],
 ]
 
@@ -497,7 +497,7 @@ function HeroCanvas({
       <div className="absolute bottom-0 right-[2%] z-20 hidden h-[48%] min-h-[240px] w-[60%] max-w-[900px] overflow-hidden rounded-t-[16px] border border-white/10 bg-[#11120f] shadow-[0_-20px_48px_-22px_rgba(0,0,0,0.88)] lg:block xl:w-[62%]">
         <div className="flex h-full">
           <aside className="w-[186px] shrink-0 border-r border-white/10 bg-[#171812] p-4 text-[11px] text-[#9ca19a]">
-            <div className="flex items-center gap-2 font-semibold text-[#f4f4ef]"><span className="size-3 rounded-full bg-[linear-gradient(135deg,#fff5a5,#f27a28)]" /> kontext</div>
+            <div className="flex items-center gap-2 font-semibold text-[#f4f4ef]"><span className="size-3 rounded-full bg-[linear-gradient(135deg,#fff5a5,#f27a28)]" /> TrueMemory</div>
             <div className="mt-5 rounded-md border border-white/10 px-2 py-1.5 text-[#777a72]">⌕ Search</div>
             <p className="mt-5 text-[10px] uppercase tracking-[0.16em] text-[#6d7068]">Workspace</p>
             <p className="mt-2 rounded-md bg-[#31321f] px-2 py-1.5 text-[#f6e879]">Quick start</p>
@@ -545,7 +545,7 @@ export default function Home() {
     >
       {showPromoBanner && (
         <div className="relative bg-[#fa5a19] px-4 py-2.5 text-center text-sm font-medium text-white">
-          <span>Kontext Web is live. Search, scrape, map, crawl, and extract with one API.</span>
+          <span>TrueMemory stores and retrieves durable context through one memory layer.</span>
           <Link href="#pricing" className="ml-2 underline underline-offset-2 hover:text-white/80">
             Try it now →
           </Link>
@@ -575,7 +575,7 @@ export default function Home() {
             <HeroCanvas workspaceHref={workspaceHref} workspaceLabel={workspaceLabel} />
           </div>
           <p className="site-container px-2 pb-3 pt-16 text-pretty text-[clamp(1.6rem,3.1vw,3rem)] leading-[1.18] tracking-[-0.045em] text-[#595c50] dark:text-[#d4d4c9] sm:px-6 lg:pt-20">
-            kontext is a <span className="text-[#e76f22]">memory and context layer</span> for builders, designed to keep files, decisions, and agent actions connected in one grounded workspace.
+            TrueMemory is a <span className="text-[#e76f22]">universal memory layer</span> for builders, designed to keep useful context connected across agents, applications, and sessions.
           </p>
         </section>
 
@@ -634,7 +634,7 @@ export default function Home() {
               </article>
 
               <DitherShowcase tone="midnight" className="min-h-[340px]">
-                <div className="flex min-h-[340px] items-center justify-center p-6"><div className="w-full max-w-[530px] overflow-hidden rounded-[12px] border border-[#20231f] bg-[#11130f] text-[#f5f4e9] shadow-[0_16px_30px_-16px_rgba(0,0,0,0.72)]"><div className="border-b border-white/10 px-4 py-3 text-xs text-[#a8aba2]">kontext · quick start</div><div className="grid gap-3 p-5 sm:grid-cols-2"><div className="rounded-md border border-white/10 p-3"><p className="text-xs font-semibold">Memory core</p><p className="mt-2 text-[11px] leading-5 text-[#a8aba2]">Recent context, project memory, durable memory.</p></div><div className="rounded-md border border-white/10 p-3"><p className="text-xs font-semibold">Agent tools</p><p className="mt-2 text-[11px] leading-5 text-[#a8aba2]">Search, inspect, approve, and recover.</p></div></div></div></div>
+                <div className="flex min-h-[340px] items-center justify-center p-6"><div className="w-full max-w-[530px] overflow-hidden rounded-[12px] border border-[#20231f] bg-[#11130f] text-[#f5f4e9] shadow-[0_16px_30px_-16px_rgba(0,0,0,0.72)]"><div className="border-b border-white/10 px-4 py-3 text-xs text-[#a8aba2]">TrueMemory · quick start</div><div className="grid gap-3 p-5 sm:grid-cols-2"><div className="rounded-md border border-white/10 p-3"><p className="text-xs font-semibold">Memory core</p><p className="mt-2 text-[11px] leading-5 text-[#a8aba2]">Recent context, project memory, durable memory.</p></div><div className="rounded-md border border-white/10 p-3"><p className="text-xs font-semibold">Agent tools</p><p className="mt-2 text-[11px] leading-5 text-[#a8aba2]">Search, inspect, approve, and recover.</p></div></div></div></div>
               </DitherShowcase>
 
               <DocsCard className="min-h-[340px]">
@@ -711,7 +711,7 @@ export default function Home() {
                     The right context, at the right depth.
                   </h2>
                   <p className="mt-6 max-w-lg text-pretty text-base leading-8 text-[#d9ddd4]">
-                    kontext assembles a working view of your task without dumping your entire history into every prompt. Useful memory stays close. Noise stays out.
+                    TrueMemory assembles a working view of your task without dumping your entire history into every prompt. Useful memory stays close. Noise stays out.
                   </p>
                 </div>
                 <div className="inline-flex w-fit items-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.15em] text-[#f6e879]">
@@ -813,7 +813,7 @@ export default function Home() {
                     <ArrowUpRight aria-hidden="true" className="size-4" />
                   </a>
                   <span className="inline-flex min-h-11 items-center rounded-full border border-[#d4d0c7] bg-white px-4 text-sm font-medium text-[#76756f] dark:border-white/15 dark:bg-white/5 dark:text-[#d8d8d2]">
-                    Kontext / terminal
+                    TrueMemory / terminal
                   </span>
                 </div>
               </div>
@@ -826,7 +826,7 @@ export default function Home() {
                     <span className="size-2 rounded-full bg-[#CAE0DA]" />
                   </div>
                   <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#737b6e]">
-                    Kontext / terminal
+                    TrueMemory / terminal
                   </span>
                 </div>
                 <div className="space-y-6 p-5 font-mono text-[12px] leading-7 sm:p-7 sm:text-[13px]">
@@ -916,7 +916,7 @@ export default function Home() {
                   Bring every source into one grounded workspace.
                 </h2>
                 <p className="mt-6 max-w-2xl text-pretty text-base leading-8 text-[#676c62] dark:text-[#aeb5a7]">
-                  Upload documents, connect live URLs, or sync an entire sitemap. kontext tracks tokens, vectors, and indexing status before an agent uses the source.
+                  Upload documents, connect live URLs, or sync an entire sitemap. TrueMemory tracks source and indexing status before an agent uses the context.
                 </p>
               </div>
               <div className="flex flex-wrap gap-3 lg:max-w-[360px] lg:justify-end">
@@ -1002,7 +1002,7 @@ export default function Home() {
                       Docs starter
                     </span>
                     <span className="rounded-full border border-[#e2d8c8] bg-white/75 px-3 py-1 font-mono text-[10px] text-[#59544c] backdrop-blur dark:border-white/10 dark:bg-black/35 dark:text-white/60">
-                      pnpm create Kontext
+                      pnpm create TrueMemory
                     </span>
                   </div>
                   <div className="relative mt-5 h-[240px] overflow-hidden rounded-[22px] border border-[#eadcc9] bg-[#0e0d0c] dark:border-white/10 sm:h-[280px] lg:h-[320px]">
@@ -1023,10 +1023,10 @@ export default function Home() {
                     <div className="rounded-[22px] border border-black/10 bg-[#1a1a1a] p-4 text-white shadow-[0_18px_50px_-36px_rgba(0,0,0,0.85)] backdrop-blur">
                       <div className="flex items-center gap-2 border-b border-white/10 pb-3 text-[11px] font-medium text-white/70">
                         <span className="size-2 rounded-full bg-[#f6821f]" />
-                        Kontext CLI
+                        TrueMemory CLI
                       </div>
                       <div className="mt-4 space-y-3 font-mono text-[12px] leading-6 text-white/85">
-                        <p>$ pnpm create Kontext</p>
+                        <p>$ pnpm create TrueMemory</p>
                         <p>• docs
                           <br />• memory
                           <br />• workspace
@@ -1037,13 +1037,13 @@ export default function Home() {
                     <div className="relative overflow-hidden rounded-[22px] border border-[#d9d0c1] bg-[#f8f3ea]/85 p-4 shadow-[0_18px_50px_-36px_rgba(46,38,24,0.45)] backdrop-blur dark:border-white/10 dark:bg-[#151311]/80">
                       <div className="rounded-[18px] border border-[#ded7ca] bg-white/76 p-3 backdrop-blur dark:border-white/10 dark:bg-black/45">
                         <div className="flex items-center justify-between gap-3">
-                          <p className="text-sm font-semibold text-[#262626] dark:text-white">Kontext Story</p>
+                          <p className="text-sm font-semibold text-[#262626] dark:text-white">TrueMemory Story</p>
                           <span className="rounded-full border border-[#e5d9cb] bg-[#fff7ef] px-2.5 py-1 text-[10px] font-semibold text-[#a14f16] dark:border-white/10 dark:bg-white/5 dark:text-[#f6e879]">
                             Explore
                           </span>
                         </div>
                         <p className="mt-3 max-w-sm text-sm leading-6 text-[#595959] dark:text-white/70">
-                          Built for Kontext surfaces. Bring docs, stories, and agent explanations into one interactive block.
+                          Built for TrueMemory surfaces. Bring docs, stories, and agent explanations into one interactive block.
                         </p>
                         <div className="mt-4 rounded-[14px] border border-[#ded7ca] bg-white/90 p-3 dark:border-white/10 dark:bg-black/55">
                           <div className="flex items-center gap-2 text-xs font-medium text-[#262626] dark:text-white">
@@ -1051,7 +1051,7 @@ export default function Home() {
                             Agent note
                           </div>
                           <p className="mt-2 text-sm text-[#5f5f5f] dark:text-white/70">
-                            This is the same kind of component-driven surface Kontext can expose for agents and docs.
+                            This is the same kind of component-driven surface TrueMemory can expose for agents and docs.
                           </p>
                         </div>
                       </div>
@@ -1065,7 +1065,7 @@ export default function Home() {
                 <div className="relative z-10 flex min-h-[420px] flex-col p-6">
                   <div className="text-center">
                     <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d96c28] dark:text-[#f6e879]">
-                      kontext
+                      TrueMemory
                     </p>
                     <h3 className="mt-4 font-mono text-3xl font-extrabold uppercase tracking-[-0.05em] text-[#282b24] dark:text-[#f2f1e8] lg:text-[2.2rem]">
                       Build your Context
@@ -1111,7 +1111,7 @@ export default function Home() {
                   <div className="relative z-10 flex min-h-[420px] flex-col justify-end pt-[48%]">
                   <div className="w-full rounded-[22px] border border-[#ded7ca] bg-white/78 p-4 shadow-[0_18px_50px_-36px_rgba(46,38,24,0.45)] backdrop-blur dark:border-white/10 dark:bg-black/45">
                     <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-[#8a3d09] dark:text-[#f6e879]">
-                      Kontext Story
+                      TrueMemory Story
                     </p>
                     <h3 className="mt-3 text-2xl font-semibold tracking-[-0.04em] text-[#262626] dark:text-white">
                       A reusable story surface for agent-driven docs.
@@ -1187,7 +1187,7 @@ export default function Home() {
                 {
                   id: "free",
                   name: "Free",
-                  description: "For individuals exploring kontext.",
+                  description: "For individuals exploring TrueMemory.",
                   monthlyPrice: 0,
                   yearlyPrice: 0,
                   currency: "$",
@@ -1211,7 +1211,7 @@ export default function Home() {
                 {
                   id: "team",
                   name: "Team",
-                  description: "For teams building with kontext.",
+                  description: "For teams building with TrueMemory.",
                   monthlyPrice: 79,
                   yearlyPrice: 758,
                   currency: "$",
@@ -1298,7 +1298,7 @@ export default function Home() {
             <div>
               <div className="flex items-center gap-3 text-[#11140f] dark:text-white">
                 <BrandMark />
-                <span className="text-[15px] font-semibold">kontext</span>
+                <span className="text-[15px] font-semibold">TrueMemory</span>
               </div>
               <p className="mt-5 max-w-md text-pretty text-base font-medium leading-7 text-[#353a32] dark:text-[#e4e7df]">
                 The context layer for agents that need to remember, retrieve, and act with confidence.
@@ -1364,7 +1364,7 @@ export default function Home() {
             </div>
           </div>
           <div className="flex flex-col gap-3 pt-6 font-mono text-[10px] uppercase tracking-[0.14em] text-[#687064] sm:flex-row sm:items-center sm:justify-between">
-            <span>© 2026 Aman Agent Lab</span>
+            <span>© 2026 TrueMemory</span>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
               <span className="inline-flex items-center gap-2">
                 <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
@@ -1376,8 +1376,8 @@ export default function Home() {
               </span>
             </div>
           </div>
-          <div className="footer-dither-wordmark select-none overflow-hidden pt-14 text-center text-[clamp(4.5rem,14vw,12rem)] font-medium leading-[0.76] tracking-[0.04em]" aria-label="Kontext">
-            KONTEXT
+          <div className="footer-dither-wordmark select-none overflow-hidden pt-14 text-center text-[clamp(4.5rem,14vw,12rem)] font-medium leading-[0.76] tracking-[0.04em]" aria-label="TrueMemory">
+            TRUEMEMORY
           </div>
         </div>
       </footer>

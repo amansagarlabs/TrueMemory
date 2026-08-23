@@ -11,7 +11,7 @@ const plans: PricingPlan[] = [
   {
     id: "free",
     name: "Free",
-    description: "For individuals exploring kontext.",
+    description: "For individuals exploring TrueMemory.",
     monthlyPrice: 0,
     yearlyPrice: 0,
     currency: "$",
@@ -56,7 +56,7 @@ const plans: PricingPlan[] = [
   {
     id: "team",
     name: "Team",
-    description: "For teams building with kontext.",
+    description: "For teams building with TrueMemory.",
     monthlyPrice: 79,
     yearlyPrice: 758,
     currency: "$",
@@ -161,7 +161,7 @@ export default function PricingPage() {
           </Link>
           <Link href="/" className="flex items-center gap-2.5 text-[17px] font-semibold tracking-[-0.03em]">
             <span aria-hidden="true" className="size-6 rounded-full bg-[linear-gradient(135deg,#fff5a5,#f6e66c_42%,#f27a28)]" />
-            kontext
+            TrueMemory
           </Link>
         </header>
       </div>
@@ -202,7 +202,7 @@ export default function PricingPage() {
         <div className="text-center">
           <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-[#f6e879]">What you get</p>
           <h2 className="mt-4 text-3xl font-medium tracking-[-0.05em] sm:text-4xl">Every plan includes</h2>
-          <p className="mx-auto mt-3 max-w-xl text-sm text-white/40">Core capabilities that make kontext a grounded workspace, not just another chatbot.</p>
+          <p className="mx-auto mt-3 max-w-xl text-sm text-white/40">Core capabilities that make TrueMemory a dependable infrastructure layer, not just another chatbot.</p>
         </div>
         <div className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {features.map((feature) => (
@@ -262,7 +262,7 @@ export default function PricingPage() {
             ["Is there a free trial for Pro?", "Yes. Every new account starts with a 14-day Pro trial. No credit card required. After the trial, you can choose to upgrade or continue on the Free plan."],
             ["Do you offer annual billing?", "Yes. Annual billing saves 20% compared to monthly. You can switch from monthly to annual at any time from your billing settings."],
             ["What payment methods do you accept?", "We accept all major credit cards (Visa, Mastercard, Amex) via Stripe. Team and Enterprise plans can also pay via invoice."],
-            ["Can I self-host kontext?", "Yes. kontext is open-source. You can self-host the entire stack including the Next.js frontend, FastAPI backend, PostgreSQL, and vector database."],
+            ["Can I self-host TrueMemory?", "Yes. TrueMemory is open-source. You can self-host the stack including the Next.js frontend, FastAPI backend, PostgreSQL, and vector database."],
           ].map(([question, answer]) => (
             <FaqItem key={question} question={question} answer={answer} />
           ))}

@@ -169,7 +169,7 @@ export function AppSidebar({
                 </div>
                 <div className="grid min-w-0 flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                   <span className="truncate font-semibold">
-                    {activeWorkspace?.name || "Kontext"}
+                    {activeWorkspace?.name || "TrueMemory"}
                   </span>
                   <span className="truncate text-xs text-sidebar-foreground/65">
                     {planLabel}

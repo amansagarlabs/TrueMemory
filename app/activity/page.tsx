@@ -187,7 +187,7 @@ export default function ActivityPage() {
               aria-hidden="true"
               className="size-6 rounded-full bg-[linear-gradient(135deg,#fff5a5,#f6e66c_42%,#f27a28)]"
             />
-            kontext
+            TrueMemory
           </Link>
         </header>
 
@@ -207,14 +207,13 @@ export default function ActivityPage() {
           <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(90deg,#f3eadf_0%,rgba(243,234,223,0.95)_50%,rgba(243,234,223,0.3)_100%)] dark:bg-[linear-gradient(90deg,#0c0a08_0%,rgba(12,10,8,0.94)_50%,rgba(12,10,8,0.2)_100%)]" />
           <div className="relative z-10 max-w-2xl">
             <p className="font-mono text-[10px] font-medium uppercase tracking-[0.17em] text-[#b64d0c] dark:text-[#f6e879]">
-              Context history
+              TrueMemory / Activity
             </p>
             <h1 className="mt-3 text-balance font-heading text-4xl font-medium leading-[1.02] tracking-[-0.055em] sm:text-5xl">
-              Everything Kontext remembered.
+              Everything happening across your memory layer.
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-7 text-[#77695f] dark:text-white/45">
-              Review the conversations, durable memory, and uploaded artifacts that shaped your workspace, ordered
-              from the latest work back through its history.
+              Review stored memories, conversations, and artifacts from the latest activity back through its history.
             </p>
           </div>
         </section>
@@ -298,7 +297,7 @@ export default function ActivityPage() {
               </div>
               <h2 className="mt-4 text-base font-semibold">No matching activity</h2>
               <p className="mt-1.5 max-w-sm text-sm leading-6 text-[#8d7d72] dark:text-white/35">
-                {query ? "Try a different search or activity filter." : "Your remembered work will appear here as you use Kontext."}
+                {query ? "Try a different search or activity filter." : "Activity will appear here as you use TrueMemory."}
               </p>
             </div>
           ) : (
@@ -408,7 +407,7 @@ function MemoryEntry({ item }: { item: MemoryItem }) {
         </div>
         <p className="mt-1 text-[13px] leading-5 text-[#77685e] dark:text-white/45">{item.content}</p>
         <p className="mt-1.5 font-mono text-[10px] text-[#aa998c] dark:text-white/25">
-          {formatDateTime(item.updated_at)} · {item.source || "Kontext"}
+          {formatDateTime(item.updated_at)} · {item.source || "TrueMemory"}
         </p>
       </div>
     </article>

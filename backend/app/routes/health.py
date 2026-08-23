@@ -7,7 +7,7 @@ LEARNING: Load balancers and frontends call `/health` before routing traffic.
 
 import time
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 
 from app.config import get_settings
 from services.postgres_store import check_postgres_connection
@@ -43,6 +43,20 @@ async def health_check(request: Request):
         "postgres_host": postgres["host"],
         "postgres_user": postgres.get("user", ""),
         "postgres_reason": postgres.get("reason", ""),
+    }
+
+
+@router.get("/readiness")
+async def readiness_check() -> dict[str, object]:
+    """Return dependency readiness separately from process liveness."""
+    settings = get_settings()
+    postgres = check_postgres_connection(settings)
+    if not postgres["connected"]:
+        raise HTTPException(status_code=503, detail={"status": "not_ready", "postgres": postgres})
+    return {
+        "status": "ready",
+        "service": "ai-pdf-learning-workspace",
+        "dependencies": {"postgres": "ready"},
     }
 
 

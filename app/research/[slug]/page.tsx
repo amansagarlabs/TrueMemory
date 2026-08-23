@@ -31,13 +31,13 @@ export async function generateMetadata({
 
   if (!item) {
     return {
-      title: "Research not found | Kontext Research",
+      title: "Research not found | TrueMemory Research",
       description: "Research paper not found",
     };
   }
 
   return {
-    title: `${item.title} | Kontext Research`,
+    title: `${item.title} | TrueMemory Research`,
     description: item.abstract || item.description,
     keywords: item.tags.join(", "),
     openGraph: {

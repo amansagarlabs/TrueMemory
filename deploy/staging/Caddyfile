@@ -1,0 +1,23 @@
+{$STAGING_DOMAIN} {
+    encode gzip
+    request_body {
+        max_size 25MB
+    }
+    reverse_proxy backend:8000 {
+        health_uri /readiness
+        health_interval 10s
+        health_timeout 3s
+        transport http {
+            read_timeout 120s
+            write_timeout 120s
+        }
+    }
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+        -Server
+    }
+}
+
+http://{$STAGING_DOMAIN} {
+    redir https://{$STAGING_DOMAIN}{uri} permanent
+}

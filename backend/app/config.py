@@ -34,6 +34,7 @@ def _build_postgres_url(
 
 @dataclass
 class Settings:
+    environment: str = "development"
     backend_host: str = "0.0.0.0"
     backend_port: int = 8000
     cors_origins: list[str] = field(
@@ -179,6 +180,7 @@ def get_settings() -> Settings:
         database_mode = "local"
 
     return Settings(
+        environment=os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "development")).strip().lower(),
         backend_host=os.getenv("BACKEND_HOST", "0.0.0.0"),
         backend_port=int(os.getenv("BACKEND_PORT", "8000")),
         cors_origins=[o.strip() for o in cors.split(",")],

@@ -119,7 +119,7 @@ export default function ResearchPage() {
         <header className="flex flex-col sm:flex-row items-center gap-4 border-b border-[#e5d8c9] pb-6 dark:border-white/10 lg:items-end lg:justify-between">
           <div>
             <h1 className="max-w-2xl text-balance text-4xl font-semibold tracking-[-0.045em] sm:text-5xl lg:text-6xl">
-              KONTEXT RESEARCH
+              TRUE MEMORY RESEARCH
             </h1>
             <p className="mt-3 max-w-2xl text-pretty text-base leading-7 text-[#786a60] dark:text-[#786a60]/45 sm:text-lg">
               Researching the infrastructure behind persistent AI context.

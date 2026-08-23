@@ -87,7 +87,10 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
         : await loginWithEmail({ email: trimmedEmail, password: trimmedPassword });
 
       saveAuthSession(result.session, result.user);
-      router.replace(isSignup ? "/onboarding" : redirectTo);
+      // Reload after persisting auth so the onboarding/auth guards read the
+      // newly-created session from a clean document. Soft navigation can race
+      // the first client render on signup in the production app shell.
+      window.location.assign(isSignup ? "/onboarding" : redirectTo);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Authentication failed.",
@@ -104,7 +107,7 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
     <div className="flex w-full max-w-[460px] flex-col rounded-[24px] border border-border bg-card p-6 text-card-foreground shadow-[0_1px_2px_rgba(39,23,13,0.04),0_20px_56px_-32px_rgba(74,39,17,0.18)] sm:min-h-[560px] sm:p-8 dark:border-white/10 dark:bg-[#0d0d0c] dark:shadow-[0_30px_80px_-42px_rgba(0,0,0,0.7)]">
       <div className="mb-8 min-h-[118px]">
         <p className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-[#bd4f13] dark:text-[#f6e879]">
-          Kontext workspace
+          TrueMemory workspace
         </p>
         <h1 className="mt-4 font-heading text-3xl font-semibold tracking-[-0.05em] text-foreground sm:text-4xl dark:text-[#f4f3ec]">
           {isSignup ? "Create your account" : "Welcome back"}

@@ -18,17 +18,25 @@ import {
 } from "@/services/dashboard";
 
 type MemoryStatus = "all" | "pending" | "approved" | "rejected" | "superseded" | "archived";
+type MemoryType = "all" | "profile" | "fact" | "preference" | "episode" | "entity";
 
 export default function MemoryPage() {
   const [items, setItems] = useState<MemoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<MemoryStatus>("all");
+  const [typeFilter, setTypeFilter] = useState<MemoryType>("all");
   const [message, setMessage] = useState("");
   const [editing, setEditing] = useState<MemoryItem | null>(null);
   const [editContent, setEditContent] = useState("");
   const [saving, setSaving] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
+  const visibleItems = typeFilter === "all"
+    ? items
+    : items.filter((item) => {
+        if (typeFilter === "profile") return item.managed_by === "profile";
+        return (item.memory_type || "fact").toLowerCase() === typeFilter;
+      });
 
   const reload = useCallback(async (search = query, lifecycle = status) => {
     setLoading(true);
@@ -106,7 +114,7 @@ export default function MemoryPage() {
       await reload();
       setMessage(`${incoming.length} memories imported into profile memory.`);
     } catch {
-      setMessage("Choose a valid Kontext memory JSON file.");
+      setMessage("Choose a valid TrueMemory memory JSON file.");
     }
     event.target.value = "";
   }
@@ -123,8 +131,8 @@ export default function MemoryPage() {
             <PaperDither className="inset-y-0 right-0 w-1/2 opacity-75" dark={{ colorBack: "#0d0b0800", colorFront: "#e85d18" }} light={{ colorBack: "#fffaf6", colorFront: "#d86516" }} eager maxPixelCount={800 * 360} scale={.72} shape="warp" size={2.2} speed={.15} type="4x4" />
             <div className="absolute inset-0 bg-[linear-gradient(90deg,#0d0b08_0%,rgba(13,11,8,.94)_55%,transparent)]" />
             <div className="relative z-10 max-w-2xl">
-              <p className="font-mono text-[10px] uppercase tracking-[.18em] text-[#f6e879]">Context layer / Memory</p>
-              <h1 className="mt-3 font-heading text-4xl tracking-[-.055em]">Memory you can inspect and control.</h1>
+              <p className="font-mono text-[10px] uppercase tracking-[.18em] text-[#f6e879]">TrueMemory / Memory</p>
+              <h1 className="mt-3 font-heading text-4xl tracking-[-.055em]">Your memory, visible and under your control.</h1>
               <p className="mt-4 max-w-[65ch] text-sm leading-7 text-white/45">
                 Review the durable facts, decisions, preferences, and task state used to ground future answers. Changes preserve provenance and history.
               </p>
@@ -149,7 +157,15 @@ export default function MemoryPage() {
                 <span className="sr-only">Search memory</span>
                 <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search memory" className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-white/25" />
               </label>
-              <select value={status} onChange={(event) => setStatus(event.target.value as MemoryStatus)} aria-label="Filter memory status" className="min-h-11 rounded-xl border border-white/10 bg-black/25 px-3 text-sm text-white/65 outline-none">
+                <select value={typeFilter} onChange={(event) => setTypeFilter(event.target.value as MemoryType)} aria-label="Filter memory type" className="min-h-11 rounded-xl border border-white/10 bg-black/25 px-3 text-sm text-white/65 outline-none">
+                  <option value="all">All memory</option>
+                  <option value="profile">Profiles</option>
+                  <option value="fact">Facts</option>
+                  <option value="preference">Preferences</option>
+                  <option value="episode">Episodes</option>
+                  <option value="entity">Entities</option>
+                </select>
+                <select value={status} onChange={(event) => setStatus(event.target.value as MemoryStatus)} aria-label="Filter memory status" className="min-h-11 rounded-xl border border-white/10 bg-black/25 px-3 text-sm text-white/65 outline-none">
                 <option value="all">All statuses</option>
                 <option value="pending">Needs review</option>
                 <option value="approved">Approved</option>
@@ -157,14 +173,14 @@ export default function MemoryPage() {
                 <option value="superseded">Superseded</option>
                 <option value="archived">Archived</option>
               </select>
-              <span className="px-2 font-mono text-[11px] tabular-nums text-white/35">{loading ? "…" : `${items.length} records`}</span>
+              <span className="px-2 font-mono text-[11px] tabular-nums text-white/35">{loading ? "…" : `${visibleItems.length} memories`}</span>
             </div>
 
             {loading ? (
               <div className="space-y-4 p-5">{Array.from({ length: 4 }, (_, index) => <Skeleton key={index} className="h-28 rounded-2xl" />)}</div>
-            ) : items.length ? (
+            ) : visibleItems.length ? (
               <div className="divide-y divide-white/[.06]">
-                {items.map((item) => <MemoryCard key={item.id} item={item} onAction={act} onEdit={() => { setEditing(item); setEditContent(item.content); }} />)}
+                {visibleItems.map((item) => <MemoryCard key={item.id} item={item} onAction={act} onEdit={() => { setEditing(item); setEditContent(item.content); }} />)}
               </div>
             ) : (
               <div className="p-12 text-center text-sm text-white/35">No memories match this workspace, project, and filter.</div>

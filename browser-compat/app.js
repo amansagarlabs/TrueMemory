@@ -17,5 +17,16 @@ export async function runTrueMemoryProbe({ baseUrl, token, workspaceId, agentId 
 }
 
 globalThis.document?.querySelector("#run")?.addEventListener("click", async () => {
-  document.querySelector("#output").textContent = "Provide a short-lived token through the host integration to run this probe.";
+  const output = document.querySelector("#output");
+  const config = globalThis.__TRUEMEMORY_BROWSER_CONFIG__;
+  if (!config) {
+    output.textContent = "Provide a short-lived token through the host integration to run this probe.";
+    return;
+  }
+  try {
+    output.textContent = JSON.stringify(await runTrueMemoryProbe(config));
+  } catch (error) {
+    output.textContent = JSON.stringify({ error: error instanceof Error ? error.message : String(error) });
+    throw error;
+  }
 });

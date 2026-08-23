@@ -16,6 +16,7 @@
     "test:mcp:external": "python backend/scripts/memory_mcp_external_client.py",
     "test:node": "node --import tsx --test tests/web-intel-cache.test.ts tests/web-intel-agent.test.ts tests/web-intel-routes.test.ts tests/web-intel-security.test.ts tests/usage-counter-refresh.test.ts tests/middleware-auth.test.ts",
     "test:e2e": "playwright test",
+    "test:e2e:browser-compat": "node scripts/run-browser-compat.mjs",
     "test:evaluation": "python backend/evaluation/run_evals.py"
   },
   "dependencies": {
