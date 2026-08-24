@@ -138,7 +138,7 @@ export default function ProjectsPage() {
                 aria-hidden="true"
                 className="size-6 rounded-full bg-[linear-gradient(135deg,#ffb36b,#f19045_42%,#bd4f13)]"
               />
-              kontext
+              TrueMemory
             </Link>
           </header>
 

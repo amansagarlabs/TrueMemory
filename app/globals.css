@@ -1594,7 +1594,7 @@ main.homepage-shell [class*="max-w-[1216px]"] {
   animation: agent-thinking-shimmer 1.9s ease-in-out infinite;
 }
 
-/* Welcome-only dither mark: six tapered arms matching the Kontext asterisk. */
+/* Welcome-only dither mark: six tapered arms matching the TrueMemory mark. */
 .welcome-kontext-mark {
   filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--chat-accent) 22%, transparent));
   clip-path: polygon(

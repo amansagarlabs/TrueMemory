@@ -123,7 +123,7 @@ export function SiteFooter() {
             </span>
           </div>
         </div>
-        <div className="footer-dither-wordmark select-none overflow-hidden pt-14 text-center text-[clamp(4.5rem,14vw,12rem)] font-medium leading-[0.76] tracking-[0.04em]" aria-label="Kontext">
+        <div className="footer-dither-wordmark select-none overflow-hidden pt-14 text-center text-[clamp(4.5rem,14vw,12rem)] font-medium leading-[0.76] tracking-[0.04em]" aria-label="TrueMemory">
           TRUEMEMORY
         </div>
       </div>

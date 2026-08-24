@@ -460,7 +460,7 @@ export async function streamChat(
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     if (res.status === 401) {
-      throw new Error("Your Kontext session expired. Please sign in again.");
+      throw new Error("Your TrueMemory session expired. Please sign in again.");
     }
     if (res.status === 403) {
       throw new Error("Your workspace plan does not allow this chat operation.");
@@ -471,7 +471,7 @@ export async function streamChat(
       data.detail.includes("OPENROUTER_API_KEY missing")
     ) {
       throw new Error(
-        "Kontext query is missing OPENROUTER_API_KEY on the backend. Add it to the server environment, then retry.",
+        "TrueMemory query is missing OPENROUTER_API_KEY on the backend. Add it to the server environment, then retry.",
       );
     }
     const validationMessage =

@@ -2654,7 +2654,7 @@ export default function ChatInterface() {
       const shouldShowInlineBanner = !isProviderFailure(message) && !hasImageRequest;
       const shouldShowOpenRouterConfigBanner =
         message.includes("OPENROUTER_API_KEY missing") ||
-        message.includes("Kontext query is missing OPENROUTER_API_KEY");
+        message.includes("TrueMemory query is missing OPENROUTER_API_KEY");
       setInlineError(
         shouldShowOpenRouterConfigBanner
           ? message
@@ -2845,7 +2845,7 @@ export default function ChatInterface() {
     const downloadUrl = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = downloadUrl;
-    link.download = `kontext-answer-${message.id}.md`;
+    link.download = `truememory-answer-${message.id}.md`;
     document.body.appendChild(link);
     link.click();
     link.remove();
@@ -2886,7 +2886,7 @@ export default function ChatInterface() {
       ? `${window.location.origin}/chat?id=${encodeURIComponent(currentConversationId)}`
       : window.location.href;
     const shareData = {
-      title: "Kontext answer",
+      title: "TrueMemory answer",
       text: message.content,
       url: conversationUrl,
     };
@@ -2896,7 +2896,7 @@ export default function ChatInterface() {
         await navigator.share(shareData);
       } else {
         await navigator.clipboard.writeText(
-          `${message.content}\n\nContinue in Kontext: ${conversationUrl}`,
+          `${message.content}\n\nContinue in TrueMemory: ${conversationUrl}`,
         );
       }
 
@@ -3170,7 +3170,7 @@ export default function ChatInterface() {
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
       video.srcObject = null;
       if (!blob) throw new Error("Screenshot capture returned no image.");
-      await addOcrImages([new File([blob], `kontext-screenshot-${Date.now()}.png`, { type: "image/png" })]);
+      await addOcrImages([new File([blob], `truememory-screenshot-${Date.now()}.png`, { type: "image/png" })]);
       setManualStatusMessage("Screenshot attached and ready for analysis.");
       window.requestAnimationFrame(() => textareaRef.current?.focus());
     } catch (error) {
@@ -3825,7 +3825,7 @@ export default function ChatInterface() {
               />
             ) : null}
 
-            <label htmlFor="chat-input" className="sr-only">Message Kontext</label>
+            <label htmlFor="chat-input" className="sr-only">Message TrueMemory</label>
             <ScrollArea
               viewportRef={composerScrollRef}
               orientation="vertical"
@@ -3841,7 +3841,7 @@ export default function ChatInterface() {
               value={input}
               placeholder={
                 typing
-                  ? "Message Kontext while it works..."
+                  ? "Message TrueMemory while it works..."
                   : imageModeSelected
                     ? "Describe the image you want..."
                     : !uploadedDocument || pipelineReady
@@ -4357,7 +4357,7 @@ function Welcome({
       </div>
       <div className="mt-3 inline-flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--chat-subtle-foreground)]">
         <span className="size-2 rounded-full bg-[var(--chat-accent)]" aria-hidden="true" />
-        Kontext
+        TrueMemory
       </div>
       <h2 className="mt-2 text-balance font-heading text-2xl font-semibold tracking-[-0.04em] text-[var(--chat-foreground)] sm:text-3xl">
         What are you working on?

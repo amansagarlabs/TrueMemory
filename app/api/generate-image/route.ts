@@ -63,7 +63,7 @@ export async function POST(req: Request) {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
         "HTTP-Referer": process.env.OPENROUTER_SITE_URL ?? "http://localhost:3000",
-        "X-Title": "Kontext",
+        "X-Title": "TrueMemory",
       },
       body: JSON.stringify({
         model,

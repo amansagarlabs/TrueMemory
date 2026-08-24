@@ -164,7 +164,7 @@ export default function MessageList({
                 <div className="absolute inset-x-5 top-4 flex items-center justify-between sm:inset-x-6">
                   <span className="inline-flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--chat-subtle-foreground)]">
                     <span className="size-2 rounded-full bg-[var(--chat-accent)]" aria-hidden="true" />
-                    Kontext
+                    TrueMemory
                   </span>
                   {!msg.streaming ? (
                     <Tooltip>
@@ -193,7 +193,7 @@ export default function MessageList({
               {msg.replyTo ? (
                 <div className="mb-3 rounded-xl border border-[var(--chat-border)] bg-[var(--chat-background)] px-3 py-2 text-left">
                   <p className="font-mono text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--chat-accent)]">
-                    Asked about {msg.replyTo.role === "assistant" ? "Kontext's response" : "your message"}
+                    Asked about {msg.replyTo.role === "assistant" ? "TrueMemory's response" : "your message"}
                   </p>
                   <p className="mt-1 line-clamp-2 text-xs leading-5 text-[var(--chat-muted-foreground)]">
                     {msg.replyTo.content}
@@ -578,7 +578,7 @@ function StreamingAnswerShell({ activity, route, plan, sources, showReasoningSum
           <div className="absolute inset-x-5 top-4 flex items-center justify-between sm:inset-x-6">
             <span className="inline-flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--chat-subtle-foreground)]">
               <span className="size-2 rounded-full bg-[var(--chat-accent)]" aria-hidden="true" />
-              Kontext
+              TrueMemory
             </span>
           </div>
         <InlineRetrievalProgress activity={activity} route={route} plan={plan} sources={sources} showReasoningSummary={showReasoningSummary} fastMode={false} onStop={onStop} />

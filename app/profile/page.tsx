@@ -185,9 +185,9 @@ export default function ProfilePage() {
 
   const connectedPlatforms = [
     { name: "TrueMemory", connected: true, color: "#f6e879" },
-    { name: "Kontext Crawl", connected: true, color: "#67d9bd" },
+    { name: "TrueMemory Crawl", connected: true, color: "#67d9bd" },
     { name: "AmanAgentLab", connected: false, color: "#8c82ff" },
-    { name: "Kontext Web", connected: false, color: "#f06418" },
+    { name: "TrueMemory Web", connected: false, color: "#f06418" },
   ];
 
   return (

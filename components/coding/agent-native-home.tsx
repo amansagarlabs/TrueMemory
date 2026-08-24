@@ -548,7 +548,7 @@ export function CodingProjectSidebar({
     <aside className="coding-command-sidebar hidden h-dvh w-[252px] shrink-0 flex-col border-r border-white/[0.07] bg-[#090b0d] lg:flex">
       <div className="flex h-12 items-center gap-2 border-b border-white/[0.07] px-3">
         <span className="grid size-7 place-items-center rounded-lg bg-[#ff7138] text-black"><Sparkles className="size-3.5" /></span>
-        <span className="text-[12px] font-semibold text-white/82">Kontext</span>
+        <span className="text-[12px] font-semibold text-white/82">TrueMemory</span>
         <span className="ml-auto rounded-full border border-white/[0.08] px-2 py-1 font-mono text-[8px] uppercase tracking-[0.12em] text-white/25">Coding</span>
       </div>
       <div className="space-y-1 p-2">
@@ -681,7 +681,7 @@ export function AgentNativeHome({
           <div className="coding-thin-scrollbar mx-auto min-h-0 w-full max-w-[760px] flex-1 scroll-pb-8 space-y-5 overflow-y-auto pb-8 pr-1" aria-live="polite">
             {visibleThread.map((message) => (
               <article key={message.id} className={message.role === "user" ? "ml-auto max-w-[82%] rounded-[18px] border border-white/[0.045] bg-white/[0.07] px-4 py-3 shadow-[0_14px_40px_rgba(0,0,0,0.16)]" : "max-w-full rounded-2xl border border-white/[0.065] bg-white/[0.018] px-4 py-4"}>
-                <p className="mb-1.5 font-mono text-[8px] uppercase tracking-[0.15em] text-white/25">{message.role === "user" ? "You" : "Kontext"}</p>
+                <p className="mb-1.5 font-mono text-[8px] uppercase tracking-[0.15em] text-white/25">{message.role === "user" ? "You" : "TrueMemory"}</p>
                 {message.role === "assistant" ? <AgentMessageBody content={message.content} /> : <p className="whitespace-pre-wrap break-words text-[13px] leading-6 text-white/76">{message.content}</p>}
               </article>
             ))}
@@ -703,7 +703,7 @@ export function AgentNativeHome({
           <div className="mx-auto mb-8 w-full max-w-[760px] text-center">
             <p className="font-mono text-[9px] uppercase tracking-[0.2em] text-emerald-300/70">{sourceReady ? "Context ready" : "Repository required"}</p>
             <h2 className="mt-4 text-balance text-[clamp(30px,4vw,48px)] font-semibold leading-[1.04] tracking-[-0.05em] text-white/92">What should the agent ship?</h2>
-            <p className="mx-auto mt-4 max-w-[54ch] text-pretty text-[13px] leading-6 text-white/38">Describe the outcome. Kontext will inspect the repository, build a plan, coordinate bounded specialists, and keep side effects behind approval.</p>
+            <p className="mx-auto mt-4 max-w-[54ch] text-pretty text-[13px] leading-6 text-white/38">Describe the outcome. TrueMemory will inspect the repository, build a plan, coordinate bounded specialists, and keep side effects behind approval.</p>
           </div>
         )}
 

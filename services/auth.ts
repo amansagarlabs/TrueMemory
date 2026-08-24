@@ -10,7 +10,7 @@ type AuthResponse = {
 function throwConnectionError(error: unknown): never {
   if (error instanceof TypeError && /fetch|network|connection/i.test(error.message)) {
     throw new Error(
-      "Kontext backend is unavailable. Start the backend service, then try again.",
+      "TrueMemory backend is unavailable. Start the backend service, then try again.",
     );
   }
   throw error;

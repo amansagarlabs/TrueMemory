@@ -92,7 +92,7 @@ export function FumadocsNav() {
       <div className="site-container flex h-16 items-center justify-between gap-8 px-5 sm:px-8 lg:px-10">
         <Link href="/" className="flex shrink-0 items-center gap-1.5 text-[17px] font-semibold tracking-[-0.04em] text-[#171814] dark:text-[#f4f4ef]">
           <ContextMark aria-hidden="true" className="size-8 text-[#e45f18]" />
-          kontext
+          TrueMemory
         </Link>
 
         <NavigationMenu aria-label="Primary navigation" className="hidden lg:flex">
@@ -124,7 +124,7 @@ export function FumadocsNav() {
                     <div aria-hidden="true" className="absolute -right-12 -top-12 size-40 rounded-full bg-[#f27a28]/20 blur-3xl dark:bg-[#e67d2b]/10" />
                     <div className="relative">
                       <Badge className="border border-[#e6c7ad] bg-[#fff4e9] text-[10px] uppercase tracking-[0.12em] text-[#bd561a] dark:border-[#e67d2b]/20 dark:bg-[#e67d2b]/10 dark:text-[#e67d2b]">
-                        Kontext OS
+                        TrueMemory
                       </Badge>
                       <h3 className="mt-4 text-base font-semibold tracking-[-0.03em] text-[#24261f] dark:text-[#f2f1e8]">One context layer for every agent.</h3>
                       <p className="mt-2 text-xs leading-5 text-[#777a71] dark:text-[#999b92]">Portable memory, retrieval, sources, and permissions.</p>
@@ -187,7 +187,7 @@ export function FumadocsNav() {
             <SheetContent side="right" className="w-[300px] border-l border-[#e7e5df] bg-[#faf9f6] text-[#171814] dark:border-white/10 dark:bg-[#0b0b0b] dark:text-white">
               <div className="mt-8 flex items-center gap-1.5 border-b border-[#e7e5df] pb-5 dark:border-white/10">
                 <ContextMark aria-hidden="true" className="size-9 text-[#e45f18]" />
-                <span className="text-[17px] font-semibold tracking-[-0.03em]">kontext</span>
+                <span className="text-[17px] font-semibold tracking-[-0.03em]">TrueMemory</span>
               </div>
               <div className="mt-5 flex flex-col gap-1">
                 {links.map(([label, href]) => (
@@ -218,7 +218,7 @@ export function FumadocsNav() {
           <div role="dialog" aria-modal="true" aria-labelledby="search-title" className="w-full max-w-xl overflow-hidden rounded-[16px] border border-[#dedbd1] bg-[#faf9f6] shadow-[0_24px_80px_-28px_rgba(0,0,0,0.45)] dark:border-white/10 dark:bg-[#141512]">
             <div className="flex items-center gap-3 border-b border-[#dedbd1] px-4 dark:border-white/10">
               <Search aria-hidden="true" className="size-4 text-[#888b83]" />
-              <input autoFocus type="search" placeholder="Search kontext" aria-label="Search kontext" className="h-14 min-w-0 flex-1 bg-transparent text-sm text-[#595c50] outline-none placeholder:text-[#999b93] dark:text-[#f1f1e8]" />
+              <input autoFocus type="search" placeholder="Search TrueMemory" aria-label="Search TrueMemory" className="h-14 min-w-0 flex-1 bg-transparent text-sm text-[#595c50] outline-none placeholder:text-[#999b93] dark:text-[#f1f1e8]" />
               <button type="button" aria-label="Close search" onClick={() => setSearchOpen(false)} className="inline-flex size-9 items-center justify-center rounded-full text-[#777972] hover:bg-black/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#e76f22] dark:hover:bg-white/10"><X aria-hidden="true" className="size-4" /></button>
             </div>
             <div className="p-2" id="search-title">
