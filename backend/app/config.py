@@ -107,7 +107,7 @@ class Settings:
     github_oauth_frontend_url: str = "http://localhost:3000/connectors"
     github_oauth_scope: str = "read:user user:email"
     coding_runtime_enabled: bool = False
-    coding_runtime_image: str = "kontext-coding-runtime:local"
+    coding_runtime_image: str = "truememory-coding-runtime:local"
     coding_runtime_root: str = "data/coding_workspaces"
     coding_runtime_volume: str = ""
     coding_runtime_memory: str = "1024m"
@@ -251,7 +251,7 @@ def get_settings() -> Settings:
         coding_runtime_enabled=_env_bool("CODING_RUNTIME_ENABLED", False),
         coding_runtime_image=os.getenv(
             "CODING_RUNTIME_IMAGE",
-            "kontext-coding-runtime:local",
+            "truememory-coding-runtime:local",
         ),
         coding_runtime_root=os.getenv(
             "CODING_RUNTIME_ROOT",

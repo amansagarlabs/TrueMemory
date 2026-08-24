@@ -1,7 +1,7 @@
 # Local development stack: backend + local Postgres. Vector DB stays on Zilliz / Milvus.
 services:
   coding-runtime:
-    image: kontext-coding-runtime:local
+    image: truememory-coding-runtime:local
     build:
       context: ./backend/coding_runtime
       dockerfile: Dockerfile
@@ -55,7 +55,7 @@ services:
     restart: unless-stopped
 
   backend:
-    image: kontext-backend:local
+    image: truememory-backend:local
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -72,9 +72,9 @@ services:
       HF_HOME: /root/.cache/huggingface
       MEMORY_DB_PATH: /app/data/memory.db
       CODING_RUNTIME_ENABLED: ${CODING_RUNTIME_ENABLED:-true}
-      CODING_RUNTIME_IMAGE: kontext-coding-runtime:local
+      CODING_RUNTIME_IMAGE: truememory-coding-runtime:local
       CODING_RUNTIME_ROOT: /app/coding-workspaces
-      CODING_RUNTIME_VOLUME: kontext-coding-workspaces
+      CODING_RUNTIME_VOLUME: truememory-coding-workspaces
     dns:
       - 8.8.8.8
 
@@ -97,10 +97,9 @@ services:
       start_period: 20s
 
   coding-worker:
-    image: kontext-backend:local
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    # Reuse the backend image. Both services run the same Python environment;
+    # avoiding a second concurrent export prevents BuildKit tag collisions.
+    image: truememory-backend:local
     depends_on:
       postgres:
         condition: service_healthy
@@ -113,9 +112,9 @@ services:
       HF_HOME: /root/.cache/huggingface
       MEMORY_DB_PATH: /app/data/memory.db
       CODING_RUNTIME_ENABLED: ${CODING_RUNTIME_ENABLED:-true}
-      CODING_RUNTIME_IMAGE: kontext-coding-runtime:local
+      CODING_RUNTIME_IMAGE: truememory-coding-runtime:local
       CODING_RUNTIME_ROOT: /app/coding-workspaces
-      CODING_RUNTIME_VOLUME: kontext-coding-workspaces
+      CODING_RUNTIME_VOLUME: truememory-coding-workspaces
     dns:
       - 8.8.8.8
       - 8.8.4.4
@@ -142,4 +141,4 @@ volumes:
   pgadmin_data:
   huggingface_cache:
   coding_workspaces:
-    name: kontext-coding-workspaces
+    name: truememory-coding-workspaces
