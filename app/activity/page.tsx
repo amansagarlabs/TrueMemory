@@ -18,6 +18,7 @@ import {
 import { isAuthenticated } from "@/lib/auth";
 import { PaperDither } from "@/components/ui/paper-dither";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AuthenticatedAppShell } from "@/components/authenticated-app-shell";
 import {
   fetchRecentConversations,
   fetchRecentArtifacts,
@@ -172,7 +173,8 @@ export default function ActivityPage() {
   if (!authorized) return null;
 
   return (
-    <main className="min-h-screen bg-[#f6f1ea] text-[#15110f] dark:bg-[#070707] dark:text-white">
+    <AuthenticatedAppShell>
+    <main className="min-h-full bg-[#f6f1ea] text-[#15110f] dark:bg-[#070707] dark:text-white">
       <div className="mx-auto max-w-[1280px] px-5 py-6 sm:px-8 lg:px-10 lg:py-9">
         <header className="flex items-center justify-between gap-4">
           <Link
@@ -332,6 +334,7 @@ export default function ActivityPage() {
         </section>
       </div>
     </main>
+    </AuthenticatedAppShell>
   );
 }
 

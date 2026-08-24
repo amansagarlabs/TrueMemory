@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, type ReactNode } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
   ArrowRight,
@@ -31,6 +31,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import SubscriptionModal from "@/components/SubscriptionModal";
 import LimitReachedModal from "@/components/LimitReachedModal";
 import UsageCounter from "@/components/UsageCounter";
+import { AuthenticatedAppShell } from "@/components/authenticated-app-shell";
 import {
   scrapeUrl,
   crawlSite,
@@ -797,6 +798,7 @@ export default function AmanCrawlPage() {
   const resultLinks = result ? getResultLinks(result) : [];
 
   return (
+    <OptionalAuthenticatedShell enabled={mounted && Boolean(user)}>
     <main className="theme-surface-page min-h-screen bg-[var(--chat-background)] text-[var(--chat-foreground)]">
       {/* ── Promo Banner ──────────────────────────────────────────────── */}
       {showPromoBanner && (
@@ -1488,5 +1490,16 @@ console.log(result.json);
         onUpgrade={() => setShowSubscriptionModal(true)}
       />
     </main>
+    </OptionalAuthenticatedShell>
   );
+}
+
+function OptionalAuthenticatedShell({
+  enabled,
+  children,
+}: {
+  enabled: boolean;
+  children: ReactNode;
+}) {
+  return enabled ? <AuthenticatedAppShell>{children}</AuthenticatedAppShell> : <>{children}</>;
 }

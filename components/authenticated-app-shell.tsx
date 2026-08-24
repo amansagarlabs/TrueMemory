@@ -148,26 +148,28 @@ export function AuthenticatedAppShell({
 
   if (!user) {
     return (
-      <SidebarProvider>
-        <div className="hidden h-svh w-64 flex-col gap-4 border-r border-sidebar-border bg-sidebar p-3 md:flex">
+      <div className="min-h-svh bg-[var(--chat-frame)]">
+      <SidebarProvider className="bg-[var(--chat-frame)]">
+        <div className="m-2 mr-0 hidden h-[calc(100svh-1rem)] w-64 shrink-0 flex-col gap-4 rounded-[22px] border border-sidebar-border bg-sidebar p-3 shadow-[0_16px_42px_-30px_rgba(0,0,0,.5)] md:flex">
           <div className="h-12 animate-pulse rounded-xl bg-sidebar-accent" />
           <div className="space-y-2">
             {["w-4/5", "w-3/5", "w-2/3", "w-4/5"].map((width, index) => <div key={`sidebar-skeleton-${index}`} className={`h-9 animate-pulse rounded-lg bg-sidebar-accent/70 ${width}`} />)}
           </div>
         </div>
-        <SidebarInset className="min-w-0 overflow-hidden" />
+        <SidebarInset className="m-2 h-[calc(100svh-1rem)] min-w-0 overflow-hidden rounded-[24px] border border-[var(--chat-frame-border)] bg-[var(--chat-background)] md:ml-2" />
       </SidebarProvider>
+      </div>
     );
   }
 
-  if (variant === "chat") {
-    return (
+  return (
       <div className="min-h-svh bg-[var(--chat-frame)] text-[var(--chat-foreground)]">
       <SidebarProvider className="bg-[var(--chat-frame)]">
         <ChatAppSidebar user={user} workspaces={workspaces} activeWorkspaceId={activeWorkspaceId} onSelectWorkspace={selectWorkspace} onCreateWorkspace={() => setCreateDialogOpen(true)} onSignOut={signOut} stats={stats} features={{ agents: PLAN_AGENTS[user.plan] }} workspacesLoading={workspacesLoading} />
         <SidebarInset className="m-2 h-[calc(100svh-1rem)] min-h-0 min-w-0 self-start overflow-hidden rounded-[24px] border border-[var(--chat-frame-border)] bg-[var(--chat-background)] text-[var(--chat-foreground)] shadow-[0_1px_2px_rgba(0,0,0,.08),0_18px_48px_-34px_rgba(0,0,0,.65)] md:ml-0">
         <header className="sticky top-0 z-[60] h-16 border-b border-[var(--chat-border)] bg-[color-mix(in_srgb,var(--chat-background)_88%,transparent)] backdrop-blur-xl">
           <div className="relative mx-auto flex h-full items-center gap-4 px-4 sm:px-6">
+            <SidebarTrigger className="inline-flex size-9 rounded-lg border border-[var(--chat-border)] bg-[var(--chat-surface)] text-[var(--chat-muted-foreground)] shadow-sm transition-[background-color,color,transform] duration-150 hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)] active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-[var(--chat-focus)] md:hidden" />
             <nav aria-label="Primary navigation" className="chat-top-nav-island absolute left-1/2 top-0 hidden  -translate-x-1/2 items-center justify-between gap-0.5 rounded-b-[20px] border-x border-b border-[var(--chat-nav-border)] bg-[var(--chat-nav-shell)] px-2 pb-1.5 pt-2 shadow-[0_1px_2px_rgba(0,0,0,.16),0_14px_34px_-24px_rgba(0,0,0,.72)] md:flex">
               {CHAT_TOP_NAVIGATION.map((item) => {
                 const active = pathname === item.href.split("?")[0];
@@ -201,23 +203,10 @@ export function AuthenticatedAppShell({
           </div>
         </header>
         <TrueMemoryCommandPalette />
-        <main className="min-h-0 flex-1 overflow-hidden">{children}</main>
+        <main className={variant === "chat" ? "min-h-0 flex-1 overflow-hidden" : "min-h-0 flex-1 overflow-y-auto"}>{children}</main>
         <CreateWorkspaceDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} onSubmit={createWorkspace} />
         </SidebarInset>
       </SidebarProvider>
       </div>
     );
-  }
-
-  return (
-    <SidebarProvider>
-      <ChatAppSidebar user={user} workspaces={workspaces} activeWorkspaceId={activeWorkspaceId} onSelectWorkspace={selectWorkspace} onCreateWorkspace={() => setCreateDialogOpen(true)} onSignOut={signOut} stats={stats} features={{ agents: PLAN_AGENTS[user.plan] }} workspacesLoading={workspacesLoading} />
-      <CreateWorkspaceDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} onSubmit={createWorkspace} />
-      <SidebarInset className="min-w-0 overflow-hidden">
-        <SidebarTrigger className="fixed left-3 top-3 z-[70] flex size-9 rounded-lg border border-[#dfd3c5] bg-[#fffaf6] text-[#6f6258] shadow-sm transition-[background-color,color,transform] duration-150 hover:bg-[#f3e9df] hover:text-[#201510] active:scale-[0.97] dark:border-white/[0.08] dark:bg-[#0d0d0c] dark:text-white/55 dark:hover:bg-white/[0.06] dark:hover:text-white/80 md:hidden" />
-      <TrueMemoryCommandPalette />
-      {children}
-      </SidebarInset>
-    </SidebarProvider>
-  );
 }

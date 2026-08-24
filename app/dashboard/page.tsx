@@ -3,13 +3,10 @@
 import { Fragment, useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { loadAuthUser, isAuthenticated, clearAuthSession } from "@/lib/auth";
-import { loadWorkspaces, saveWorkspaces } from "@/lib/workspaces";
+import { loadAuthUser, isAuthenticated } from "@/lib/auth";
 import { PaperDither, type DitherShape } from "@/components/ui/paper-dither";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { ChatAppSidebar } from "@/components/chat-app-sidebar";
-import { CreateWorkspaceDialog } from "@/components/create-workspace-dialog";
+import { AuthenticatedAppShell } from "@/components/authenticated-app-shell";
 import {
   fetchDashboardStats,
   fetchRecentConversations,
@@ -28,7 +25,7 @@ import {
   Layers3,
   ArrowUpRight,
 } from "lucide-react";
-import type { AuthUser, AuthWorkspace } from "@/lib/types";
+import type { AuthUser } from "@/lib/types";
 
 type Platform = "lab" | "crawl" | "both";
 
@@ -55,8 +52,6 @@ const POLL_INTERVAL = 30000; // 30 seconds
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [workspaces, setWorkspaces] = useState<AuthWorkspace[]>([]);
-  const [activeWorkspaceId, setActiveWorkspaceId] = useState("");
   const [platform, setPlatform] = useState<Platform>("both");
 
   // Real data states
@@ -81,34 +76,11 @@ export default function DashboardPage() {
         return;
       }
 
-      const ws = loadWorkspaces(authenticatedUser);
       setUser(authenticatedUser);
-      setWorkspaces(ws);
-      setActiveWorkspaceId(ws[0]?.id ?? "");
     });
 
     return () => window.cancelAnimationFrame(frame);
   }, [router]);
-
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-
-  const handleCreateWorkspace = useCallback(() => {
-    setCreateDialogOpen(true);
-  }, []);
-
-  const handleCreateWorkspaceSubmit = useCallback((name: string) => {
-    if (!user) return;
-    const newWorkspace: AuthWorkspace = {
-      id: crypto.randomUUID(),
-      name,
-      platform: "Kontext Memory",
-      last_active: new Date().toISOString(),
-    };
-    const next = [...workspaces, newWorkspace];
-    setWorkspaces(next);
-    saveWorkspaces(user.id, next);
-    setActiveWorkspaceId(newWorkspace.id);
-  }, [workspaces, user]);
 
   const loadData = useCallback(async (showLoading = true) => {
     if (!user) return;
@@ -169,29 +141,11 @@ export default function DashboardPage() {
   const showCrawl = platform !== "lab";
 
   return (
-    <div className="min-h-screen bg-[#f6f1ea] text-[#15110f] transition-colors duration-150 dark:bg-[#070707] dark:text-white">
-      <SidebarProvider>
+    <AuthenticatedAppShell>
         {/* ── SIDEBAR ── */}
-        <ChatAppSidebar
-          user={user}
-          workspaces={workspaces}
-          activeWorkspaceId={activeWorkspaceId}
-          onSelectWorkspace={setActiveWorkspaceId}
-          onCreateWorkspace={handleCreateWorkspace}
-          onSignOut={() => { clearAuthSession(); router.replace("/login"); }}
-          stats={stats ?? undefined}
-          features={{ agents: features.agents }}
-        />
-
-        <CreateWorkspaceDialog
-          open={createDialogOpen}
-          onOpenChange={setCreateDialogOpen}
-          onSubmit={handleCreateWorkspaceSubmit}
-        />
 
         {/* ── MAIN ── */}
-        <SidebarInset>
-          <main className="min-w-0 flex-1 overflow-y-auto">
+          <main className="min-h-full min-w-0 bg-[#f6f1ea] text-[#15110f] transition-colors duration-150 dark:bg-[#070707] dark:text-white">
             <div className="mx-auto max-w-[1440px] p-4 sm:p-7 lg:p-8">
 
             {/* Topbar */}
@@ -412,9 +366,7 @@ export default function DashboardPage() {
         )}
         </div>
       </main>
-      </SidebarInset>
-      </SidebarProvider>
-    </div>
+    </AuthenticatedAppShell>
   );
 }
 

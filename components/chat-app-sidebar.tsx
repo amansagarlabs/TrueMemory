@@ -369,8 +369,8 @@ export function ChatAppSidebar({
     <Sidebar
       collapsible="icon"
       side="left"
-      variant={isChatRoute ? "floating" : "sidebar"}
-      className={isChatRoute ? "[&_[data-slot=sidebar-inner]]:rounded-[22px] [&_[data-slot=sidebar-inner]]:border [&_[data-slot=sidebar-inner]]:border-sidebar-border [&_[data-slot=sidebar-inner]]:shadow-[0_1px_2px_rgba(0,0,0,.12),0_16px_42px_-30px_rgba(0,0,0,.72)]" : undefined}
+      variant="floating"
+      className="[&_[data-slot=sidebar-inner]]:rounded-[22px] [&_[data-slot=sidebar-inner]]:border [&_[data-slot=sidebar-inner]]:border-sidebar-border [&_[data-slot=sidebar-inner]]:shadow-[0_1px_2px_rgba(0,0,0,.12),0_16px_42px_-30px_rgba(0,0,0,.72)]"
     >
       {isChatRoute && sidebarState === "collapsed" && activeChat && (
         <div className="absolute left-[calc(100%+3rem)] top-1.5 z-50 hidden md:block">
@@ -1006,7 +1006,7 @@ export function ChatAppSidebar({
       <SidebarTrigger
         aria-label="Expand sidebar"
         title="Expand sidebar"
-        style={{ left: isChatRoute ? "calc(var(--sidebar-width-icon) + 20px)" : "calc(var(--sidebar-width-icon) + 6px)" }}
+        style={{ left: "calc(var(--sidebar-width-icon) + 20px)" }}
         className="fixed top-2 z-[80] hidden size-8 rounded-lg border border-[var(--chat-border-strong)] bg-[var(--chat-surface-raised)] text-[var(--chat-foreground)] shadow-[0_8px_24px_-12px_rgba(0,0,0,.55)] backdrop-blur-xl transition-[background-color,color,transform] hover:bg-[var(--chat-highlight)] active:scale-[0.96] focus-visible:ring-2 focus-visible:ring-[var(--chat-focus)] md:inline-flex"
       />
     ) : null}

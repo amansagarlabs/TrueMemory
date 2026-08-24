@@ -25,6 +25,7 @@ import {
 
 import { isAuthenticated, loadAuthUser } from "@/lib/auth";
 import type { AuthUser } from "@/lib/types";
+import { AuthenticatedAppShell } from "@/components/authenticated-app-shell";
 import {
   fetchPlatformStatus,
   testConnector,
@@ -202,7 +203,8 @@ export default function IntegrationsPage() {
   const connectorCategories = [...new Set(CONNECTORS.map((c) => c.category))];
 
   return (
-    <main className="dark min-h-screen bg-[#070707] text-white">
+    <AuthenticatedAppShell>
+    <main className="dark min-h-full bg-[#070707] text-white">
       <div className="mx-auto w-full max-w-[1360px] px-5 py-6 sm:px-8 lg:px-10 lg:py-9">
         <header className="flex items-center justify-between gap-4">
           <Link href="/profile" className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-3 py-2 text-sm text-white/55 transition hover:bg-white/[0.07] hover:text-white">
@@ -455,5 +457,6 @@ export default function IntegrationsPage() {
         </div>
       )}
     </main>
+    </AuthenticatedAppShell>
   );
 }
