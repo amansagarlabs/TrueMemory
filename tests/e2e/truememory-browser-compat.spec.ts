@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 const apiBase = process.env.TM_BASE_URL ?? "http://127.0.0.1:8000";
-const origin = "http://localhost:3000";
+const origin = process.env.TEST_BASE_URL ?? "http://127.0.0.1:3000";
 
 test.use({ baseURL: origin });
 
@@ -28,9 +28,9 @@ test("TrueMemory works from an independent browser page", async ({ page, request
   page.on("response", response => { if (response.url().startsWith(apiBase)) responses.push({ url: response.url(), status: response.status() }); });
 
   await page.goto("/");
-  await page.evaluate(({ token, workspaceId: workspace, agentId: agent }) => {
-    (globalThis as typeof globalThis & { __TRUEMEMORY_BROWSER_CONFIG__?: unknown }).__TRUEMEMORY_BROWSER_CONFIG__ = { baseUrl: "http://127.0.0.1:8000", token, workspaceId: workspace, agentId: agent };
-  }, { token: issued.token, workspaceId, agentId });
+  await page.evaluate(({ api, token, workspaceId: workspace, agentId: agent }) => {
+    (globalThis as typeof globalThis & { __TRUEMEMORY_BROWSER_CONFIG__?: unknown }).__TRUEMEMORY_BROWSER_CONFIG__ = { baseUrl: api, token, workspaceId: workspace, agentId: agent };
+  }, { api: apiBase, token: issued.token, workspaceId, agentId });
   await page.getByRole("button", { name: /run browser compatibility probe/i }).click();
   await expect(page.locator("#output")).toHaveText(/\S+/, { timeout: 30_000 });
   await expect(page.locator("#output")).not.toContainText("Provide a short-lived");
