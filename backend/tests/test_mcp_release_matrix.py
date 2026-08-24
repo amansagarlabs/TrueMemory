@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 import os
+import time
 import uuid
 from datetime import UTC, datetime
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from app.config import get_settings
@@ -15,6 +16,42 @@ from services.postgres_store import _connect
 
 
 BASE = os.getenv("KONTEXT_RELEASE_BASE_URL", "http://127.0.0.1:8000")
+
+
+def _wait_for_backend(timeout_seconds: float = 30.0) -> None:
+    """Wait for a restarted backend without masking an MCP assertion failure."""
+    deadline = time.monotonic() + timeout_seconds
+    delay = 0.25
+    last_error: Exception | None = None
+    while time.monotonic() < deadline:
+        try:
+            with urlopen(BASE + "/health", timeout=3) as response:
+                if response.status == 200:
+                    return
+                last_error = RuntimeError(f"health returned HTTP {response.status}")
+        except (OSError, HTTPError, URLError) as exc:
+            last_error = exc
+        time.sleep(delay)
+        delay = min(delay * 1.7, 2.0)
+    raise AssertionError(f"backend unavailable after {timeout_seconds:.0f}s: {last_error}")
+
+
+def _wait_for_mcp_endpoint(timeout_seconds: float = 30.0) -> None:
+    """Confirm /mcp accepts requests before live MCP assertions begin."""
+    deadline = time.monotonic() + timeout_seconds
+    delay = 0.25
+    last_error: Exception | None = None
+    while time.monotonic() < deadline:
+        try:
+            status, _ = _mcp(None, "tools/list")
+            if status == 401:
+                return
+            last_error = RuntimeError(f"MCP endpoint returned HTTP {status}")
+        except (OSError, HTTPError, URLError) as exc:
+            last_error = exc
+        time.sleep(delay)
+        delay = min(delay * 1.7, 2.0)
+    raise AssertionError(f"MCP endpoint unavailable after {timeout_seconds:.0f}s: {last_error}")
 
 
 def _request(path: str, *, token: str | None = None, method: str = "GET", body: dict | None = None, origin: str | None = None):
@@ -78,6 +115,8 @@ def _rest_metrics(token: str):
 
 
 def test_live_mcp_release_matrix():
+    _wait_for_backend()
+    _wait_for_mcp_endpoint()
     ws_a, ws_b = str(uuid.uuid4()), str(uuid.uuid4())
     agent_a, agent_b = str(uuid.uuid4()), str(uuid.uuid4())
     user_a, token_a = _identity(scopes=["memory"], workspace_id=ws_a, agent_id=agent_a)
