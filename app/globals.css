@@ -1382,6 +1382,11 @@ main.homepage-shell [class*="max-w-[1216px]"] {
   --sidebar-accent-foreground: #15110f;
   --sidebar-border: #e7ddd2;
   --sidebar-ring: color(display-p3 0.980392 0.364706 0.098039);
+  --chat-frame: #eee8e0;
+  --chat-frame-border: #d9cec2;
+  --chat-nav-shell: #f3ece3;
+  --chat-nav-border: #ddd1c4;
+  --chat-nav-active: #fffdf9;
   --chat-background: #ffffff;
   --chat-surface: #fffdf9;
   --chat-surface-raised: rgba(255, 253, 249, 0.92);
@@ -1438,6 +1443,11 @@ main.homepage-shell [class*="max-w-[1216px]"] {
   --sidebar-accent-foreground: #ffffff;
   --sidebar-border: rgba(255, 255, 255, 0.08);
   --sidebar-ring: #e67d2b;
+  --chat-frame: #050604;
+  --chat-frame-border: rgba(255, 255, 255, 0.12);
+  --chat-nav-shell: #050604;
+  --chat-nav-border: rgba(255, 255, 255, 0.13);
+  --chat-nav-active: #20231d;
   --chat-background: #0d100d;
   --chat-surface: #11130f;
   --chat-surface-raised: rgba(17, 19, 15, 0.92);
@@ -1513,6 +1523,60 @@ main.homepage-shell [class*="max-w-[1216px]"] {
     border-color 140ms cubic-bezier(0.23, 1, 0.32, 1),
     box-shadow 140ms cubic-bezier(0.23, 1, 0.32, 1),
     transform 140ms cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.chat-top-nav-island {
+  isolation: isolate;
+}
+
+.chat-top-nav-island::before,
+.chat-top-nav-island::after {
+  position: absolute;
+  top: 0;
+  z-index: -1;
+  width: 18px;
+  height: 18px;
+  content: "";
+  pointer-events: none;
+}
+
+.chat-top-nav-island::before {
+  right: 100%;
+  background: radial-gradient(
+    circle at left bottom,
+    transparent 17.5px,
+    var(--chat-nav-shell) 18px
+  );
+}
+
+.chat-top-nav-island::after {
+  left: 100%;
+  background: radial-gradient(
+    circle at right bottom,
+    transparent 17.5px,
+    var(--chat-nav-shell) 18px
+  );
+}
+
+/* The resizable assistant rail uses smaller controls before text starts to
+   compete with the composer. Icons remain legible; labels collapse first. */
+[data-chat-panel="compact"] [aria-label="Open composer actions"] {
+  width: 36px;
+  height: 36px;
+}
+
+[data-chat-panel="compact"] [aria-label="Choose response mode"] {
+  padding-inline: 9px;
+}
+
+[data-chat-panel="compact"] [aria-label="Choose response mode"] span {
+  display: none;
+}
+
+[data-chat-panel="compact"] [data-welcome] button {
+  min-height: 36px;
+  padding-inline: 11px;
+  font-size: 12px;
 }
 
 .chat-composer-action:hover:not(:disabled) {
@@ -1594,26 +1658,6 @@ main.homepage-shell [class*="max-w-[1216px]"] {
   animation: agent-thinking-shimmer 1.9s ease-in-out infinite;
 }
 
-/* Welcome-only dither mark: six tapered arms matching the TrueMemory mark. */
-.welcome-kontext-mark {
-  filter: drop-shadow(0 8px 14px color-mix(in srgb, var(--chat-accent) 22%, transparent));
-  clip-path: polygon(
-    45% 3%, 55% 3%, 57% 32%, 78% 12%, 86% 20%, 65% 41%,
-    97% 45%, 97% 55%, 65% 58%, 86% 80%, 78% 88%, 57% 67%,
-    55% 97%, 45% 97%, 43% 67%, 22% 88%, 14% 80%, 35% 58%,
-    3% 55%, 3% 45%, 35% 41%, 14% 20%, 22% 12%, 43% 32%
-  );
-  transform: rotate(-8deg);
-}
-
-.welcome-kontext-mark::after {
-  position: absolute;
-  inset: 42%;
-  border-radius: 999px;
-  background: var(--chat-accent);
-  content: "";
-}
-
 @media (prefers-reduced-motion: reduce) {
   .chat-prompt-shell {
     transition-duration: 0.01ms;
@@ -1628,6 +1672,14 @@ main.homepage-shell [class*="max-w-[1216px]"] {
   background:
     radial-gradient(circle at top right, color-mix(in srgb, var(--chat-accent) 7%, transparent), transparent 28%),
     var(--chat-background);
+}
+
+.chat-memory-grid {
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--chat-accent) 26%, transparent) 1px,
+    transparent 1px
+  );
+  background-size: 32px 32px;
 }
 
 /* The projects surface predates the semantic chat palette. Keep its dark

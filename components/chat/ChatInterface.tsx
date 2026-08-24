@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode, type RefObject } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
@@ -19,6 +20,9 @@ import {
   Globe,
   Image as ImageIcon,
   Info,
+  Maximize2,
+  MoreHorizontal,
+  PencilLine,
   Loader2,
   Paperclip,
   Plug,
@@ -134,7 +138,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import LoadingCarousel, { type Tip as LoadingTip } from "@/components/ui/loading-carousel";
-import { PaperDither } from "@/components/ui/paper-dither";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   useImageOcr,
@@ -839,6 +842,7 @@ export default function ChatInterface() {
   const [imageModeSelected, setImageModeSelected] = useState(false);
   const [imageGenerating, setImageGenerating] = useState(false);
   const [serviceMenuOpen, setServiceMenuOpen] = useState(false);
+  const [chatMenuOpen, setChatMenuOpen] = useState(false);
   const [visualizationOpen, setVisualizationOpen] = useState(false);
   const [documentPreviewOpen, setDocumentPreviewOpen] = useState(false);
   const [documentPreviewFile, setDocumentPreviewFile] = useState<File | null>(null);
@@ -3326,11 +3330,67 @@ export default function ChatInterface() {
     composerMentionsRailRef.current?.releasePointerCapture(event.pointerId);
   }
 
+  function startNewChatFromHeader() {
+    window.dispatchEvent(new Event(CHAT_NEW_EVENT));
+    setChatMenuOpen(false);
+  }
+
+  async function shareCurrentChat() {
+    const url = window.location.href;
+    if (navigator.share) {
+      await navigator.share({ title: "TrueMemory chat", url }).catch(() => undefined);
+    } else {
+      await navigator.clipboard?.writeText(url);
+      toast.success("Chat link copied");
+    }
+  }
+
+  async function toggleChatFullscreen() {
+    if (document.fullscreenElement) {
+      await document.exitFullscreen();
+      return;
+    }
+    await document.documentElement.requestFullscreen?.();
+  }
+
   return (
     <TooltipProvider delay={180}>
-    <div className="chat-surface flex h-full min-h-screen bg-[var(--chat-background)] text-[var(--chat-foreground)]">
+    <div className="chat-surface flex h-full min-h-full bg-[var(--chat-background)] text-[var(--chat-foreground)]">
 
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[var(--chat-background)]">
+        <header className="relative z-20 shrink-0 bg-transparent px-3 pt-2 sm:px-6 sm:pt-3">
+          <div className="mx-auto flex min-h-10 w-full max-w-[768px] items-center justify-between gap-3">
+            <div className="flex min-w-0 items-center gap-2">
+              <button type="button" onClick={startNewChatFromHeader} className="inline-flex min-h-10 min-w-0 items-center gap-1.5 rounded-lg px-2 text-left text-sm font-medium text-[var(--chat-foreground)] transition-colors hover:bg-[var(--chat-surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--chat-focus)]">
+                <span className="truncate">New AI chat</span>
+                <ChevronDown className="size-3.5 shrink-0 text-[var(--chat-muted-foreground)]" />
+              </button>
+              <span className="rounded-full border border-[var(--chat-border)] px-2 py-1 text-[10px] font-medium text-[var(--chat-muted-foreground)]">Private</span>
+            </div>
+            <div className="flex shrink-0 items-center gap-1">
+              <button type="button" aria-label="Edit chat title" title="Edit chat title" onClick={() => toast("Chat title editing is available from chat history.")} className="inline-flex size-9 items-center justify-center rounded-lg text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-surface-muted)] hover:text-[var(--chat-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--chat-focus)]">
+                <PencilLine className="size-4" />
+              </button>
+              <button type="button" aria-label="Toggle fullscreen" title="Toggle fullscreen" onClick={() => void toggleChatFullscreen()} className="hidden size-9 items-center justify-center rounded-lg text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-surface-muted)] hover:text-[var(--chat-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--chat-focus)] sm:inline-flex">
+                <Maximize2 className="size-4" />
+              </button>
+              <button type="button" aria-label="Share chat" title="Share chat" onClick={() => void shareCurrentChat()} className="inline-flex min-h-9 items-center rounded-lg border border-[var(--chat-border)] px-3 text-xs font-semibold text-[var(--chat-foreground)] transition-colors hover:bg-[var(--chat-surface-muted)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--chat-focus)]">
+                Share
+              </button>
+              <div className="relative">
+                <button type="button" aria-label="More chat actions" title="More chat actions" aria-expanded={chatMenuOpen} onClick={() => setChatMenuOpen((open) => !open)} className="inline-flex size-9 items-center justify-center rounded-lg text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-surface-muted)] hover:text-[var(--chat-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--chat-focus)]">
+                  <MoreHorizontal className="size-4" />
+                </button>
+                {chatMenuOpen ? (
+                  <div className="absolute right-0 top-11 z-50 w-48 rounded-xl border border-[var(--chat-border)] bg-[var(--chat-surface)] p-1.5 text-[var(--chat-foreground)] shadow-[0_18px_42px_-18px_rgba(0,0,0,.6)]">
+                    <button type="button" onClick={startNewChatFromHeader} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-2.5 text-left text-xs hover:bg-[var(--chat-surface-muted)]"><Plus className="size-3.5" />New chat</button>
+                    <button type="button" onClick={() => void shareCurrentChat()} className="flex min-h-10 w-full items-center gap-2 rounded-lg px-2.5 text-left text-xs hover:bg-[var(--chat-surface-muted)]"><Share2 className="size-3.5" />Copy/share link</button>
+                  </div>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </header>
         <div className="hidden">
           <div className="mx-auto flex w-full max-w-5xl flex-col gap-3">
             <div className="flex items-center justify-between gap-4">
@@ -4340,24 +4400,9 @@ function Welcome({
   disabled?: boolean;
 }) {
   return (
-    <section className="flex w-full max-w-2xl flex-col items-center px-4 py-6 text-center sm:py-8">
-      <div className="welcome-kontext-mark relative size-14 overflow-hidden" aria-hidden="true">
-        <PaperDither
-          className="inset-0"
-          dark={{ colorBack: "#3a1c0b", colorFront: "#f19045" }}
-          light={{ colorBack: "#f8d4b5", colorFront: "#e67d2b" }}
-          eager
-          maxPixelCount={128 * 128}
-          scale={0.7}
-          shape="swirl"
-          size={1.65}
-          speed={0.1}
-          type="4x4"
-        />
-      </div>
-      <div className="mt-3 inline-flex items-center gap-2 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--chat-subtle-foreground)]">
-        <span className="size-2 rounded-full bg-[var(--chat-accent)]" aria-hidden="true" />
-        TrueMemory
+    <section data-welcome className="flex w-full max-w-2xl flex-col items-center px-4 py-6 text-center sm:py-8">
+      <div className="flex size-14 items-center justify-center rounded-[18px] bg-[var(--chat-surface-muted)] p-3 shadow-[0_12px_30px_-18px_var(--chat-accent)]" aria-label="TrueMemory">
+        <Image src="/truememory-mark.svg" alt="TrueMemory" width={64} height={64} className="size-full" />
       </div>
       <h2 className="mt-2 text-balance font-heading text-2xl font-semibold tracking-[-0.04em] text-[var(--chat-foreground)] sm:text-3xl">
         What are you working on?

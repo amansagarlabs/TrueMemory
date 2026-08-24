@@ -7,8 +7,8 @@ import { loadAuthUser, isAuthenticated, clearAuthSession } from "@/lib/auth";
 import { loadWorkspaces, saveWorkspaces } from "@/lib/workspaces";
 import { PaperDither, type DitherShape } from "@/components/ui/paper-dither";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
+import { ChatAppSidebar } from "@/components/chat-app-sidebar";
 import { CreateWorkspaceDialog } from "@/components/create-workspace-dialog";
 import {
   fetchDashboardStats,
@@ -172,17 +172,15 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-[#f6f1ea] text-[#15110f] transition-colors duration-150 dark:bg-[#070707] dark:text-white">
       <SidebarProvider>
         {/* ── SIDEBAR ── */}
-        <AppSidebar
-          displayName={displayName}
-          email={user?.email}
-          planLabel={features.label}
+        <ChatAppSidebar
+          user={user}
           workspaces={workspaces}
           activeWorkspaceId={activeWorkspaceId}
           onSelectWorkspace={setActiveWorkspaceId}
           onCreateWorkspace={handleCreateWorkspace}
           onSignOut={() => { clearAuthSession(); router.replace("/login"); }}
           stats={stats ?? undefined}
-          features={features}
+          features={{ agents: features.agents }}
         />
 
         <CreateWorkspaceDialog
@@ -193,7 +191,6 @@ export default function DashboardPage() {
 
         {/* ── MAIN ── */}
         <SidebarInset>
-          <SidebarTrigger className="fixed left-3 top-3 z-50 flex size-8 rounded-md border border-[#dfd3c5] bg-[#fffaf6] text-[#6f6258] shadow-sm transition-[background-color,color,transform] duration-150 hover:bg-[#f3e9df] hover:text-[#201510] active:scale-[0.97] dark:border-white/[0.08] dark:bg-[#0d0d0c] dark:text-white/55 dark:hover:bg-white/[0.06] dark:hover:text-white/80 md:hidden" />
           <main className="min-w-0 flex-1 overflow-y-auto">
             <div className="mx-auto max-w-[1440px] p-4 sm:p-7 lg:p-8">
 

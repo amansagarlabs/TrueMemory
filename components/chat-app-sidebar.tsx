@@ -1,14 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, type ComponentType, type MouseEvent as ReactMouseEvent, type ReactNode, type SVGProps } from "react";
 import {
-  IconApps,
   IconBook,
   IconBooks,
   IconCheck,
-  IconFolder,
   IconLogout,
   IconMail,
   IconPlus,
@@ -17,7 +16,6 @@ import {
   IconSettings,
   IconUser,
   IconSearch,
-  IconDashboard,
   IconStack2,
   IconBrain,
   IconFileText,
@@ -31,14 +29,16 @@ import {
 import {
   Archive,
   Activity,
-  Code2,
+  Boxes,
   ChevronDown,
   ChevronRight,
   GalleryVerticalEnd,
+  MessageCircle,
   MoreHorizontal,
   Pencil,
   Pin,
   PinOff,
+  SlidersHorizontal,
   Star,
   StarOff,
   Trash2,
@@ -98,18 +98,12 @@ type ConversationDialogState =
   | { kind: "delete"; chat: RecentConversation }
   | null;
 
-const CHAT_NAVIGATION = [
-  { label: "Assistant", href: "/chat", icon: IconRobot },
-] as const;
-
 const PRIMARY_NAVIGATION = [
-  { label: "Home", href: "/dashboard", icon: IconDashboard },
-  { label: "Memory", href: "/memory", icon: IconBrain },
-  { label: "Spaces", href: "/workspaces", icon: IconStack2 },
-  { label: "Connections", href: "/connectors", icon: IconApps },
-  { label: "API & SDK", href: "/api-sdk", icon: Code2 },
-  { label: "Activity", href: "/activity", icon: Activity },
-  { label: "Usage", href: "/credits", icon: IconChartBar },
+  { label: "Chats", href: "/chat", icon: MessageCircle },
+  { label: "Skills", href: "/skills", icon: IconSparkles },
+  { label: "Automations", href: "/projects", icon: Activity },
+  { label: "Personalization", href: "/profile", icon: SlidersHorizontal },
+  { label: "Models", href: "/connectors", icon: Boxes },
 ] as const;
 
 type SidebarNavItem = {
@@ -352,13 +346,13 @@ export function ChatAppSidebar({
       <SidebarMenu className="gap-0.5">
         {items.map((item) => (
           <SidebarMenuItem key={item.label}>
-            <SidebarMenuButton
+              <SidebarMenuButton
               render={<Link href={getNavHref(item.href)} />}
               isActive={isNavActive(item.href)}
               tooltip={item.label}
               className="h-9 rounded-lg px-2.5 text-[13px] font-medium group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
             >
-              <item.icon className="size-4 shrink-0 text-sidebar-foreground/72" stroke="1.8" />
+              <item.icon aria-hidden="true" className="size-4 shrink-0 text-sidebar-foreground" strokeWidth={1.8} />
               <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
             </SidebarMenuButton>
             {item.badge !== undefined && item.badge !== 0 ? (
@@ -371,9 +365,13 @@ export function ChatAppSidebar({
   }
 
   return (
-    <Sidebar collapsible="icon" side="left">
-      <SidebarTrigger className="absolute -right-11 top-[18px] z-50 hidden size-9 rounded-lg border border-sidebar-border bg-sidebar text-sidebar-foreground/60 shadow-sm transition-[background-color,color,transform] duration-150 hover:bg-sidebar-accent hover:text-sidebar-foreground active:scale-[0.97] focus-visible:ring-2 md:flex group-data-[collapsible=icon]:top-1.5" />
-
+    <>
+    <Sidebar
+      collapsible="icon"
+      side="left"
+      variant={isChatRoute ? "floating" : "sidebar"}
+      className={isChatRoute ? "[&_[data-slot=sidebar-inner]]:rounded-[22px] [&_[data-slot=sidebar-inner]]:border [&_[data-slot=sidebar-inner]]:border-sidebar-border [&_[data-slot=sidebar-inner]]:shadow-[0_1px_2px_rgba(0,0,0,.12),0_16px_42px_-30px_rgba(0,0,0,.72)]" : undefined}
+    >
       {isChatRoute && sidebarState === "collapsed" && activeChat && (
         <div className="absolute left-[calc(100%+3rem)] top-1.5 z-50 hidden md:block">
           <DropdownMenu>
@@ -490,8 +488,24 @@ export function ChatAppSidebar({
         </div>
       ) : null}
 
-      <SidebarHeader className="p-2">
-        <div className="flex items-start gap-2">
+      <SidebarHeader className="gap-0 p-2">
+        <div className="relative mb-2 flex items-center justify-between gap-2 px-1 group-data-[collapsible=icon]:h-auto group-data-[collapsible=icon]:flex-col group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-1">
+          <Link href="/dashboard" aria-label="TrueMemory home" className="flex min-w-0 items-center gap-2 text-[15px] font-semibold tracking-[-0.04em] group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:justify-center">
+            <span className="flex size-8 shrink-0 items-center justify-center rounded-[11px] bg-sidebar-accent p-1.5 shadow-[0_4px_12px_-7px_rgba(228,95,24,.65)] ring-1 ring-sidebar-border group-data-[collapsible=icon]:size-8">
+              <Image src="/truememory-mark.svg" alt="" width={40} height={40} className="size-full object-contain" />
+            </span>
+            <span className="truncate group-data-[collapsible=icon]:hidden">TrueMemory</span>
+          </Link>
+          <div className="flex items-center gap-0.5 group-data-[collapsible=icon]:flex-col">
+            <button type="button" aria-label="Search TrueMemory" title="Search TrueMemory (Ctrl+K)" onClick={() => window.dispatchEvent(new Event("truememory:open-command-palette"))} className="inline-flex size-8 items-center justify-center rounded-lg text-sidebar-foreground/60 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:hidden">
+              <IconSearch aria-hidden="true" className="size-4" />
+            </button>
+            {sidebarState === "expanded" ? (
+              <SidebarTrigger aria-label="Collapse sidebar" title="Collapse sidebar" className="relative size-8 rounded-lg border-0 text-sidebar-foreground/60 shadow-none transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:ring-2" />
+            ) : null}
+          </div>
+        </div>
+        <div className="flex items-start gap-2 group-data-[collapsible=icon]:hidden">
           <div className="min-w-0 flex-1">
             <DropdownMenu>
               <DropdownMenuTrigger
@@ -578,16 +592,18 @@ export function ChatAppSidebar({
             </DropdownMenu>
           </div>
 
-          <button
-            type="button"
-            aria-label="Search chats"
-            title="Search chats"
-            onClick={() => window.dispatchEvent(new Event("kontext:open-chat-search"))}
-            className="mt-0.5 inline-flex size-9 shrink-0 items-center justify-center rounded-xl border border-sidebar-border/70 bg-sidebar-accent/50 text-sidebar-foreground/70 transition-[background-color,color,transform] duration-150 hover:bg-sidebar-accent hover:text-sidebar-foreground active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:hidden"
-          >
-            <IconSearch aria-hidden="true" className="size-4" />
-          </button>
         </div>
+        <button
+          type="button"
+          aria-label="Search TrueMemory"
+          title="Search TrueMemory (Ctrl+K)"
+          onClick={() => window.dispatchEvent(new Event("truememory:open-command-palette"))}
+          className="mt-2 hidden min-h-10 w-full items-center justify-start gap-2 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/50 px-3 text-[12px] font-medium text-sidebar-foreground/65 transition-[background-color,color,transform] duration-150 hover:bg-sidebar-accent hover:text-sidebar-foreground active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
+        >
+          <IconSearch aria-hidden="true" className="size-4 shrink-0" />
+          <span className="group-data-[collapsible=icon]:hidden">Search TrueMemory</span>
+          <kbd className="ml-auto rounded border border-sidebar-border/70 px-1.5 py-0.5 font-mono text-[9px] opacity-60 group-data-[collapsible=icon]:hidden">Ctrl K</kbd>
+        </button>
       </SidebarHeader>
 
       <SidebarSeparator className="mx-0" />
@@ -603,7 +619,7 @@ export function ChatAppSidebar({
                     onClick={startNewChat}
                     tooltip="New chat"
                     isActive={!activeConversationId}
-                    className="h-10 flex-1 rounded-xl px-2.5 text-[13px] font-semibold group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
+                    className="h-10 flex-1 gap-2 rounded-xl px-3 text-[13px] font-semibold group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
                   >
                     <IconPlus aria-hidden="true" className="size-4 shrink-0 text-sidebar-foreground/70" />
                     <span className="group-data-[collapsible=icon]:hidden">New chat</span>
@@ -632,25 +648,10 @@ export function ChatAppSidebar({
                     tooltip={item.label}
                     className="h-9 rounded-lg px-2.5 text-[13px] font-medium group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
                   >
-                    <item.icon className="size-4 shrink-0 text-sidebar-foreground/72" stroke="1.8" />
+                    <item.icon aria-hidden="true" className="size-4 shrink-0 text-sidebar-foreground" strokeWidth={1.8} />
                     <span className="text-[13px] group-data-[collapsible=icon]:hidden">{item.label}</span>
                   </SidebarMenuButton>
               </SidebarMenuItem>
-              ))}
-
-              <SidebarSeparator className="my-1" />
-              {CHAT_NAVIGATION.map((item) => (
-                <SidebarMenuItem key={item.label}>
-                  <SidebarMenuButton
-                    render={<Link href={item.href} />}
-                    isActive={isNavActive(item.href)}
-                    tooltip={item.label}
-                    className="h-9 rounded-lg px-2.5 text-[13px] font-medium group-data-[collapsible=icon]:size-9! group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:p-0!"
-                  >
-                    <item.icon className="size-4 shrink-0 text-sidebar-foreground/72" stroke={1.8} />
-                    <span className="text-[13px] group-data-[collapsible=icon]:hidden">{item.label}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
               ))}
 
               <SidebarMenuItem className="mt-1">
@@ -1001,6 +1002,15 @@ export function ChatAppSidebar({
         </DialogContent>
       </Dialog>
     </Sidebar>
+    {sidebarState === "collapsed" ? (
+      <SidebarTrigger
+        aria-label="Expand sidebar"
+        title="Expand sidebar"
+        style={{ left: isChatRoute ? "calc(var(--sidebar-width-icon) + 20px)" : "calc(var(--sidebar-width-icon) + 6px)" }}
+        className="fixed top-2 z-[80] hidden size-8 rounded-lg border border-[var(--chat-border-strong)] bg-[var(--chat-surface-raised)] text-[var(--chat-foreground)] shadow-[0_8px_24px_-12px_rgba(0,0,0,.55)] backdrop-blur-xl transition-[background-color,color,transform] hover:bg-[var(--chat-highlight)] active:scale-[0.96] focus-visible:ring-2 focus-visible:ring-[var(--chat-focus)] md:inline-flex"
+      />
+    ) : null}
+    </>
   );
 }
 

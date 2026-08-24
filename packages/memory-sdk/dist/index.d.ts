@@ -96,6 +96,7 @@ export declare class TrueMemory {
     private error;
     remember(input: MemoryInput, options?: RequestOptions): Promise<{
         saved: boolean;
+        id: string;
         key: string;
         scope: string;
     }>;
