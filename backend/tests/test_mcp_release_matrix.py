@@ -7,7 +7,9 @@ import os
 import time
 import uuid
 from datetime import UTC, datetime
+from pathlib import Path
 from urllib.error import HTTPError, URLError
+from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 from app.config import get_settings
@@ -16,6 +18,60 @@ from services.postgres_store import _connect
 
 
 BASE = os.getenv("KONTEXT_RELEASE_BASE_URL", "http://127.0.0.1:8000")
+
+
+def _read_project_env() -> dict[str, str]:
+    """Read only the local test configuration keys when pytest runs on host."""
+    env_path = Path(__file__).resolve().parents[2] / ".env"
+    if not env_path.is_file():
+        return {}
+    values: dict[str, str] = {}
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        values[key.strip()] = value.strip().strip('"').strip("'")
+    return values
+
+
+def _configure_release_database() -> None:
+    """Select the database URL for the environment executing this test.
+
+    Compose injects `.env` into containers, but host-side pytest does not get
+    those variables automatically. The test must therefore select the local
+    published-port URL explicitly instead of inheriting a container hostname.
+    """
+    requested = os.getenv("KONTEXT_RELEASE_EXECUTION_ENV", "").strip().lower()
+    if requested not in {"host", "container"}:
+        requested = "container" if Path("/.dockerenv").exists() else "host"
+    values = _read_project_env() if requested == "host" else {}
+    url_key = "DATABASE_URL_DOCKER" if requested == "container" else "DATABASE_URL_LOCAL"
+    selected_url = os.getenv(url_key, "").strip() or values.get(url_key, "").strip()
+    if not selected_url:
+        raise RuntimeError(
+            f"{url_key} is required for the MCP release test; set it explicitly "
+            "for the selected host/container environment."
+        )
+
+    os.environ["USE_DOCKER_POSTGRES"] = "true" if requested == "container" else "false"
+    os.environ[url_key] = selected_url
+    os.environ["DATABASE_URL"] = selected_url
+    get_settings.cache_clear()
+    settings = get_settings()
+    parsed = urlsplit(selected_url)
+    database_host = parsed.hostname or "unknown"
+    database_port = parsed.port or (5432 if parsed.scheme.startswith("postgres") else "unknown")
+    database_name = parsed.path.lstrip("/") or "unknown"
+    print(
+        "MCP release database: "
+        f"host={database_host} port={database_port} database={database_name} "
+        f"execution_environment={requested} mode={settings.database_mode}",
+        flush=True,
+    )
+
+
+_configure_release_database()
 
 
 def _wait_for_backend(timeout_seconds: float = 30.0) -> None:

@@ -10,6 +10,7 @@ import time
 from fastapi import APIRouter, HTTPException, Request
 
 from app.config import get_settings
+from services.memory_ingestion import ingestion_worker_is_healthy
 from services.postgres_store import check_postgres_connection
 
 router = APIRouter()
@@ -30,6 +31,7 @@ async def root():
 async def health_check(request: Request):
     settings = get_settings()
     postgres = check_postgres_connection(settings)
+    ingestion_worker = ingestion_worker_is_healthy(settings)
     return {
         "status": "ok",
         "service": "ai-pdf-learning-workspace",
@@ -43,6 +45,7 @@ async def health_check(request: Request):
         "postgres_host": postgres["host"],
         "postgres_user": postgres.get("user", ""),
         "postgres_reason": postgres.get("reason", ""),
+        "memory_ingestion_worker": "healthy" if ingestion_worker else "not_seen",
     }
 
 
@@ -51,12 +54,13 @@ async def readiness_check() -> dict[str, object]:
     """Return dependency readiness separately from process liveness."""
     settings = get_settings()
     postgres = check_postgres_connection(settings)
+    ingestion_worker = ingestion_worker_is_healthy(settings)
     if not postgres["connected"]:
         raise HTTPException(status_code=503, detail={"status": "not_ready", "postgres": postgres})
     return {
         "status": "ready",
         "service": "ai-pdf-learning-workspace",
-        "dependencies": {"postgres": "ready"},
+        "dependencies": {"postgres": "ready", "memory_ingestion_worker": "ready" if ingestion_worker else "not_seen"},
     }
 
 

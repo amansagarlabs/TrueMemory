@@ -117,7 +117,7 @@ export async function fetchRecentConversations(limit = 10): Promise<Conversation
 
 export async function fetchRecentMemories(
   limit = 10,
-  options: { query?: string; status?: string } = {},
+  options: { query?: string; status?: string; strict?: boolean } = {},
 ): Promise<MemoryItem[]> {
   const user = loadAuthUser();
   const workspaceId = user ? loadActiveWorkspaceId(user.id) : "";
@@ -131,8 +131,16 @@ export async function fetchRecentMemories(
     headers: authHeaders(),
     cache: "no-store",
   });
-  if (!res.ok) return [];
+  if (!res.ok) {
+    if (!options.strict) return [];
+    const data = await res.json().catch(() => ({}));
+    const detail = typeof data.detail === "string" ? data.detail : "Could not retrieve memories.";
+    throw new Error(detail);
+  }
   const data = await res.json();
+  if (options.strict && typeof data.error === "string" && data.error) {
+    throw new Error(data.error);
+  }
   return (data.items || []).map((item: MemoryItem) => ({
     ...item,
     key: item.key || item.memory_key || item.id,

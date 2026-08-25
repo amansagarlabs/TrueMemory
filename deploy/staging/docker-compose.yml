@@ -42,6 +42,31 @@ services:
       start_period: 30s
     networks: [memory]
 
+  memory-ingestion-worker:
+    image: ${TRUEMEMORY_IMAGE:?set TRUEMEMORY_IMAGE}
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      APP_ENV: staging
+      USE_DOCKER_POSTGRES: "true"
+      DATABASE_URL_DOCKER: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      KONTEXT_ENABLE_TEST_AUTH: "0"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["python", "-m", "worker.memory_ingestion_worker"]
+    read_only: true
+    tmpfs: [/tmp]
+    healthcheck:
+      test: ["CMD", "python", "-c", "from app.config import get_settings; from services.memory_ingestion import ingestion_worker_is_healthy; assert ingestion_worker_is_healthy(get_settings())"]
+      interval: 30s
+      timeout: 5s
+      retries: 4
+      start_period: 30s
+    restart: unless-stopped
+    networks: [memory]
+
   edge:
     image: caddy:2.10-alpine
     environment:

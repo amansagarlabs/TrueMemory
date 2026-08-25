@@ -119,6 +119,7 @@ const WORKSPACE_NAVIGATION: SidebarNavItem[] = [
 
 const CONTEXT_NAVIGATION: SidebarNavItem[] = [
   { label: "Memory", href: "/memory", icon: IconBrain },
+  { label: "Brain memory", href: "/brain-memory", icon: IconBrain },
   { label: "Artifacts", href: "/artifacts", icon: IconFileText },
   { label: "Agent chat", href: "/chat", icon: IconRobot },
   { label: "Skills", href: "/skills", icon: IconSparkles },

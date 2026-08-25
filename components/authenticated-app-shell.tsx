@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState, type ReactNode } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Grid2X2, GitBranch, Home, LogOut, MessageCircle, Network, Plus, Search, Settings } from "lucide-react";
 
 import { ChatAppSidebar } from "@/components/chat-app-sidebar";
@@ -28,6 +28,54 @@ const CHAT_TOP_NAVIGATION = [
   { label: "Memories", href: "/memory", icon: Grid2X2 },
   { label: "Assistant", href: "/chat", icon: MessageCircle },
 ] as const;
+
+function NavigationIsland({
+  pathname,
+  memoryView,
+}: {
+  pathname: string;
+  memoryView?: string | null;
+}) {
+  return (
+    <nav aria-label="Primary navigation" className="chat-top-nav-island absolute left-1/2 top-0 hidden -translate-x-1/2 items-center justify-between gap-0.5 rounded-b-[20px] border-x border-b border-[var(--chat-nav-border)] bg-[var(--chat-nav-shell)] px-2 pb-1.5 pt-2 shadow-[0_1px_2px_rgba(0,0,0,.16),0_14px_34px_-24px_rgba(0,0,0,.72)] md:flex">
+      {CHAT_TOP_NAVIGATION.map((item) => {
+        const itemPath = item.href.split("?")[0];
+        const active = item.label === "Graph"
+          ? pathname === "/memory" && memoryView === "graph"
+          : item.label === "Memories"
+            ? (pathname === "/memory" || pathname === "/brain-memory") && memoryView !== "graph"
+            : item.label === "Integrations"
+              ? pathname === "/connectors" || pathname === "/integrations"
+              : pathname === itemPath;
+        const Icon = item.icon;
+
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-label={item.label}
+            aria-current={active ? "page" : undefined}
+            className={`group inline-flex h-10 min-w-10 items-center justify-center overflow-hidden rounded-[12px] px-3 text-xs font-medium transition-[width,background-color,color,transform] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--chat-focus)] motion-reduce:transition-none ${
+              active
+                ? "w-auto bg-[var(--chat-nav-active)] text-[var(--chat-accent)] shadow-[0_1px_2px_rgba(0,0,0,.12)]"
+                : "w-10 text-[var(--chat-muted-foreground)] hover:w-auto hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)] focus-visible:w-auto"
+            }`}
+          >
+            <Icon aria-hidden="true" className="size-4 shrink-0" />
+            <span className={`overflow-hidden whitespace-nowrap transition-[max-width,margin,opacity] duration-150 ease-out motion-reduce:transition-none ${active ? "ml-2 max-w-24 opacity-100" : "ml-0 max-w-0 opacity-0 group-hover:ml-2 group-hover:max-w-24 group-hover:opacity-100 group-focus-visible:ml-2 group-focus-visible:max-w-24 group-focus-visible:opacity-100"}`}>
+              {item.label}
+            </span>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
+function QueryAwareNavigationIsland({ pathname }: { pathname: string }) {
+  const searchParams = useSearchParams();
+  return <NavigationIsland pathname={pathname} memoryView={searchParams.get("view")} />;
+}
 
 export function AuthenticatedAppShell({
   children,
@@ -163,37 +211,19 @@ export function AuthenticatedAppShell({
   }
 
   return (
-      <div className="min-h-svh bg-[var(--chat-frame)] text-[var(--chat-foreground)]">
+    <div className="min-h-svh bg-[var(--chat-frame)] text-[var(--chat-foreground)]">
+      <a href="#main-content" className="sr-only fixed left-4 top-4 z-[100] rounded-lg bg-[var(--chat-foreground)] px-4 py-2 text-sm font-medium text-[var(--chat-background)] focus:not-sr-only">
+        Skip to content
+      </a>
       <SidebarProvider className="bg-[var(--chat-frame)]">
         <ChatAppSidebar user={user} workspaces={workspaces} activeWorkspaceId={activeWorkspaceId} onSelectWorkspace={selectWorkspace} onCreateWorkspace={() => setCreateDialogOpen(true)} onSignOut={signOut} stats={stats} features={{ agents: PLAN_AGENTS[user.plan] }} workspacesLoading={workspacesLoading} />
-        <SidebarInset className="m-2 h-[calc(100svh-1rem)] min-h-0 min-w-0 self-start overflow-hidden rounded-[24px] border border-[var(--chat-frame-border)] bg-[var(--chat-background)] text-[var(--chat-foreground)] shadow-[0_1px_2px_rgba(0,0,0,.08),0_18px_48px_-34px_rgba(0,0,0,.65)] md:ml-0">
+        <SidebarInset id="main-content" className="m-2 h-[calc(100svh-1rem)] min-h-0 min-w-0 self-start overflow-hidden rounded-[24px] border border-[var(--chat-frame-border)] bg-[var(--chat-background)] text-[var(--chat-foreground)] shadow-[0_1px_2px_rgba(0,0,0,.08),0_18px_48px_-34px_rgba(0,0,0,.65)] md:ml-0">
         <header className="sticky top-0 z-[60] h-16 border-b border-[var(--chat-border)] bg-[color-mix(in_srgb,var(--chat-background)_88%,transparent)] backdrop-blur-xl">
           <div className="relative mx-auto flex h-full items-center gap-4 px-4 sm:px-6">
             <SidebarTrigger className="inline-flex size-9 rounded-lg border border-[var(--chat-border)] bg-[var(--chat-surface)] text-[var(--chat-muted-foreground)] shadow-sm transition-[background-color,color,transform] duration-150 hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)] active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-[var(--chat-focus)] md:hidden" />
-            <nav aria-label="Primary navigation" className="chat-top-nav-island absolute left-1/2 top-0 hidden  -translate-x-1/2 items-center justify-between gap-0.5 rounded-b-[20px] border-x border-b border-[var(--chat-nav-border)] bg-[var(--chat-nav-shell)] px-2 pb-1.5 pt-2 shadow-[0_1px_2px_rgba(0,0,0,.16),0_14px_34px_-24px_rgba(0,0,0,.72)] md:flex">
-              {CHAT_TOP_NAVIGATION.map((item) => {
-                const active = pathname === item.href.split("?")[0];
-                const Icon = item.icon;
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    aria-label={item.label}
-                    aria-current={active ? "page" : undefined}
-                    className={`group inline-flex h-10 min-w-10 items-center justify-center overflow-hidden rounded-[12px] px-3 text-xs font-medium transition-[width,background-color,color,transform] duration-150 ease-out active:scale-[0.96] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--chat-focus)] motion-reduce:transition-none ${
-                      active
-                        ? "w-auto bg-[var(--chat-nav-active)] text-[var(--chat-accent)] shadow-[0_1px_2px_rgba(0,0,0,.12)]"
-                        : "w-10 text-[var(--chat-muted-foreground)] hover:w-auto hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)] focus-visible:w-auto"
-                    }`}
-                  >
-                    <Icon aria-hidden="true" className="size-4 shrink-0" />
-                    <span className={`overflow-hidden whitespace-nowrap transition-[max-width,margin,opacity] duration-150 ease-out motion-reduce:transition-none ${active ? "ml-2 max-w-24 opacity-100" : "ml-0 max-w-0 opacity-0 group-hover:ml-2 group-hover:max-w-24 group-hover:opacity-100 group-focus-visible:ml-2 group-focus-visible:max-w-24 group-focus-visible:opacity-100"}`}>
-                      {item.label}
-                    </span>
-                  </Link>
-                );
-              })}
-            </nav>
+            <Suspense fallback={<NavigationIsland pathname={pathname} />}>
+              <QueryAwareNavigationIsland pathname={pathname} />
+            </Suspense>
             <div className="ml-auto flex items-center gap-2">
               <button type="button" onClick={() => window.dispatchEvent(new Event("truememory:open-command-palette"))} aria-label="Search TrueMemory" className="inline-flex size-9 items-center justify-center rounded-full border border-[var(--chat-border)] text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)]"><Search className="size-4" /></button>
               <button type="button" onClick={() => setCreateDialogOpen(true)} aria-label="Add memory" className="hidden size-9 items-center justify-center rounded-full border border-[var(--chat-border)] text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)] sm:inline-flex"><Plus className="size-4" /></button>
@@ -203,7 +233,7 @@ export function AuthenticatedAppShell({
           </div>
         </header>
         <TrueMemoryCommandPalette />
-        <main className={variant === "chat" ? "min-h-0 flex-1 overflow-hidden" : "min-h-0 flex-1 overflow-y-auto"}>{children}</main>
+        <div className={variant === "chat" ? "min-h-0 flex-1 overflow-hidden" : "min-h-0 flex-1 overflow-y-auto"}>{children}</div>
         <CreateWorkspaceDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} onSubmit={createWorkspace} />
         </SidebarInset>
       </SidebarProvider>

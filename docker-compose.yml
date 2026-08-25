@@ -136,6 +136,30 @@ services:
       retries: 4
       start_period: 20s
 
+  memory-ingestion-worker:
+    # Universal intake worker. It reuses the backend image and PostgreSQL
+    # queue semantics; it does not create a second memory store.
+    image: truememory-backend:local
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["python", "-m", "worker.memory_ingestion_worker"]
+    env_file:
+      - .env
+    environment:
+      HF_HOME: /root/.cache/huggingface
+      MEMORY_DB_PATH: /app/data/memory.db
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./backend/uploads:/app/uploads
+      - ./backend/data:/app/data
+      - huggingface_cache:/root/.cache/huggingface
+    restart: unless-stopped
+
 volumes:
   postgres_data:
   pgadmin_data:
