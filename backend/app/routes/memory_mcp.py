@@ -28,6 +28,9 @@ TOOLS: list[dict[str, Any]] = [
     {"name": "memory_store", "description": "Store an authorized memory.", "inputSchema": {"type": "object", "required": ["key", "content"], "properties": {"key": {"type": "string", "minLength": 1}, "content": {"type": "string", "minLength": 1}, "scope": {"type": "string"}, "source": {"type": "string"}, "workspace_id": {"type": "string"}, "agent_id": {"type": "string"}, "valid_from": {"type": "string"}, "valid_until": {"type": "string"}, "confidence": {"type": "number", "minimum": 0, "maximum": 1}}, "additionalProperties": False}},
     {"name": "memory_update", "description": "Update an authorized memory.", "inputSchema": {"type": "object", "required": ["id", "content"], "properties": {"id": {"type": "string"}, "content": {"type": "string"}, "scope": {"type": "string"}, "source": {"type": "string"}, "valid_from": {"type": "string"}, "valid_until": {"type": "string"}, "confidence": {"type": "number", "minimum": 0, "maximum": 1}}, "additionalProperties": False}},
     {"name": "memory_forget", "description": "Forget an authorized memory.", "inputSchema": {"type": "object", "required": ["id"], "properties": {"id": {"type": "string"}, "scope": {"type": "string"}}, "additionalProperties": False}},
+    {"name": "memory_current_state", "description": "Return the current authorized project memory state.", "inputSchema": {"type": "object", "required": ["workspace_id"], "properties": {"workspace_id": {"type": "string"}, "project_id": {"type": "string"}}, "additionalProperties": False}},
+    {"name": "memory_timeline", "description": "Return ordered authorized memory version events.", "inputSchema": {"type": "object", "required": ["workspace_id"], "properties": {"workspace_id": {"type": "string"}, "project_id": {"type": "string"}, "memory_key": {"type": "string"}, "start": {"type": "string"}, "end": {"type": "string"}, "as_of": {"type": "string"}, "order": {"type": "string", "enum": ["asc", "desc"]}, "limit": {"type": "integer", "minimum": 1, "maximum": 200}}, "additionalProperties": False}},
+    {"name": "memory_related", "description": "Find memories related to a query.", "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}, "scope": {"type": "string"}, "limit": {"type": "integer"}}, "additionalProperties": False}},
     {"name": "memory_context", "description": "Build relevant authorized memory context.", "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}, "scope": {"type": "string"}, "limit": {"type": "integer"}}, "additionalProperties": False}},
     {"name": "memory_profile", "description": "List authorized profile memories.", "inputSchema": {"type": "object", "properties": {"scope": {"type": "string"}, "limit": {"type": "integer"}}, "additionalProperties": False}},
     {"name": "memory_entities", "description": "Return entities found in authorized memories.", "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}, "scope": {"type": "string"}, "limit": {"type": "integer"}}, "additionalProperties": False}},
@@ -75,18 +78,31 @@ def _call(name: str, args: dict[str, Any], auth: AuthContext) -> dict[str, Any]:
         return result
     if name == "memory_profile":
         return {"items": client.list(user_id=user_id, scope=scope, limit=int(args.get("limit") or 50), workspace_id=workspace_id, agent_id=agent_id), "scope": scope}
+    if name == "memory_current_state":
+        if not workspace_id:
+            raise ValueError("workspace_id_required")
+        items = client.current_state(user_id=user_id, workspace_id=workspace_id, project_id=args.get("project_id"))
+        return {"items": items, "count": len(items), "as_of": "now", "scope": scope}
+    if name == "memory_timeline":
+        if not workspace_id:
+            raise ValueError("workspace_id_required")
+        items = client.timeline(user_id=user_id, workspace_id=workspace_id,
+            project_id=args.get("project_id"), memory_key=args.get("memory_key"),
+            start=args.get("start"), end=args.get("end"), as_of=args.get("as_of"),
+            order=str(args.get("order") or "desc"), limit=int(args.get("limit") or 50))
+        return {"items": items, "count": len(items), "as_of": args.get("as_of"), "scope": scope}
     if name == "memory_store":
         client.remember(user_id=user_id, scope=scope, key=str(args["key"]), content=str(args["content"]), source=str(args.get("source") or "mcp"), valid_from=args.get("valid_from"), valid_until=args.get("valid_until"), confidence=float(args["confidence"] if args.get("confidence") is not None else 0.75), workspace_id=workspace_id, agent_id=agent_id)
         key = str(args["key"]).strip()
         return {"saved": True, "memory_id": f"profile:{scope}:{key}", "key": key, "scope": scope, "provenance": str(args.get("source") or "mcp"), "confidence": 0.75, "temporal_state": "current"}
     memory_id = str(args["id"])
-    parts = memory_id.split(":", 3)
-    if len(parts) == 4 and parts[0] == "profile" and parts[1] == "workspace":
-        target_scope, key = f"workspace:{parts[2]}", parts[3]
-    elif len(parts) == 3 and parts[0] == "profile":
-        target_scope, key = parts[1], parts[2]
-    else:
+    if not memory_id.startswith("profile:"):
         raise ValueError("invalid_memory_id")
+    remainder = memory_id[len("profile:"):]
+    target_scope, _, key = remainder.rpartition(":")
+    if not target_scope or not key:
+        raise ValueError("invalid_memory_id")
+    target_scope = target_scope.split("|", 1)[0]
     if name == "memory_update":
         return {"updated": client.update(user_id=user_id, scope=target_scope, key=key, content=str(args["content"]), source=str(args.get("source") or "mcp"), valid_from=args.get("valid_from"), valid_until=args.get("valid_until"), confidence=float(args["confidence"] if args.get("confidence") is not None else 0.75), workspace_id=workspace_id, agent_id=agent_id), "memory_id": memory_id, "scope": target_scope}
     return {"forgotten": client.forget(user_id=user_id, scope=target_scope, key=key, workspace_id=workspace_id, agent_id=agent_id), "memory_id": memory_id, "scope": target_scope}

@@ -182,6 +182,142 @@ async def complete_chat_completion(
     return ""
 
 
+async def stream_chat_completion_with_tools(
+    *,
+    api_key: str,
+    model: str,
+    messages: list[dict],
+    tools: list[dict] | None = None,
+    max_tokens: int = 2048,
+    on_usage: Callable[[dict[str, int]], None] | None = None,
+) -> AsyncGenerator[str, None]:
+    """Stream chat completion with tool support. Yields text tokens or tool_calls dict."""
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost:3000",
+        "X-Title": "Kontext",
+    }
+    payload: dict = {
+        "model": model,
+        "messages": messages,
+        "stream": True,
+        "stream_options": {"include_usage": True},
+        "max_tokens": max_tokens,
+    }
+    if tools:
+        payload["tools"] = tools
+        payload["tool_choice"] = "auto"
+
+    collected_tool_calls: dict[int, dict] = {}
+
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        for attempt in range(2):
+            async with client.stream(
+                "POST", OPENROUTER_URL, headers=headers, json=payload
+            ) as response:
+                if response.status_code != 200:
+                    body = await response.aread()
+                    message = _openrouter_error(body, response.status_code)
+                    retry_tokens = _affordable_retry_tokens(message, int(payload["max_tokens"]))
+                    if attempt == 0 and retry_tokens:
+                        payload["max_tokens"] = retry_tokens
+                        continue
+                    raise RuntimeError(message)
+
+                async for line in response.aiter_lines():
+                    if not line or not line.startswith("data: "):
+                        continue
+                    data = line[6:].strip()
+                    if data == "[DONE]":
+                        break
+                    try:
+                        chunk = json.loads(data)
+                    except json.JSONDecodeError:
+                        continue
+                    usage = _normalized_usage(chunk.get("usage"))
+                    if usage and on_usage:
+                        on_usage(usage)
+                    choices = chunk.get("choices")
+                    if not isinstance(choices, list) or not choices:
+                        continue
+                    choice = choices[0] or {}
+                    delta = choice.get("delta", {}) or {}
+                    # Handle tool call deltas
+                    for tc_delta in delta.get("tool_calls") or []:
+                        idx = tc_delta.get("index", 0)
+                        if idx not in collected_tool_calls:
+                            collected_tool_calls[idx] = {
+                                "id": tc_delta.get("id", ""),
+                                "type": "function",
+                                "function": {"name": "", "arguments": ""},
+                            }
+                        tc = collected_tool_calls[idx]
+                        if tc_delta.get("id"):
+                            tc["id"] = tc_delta["id"]
+                        fn = tc_delta.get("function") or {}
+                        if fn.get("name"):
+                            tc["function"]["name"] += fn["name"]
+                        if fn.get("arguments"):
+                            tc["function"]["arguments"] += fn["arguments"]
+                    # Yield text content
+                    text = _content_text(delta.get("content"))
+                    if not text:
+                        text = _content_text((choice.get("message") or {}).get("content"))
+                    if text:
+                        yield text
+                # After stream ends, if we collected tool calls, yield them as a special dict
+                if collected_tool_calls:
+                    yield {"tool_calls": list(collected_tool_calls.values())}
+                return
+
+
+async def complete_chat_completion_with_tools(
+    *,
+    api_key: str,
+    model: str,
+    messages: list[dict],
+    tools: list[dict] | None = None,
+    max_tokens: int = 2048,
+) -> dict:
+    """Non-streaming completion with tool support. Returns {content, tool_calls}."""
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "http://localhost:3000",
+        "X-Title": "Kontext",
+    }
+    payload: dict = {
+        "model": model,
+        "messages": messages,
+        "stream": False,
+        "max_tokens": max_tokens,
+    }
+    if tools:
+        payload["tools"] = tools
+        payload["tool_choice"] = "auto"
+
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        for attempt in range(2):
+            response = await client.post(OPENROUTER_URL, headers=headers, json=payload)
+            if response.status_code != 200:
+                message = _openrouter_error(response.content, response.status_code)
+                retry_tokens = _affordable_retry_tokens(message, int(payload["max_tokens"]))
+                if attempt == 0 and retry_tokens:
+                    payload["max_tokens"] = retry_tokens
+                    continue
+                raise RuntimeError(message)
+
+            data = response.json()
+            choice = (data.get("choices") or [{}])[0] or {}
+            message = choice.get("message") or {}
+            return {
+                "content": _content_text(message.get("content")),
+                "tool_calls": message.get("tool_calls") or [],
+            }
+    return {"content": "", "tool_calls": []}
+
+
 async def stream_ollama_completion(
     *,
     base_url: str,

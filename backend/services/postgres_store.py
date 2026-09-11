@@ -8,6 +8,8 @@ import logging
 from typing import Any
 from uuid import UUID, uuid4
 
+from services.conflict_resolver import ConflictResolution, resolve_conflict
+
 try:
     import psycopg
     from psycopg.rows import dict_row
@@ -576,56 +578,76 @@ def save_durable_memories(
                 current = cur.fetchone()
                 lifecycle_status = "approved"
                 supersedes_id = None
-                if current and current["content"] == candidate.content:
-                    cur.execute(
-                        """
-                        UPDATE user_memories SET
-                            conversation_id = %s, source_message_id = %s,
-                            importance_score = %s, updated_at = NOW()
-                        WHERE id = %s
-                        RETURNING id::text, memory_type, memory_key, content,
-                                  importance_score, source, conversation_id::text,
-                                  source_message_id::text, updated_at
-                        """,
-                        (
-                            conversation_id, source_message_id,
-                            candidate.importance_score, current["id"],
-                        ),
+
+                if current:
+                    conflict = resolve_conflict(
+                        candidate_content=candidate.content,
+                        candidate_type=candidate.memory_type,
+                        candidate_key=candidate.memory_key,
+                        existing=current,
                     )
-                else:
-                    if current:
+
+                    if conflict.resolution == ConflictResolution.NOOP:
+                        cur.execute(
+                            """
+                            UPDATE user_memories SET
+                                conversation_id = %s, source_message_id = %s,
+                                importance_score = %s, updated_at = NOW()
+                            WHERE id = %s
+                            RETURNING id::text, memory_type, memory_key, content,
+                                      importance_score, source, conversation_id::text,
+                                      source_message_id::text, updated_at
+                            """,
+                            (
+                                conversation_id, source_message_id,
+                                candidate.importance_score, current["id"],
+                            ),
+                        )
+                        row = cur.fetchone()
+                        if row:
+                            saved.append(dict(row))
+                        continue
+
+                    if conflict.resolution == ConflictResolution.ADD:
+                        pass
+                    else:
                         lifecycle_status = "pending"
                         supersedes_id = current["id"]
+                        next_revision = int(current.get("revision") or 0) + 1
                         cur.execute(
                             """
                             UPDATE user_memories
                             SET lifecycle_status = 'superseded',
-                                superseded_at = NOW(), updated_at = NOW()
+                                superseded_at = NOW(), valid_until = NOW(),
+                                updated_at = NOW()
                             WHERE id = %s
                             """,
                             (current["id"],),
                         )
-                    cur.execute(
-                        """
-                        INSERT INTO user_memories (
-                            user_id, workspace_id, project_id, conversation_id,
-                            source_message_id, memory_type, memory_key, content,
-                            importance_score, confidence_score, source,
-                            lifecycle_status, supersedes_memory_id
-                        )
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 0.900,
-                                'user-declared', %s, %s)
-                        RETURNING id::text, memory_type, memory_key, content,
-                                  importance_score, source, conversation_id::text,
-                                  source_message_id::text, updated_at
-                        """,
-                        (
-                            user_id, workspace_id, project_id, conversation_id,
-                            source_message_id, candidate.memory_type,
-                            candidate.memory_key, candidate.content,
-                            candidate.importance_score, lifecycle_status, supersedes_id,
-                        ),
+
+                cur.execute(
+                    """
+                    INSERT INTO user_memories (
+                        user_id, workspace_id, project_id, conversation_id,
+                        source_message_id, memory_type, memory_key, content,
+                        importance_score, confidence_score, source,
+                        lifecycle_status, supersedes_memory_id,
+                        valid_from, revision
                     )
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 0.900,
+                            'user-declared', %s, %s, NOW(), %s)
+                    RETURNING id::text, memory_type, memory_key, content,
+                              importance_score, source, conversation_id::text,
+                              source_message_id::text, updated_at
+                    """,
+                    (
+                        user_id, workspace_id, project_id, conversation_id,
+                        source_message_id, candidate.memory_type,
+                        candidate.memory_key, candidate.content,
+                        candidate.importance_score, lifecycle_status, supersedes_id,
+                        next_revision if supersedes_id else 1,
+                    ),
+                )
                 row = cur.fetchone()
                 if row:
                     saved.append(dict(row))
@@ -678,6 +700,40 @@ def list_workspace_memories(
                 ),
             )
             return list(cur.fetchall())
+
+
+def timeline_workspace_memories(
+    settings, *, user_id: str, workspace_id: str, project_id: str | None = None,
+    memory_key: str | None = None, start: str | None = None, end: str | None = None,
+    as_of: str | None = None, order: str = "desc", limit: int = 50,
+) -> list[dict[str, Any]]:
+    """Return version events; never collapses revisions into current rows."""
+    if not postgres_enabled(settings):
+        return []
+    direction = "ASC" if order == "asc" else "DESC"
+    with _connect(settings) as conn:
+        with conn.cursor() as cur:
+            cur.execute(f"""
+                SELECT id::text AS memory_id, memory_key, content, revision,
+                       lifecycle_status, source AS source_type, provenance,
+                       valid_from, valid_until, created_at AS observed_at,
+                       supersedes_memory_id::text
+                FROM user_memories
+                WHERE user_id = %s AND workspace_id = %s
+                  AND (%s::uuid IS NULL OR project_id = %s::uuid)
+                  AND (%s::text IS NULL OR memory_key = %s)
+                  AND (%s::timestamptz IS NULL OR COALESCE(valid_until, created_at) >= %s::timestamptz)
+                  AND (%s::timestamptz IS NULL OR COALESCE(valid_from, created_at) <= %s::timestamptz)
+                  AND (%s::timestamptz IS NULL OR created_at <= %s::timestamptz)
+                ORDER BY COALESCE(valid_from, created_at) {direction}, revision {direction}
+                LIMIT %s
+            """, (user_id, workspace_id, project_id, project_id, memory_key, memory_key,
+                   start, start, end, end, as_of, as_of, max(1, min(limit, 200))))
+            rows = list(cur.fetchall())
+            for row in rows:
+                row["event_type"] = "superseded" if row.get("lifecycle_status") == "superseded" else "stored"
+                row["state"] = "historical" if row.get("lifecycle_status") == "superseded" else "current"
+            return rows
 
 
 def list_managed_memories(
@@ -742,10 +798,12 @@ def update_managed_memory(
                 normalized = (content or "").strip()[:4000]
                 if not normalized:
                     raise ValueError("Memory content cannot be empty.")
+                next_revision = int(current.get("revision") or 0) + 1
                 cur.execute(
                     """
                     UPDATE user_memories
-                    SET lifecycle_status = 'superseded', superseded_at = NOW(), updated_at = NOW()
+                    SET lifecycle_status = 'superseded', superseded_at = NOW(),
+                        valid_until = NOW(), updated_at = NOW()
                     WHERE id = %s
                     """,
                     (memory_id,),
@@ -756,10 +814,12 @@ def update_managed_memory(
                         user_id, workspace_id, project_id, conversation_id,
                         artifact_id, source_message_id, memory_type, memory_key,
                         content, importance_score, confidence_score, source,
-                        lifecycle_status, is_pinned, supersedes_memory_id, reviewed_at
+                        lifecycle_status, is_pinned, supersedes_memory_id, reviewed_at,
+                        valid_from, revision
                     ) VALUES (
                         %s, %s, %s, %s, %s, %s, %s, %s,
-                        %s, %s, %s, 'user-edited', 'approved', %s, %s, NOW()
+                        %s, %s, %s, 'user-edited', 'approved', %s, %s, NOW(),
+                        NOW(), %s
                     )
                     RETURNING id::text
                     """,
@@ -769,6 +829,7 @@ def update_managed_memory(
                         current["source_message_id"], current["memory_type"],
                         current["memory_key"], normalized, current["importance_score"],
                         current["confidence_score"], current["is_pinned"], memory_id,
+                        next_revision,
                     ),
                 )
                 next_id = cur.fetchone()["id"]

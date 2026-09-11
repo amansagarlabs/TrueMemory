@@ -23,10 +23,11 @@ from services.memory_store import (
     sync_account_profile_memories,
 )
 from services.durable_memory import extract_durable_memories, rank_durable_memories
-from services.postgres_store import load_conversation_messages, list_managed_memories, list_workspace_memories, postgres_enabled, save_durable_memories, update_managed_memory
+from services.postgres_store import load_conversation_messages, list_managed_memories, list_workspace_memories, timeline_workspace_memories, postgres_enabled, save_durable_memories, update_managed_memory, _connect
 from services.memory_store import get_recent_messages
 from services.memory_hot_cache import HotMemoryCache, get_hot_cache
 from services.memory_hybrid import get_memory_hybrid_retriever
+from services.temporal_reasoning import extract_temporal_intent, filter_by_temporal_intent
 
 logger = logging.getLogger("kontext.memory")
 
@@ -292,14 +293,37 @@ class MemoryClient:
         if bindings:
             context = self.context(user_id=user_id, scope=scope, workspace_id=workspace_id, agent_id=agent_id, token_bindings=token_bindings, request_id=request_id)
             MemoryAuthorization.assert_bindings(context, {"organization_id": context.scope.organization_id, "tenant_id": context.scope.tenant_id, "workspace_id": workspace_id, "agent_id": agent_id})
-        return self._cached(key, lambda: self._search_hierarchy(user_id=user_id, scope=scope, query=query, limit=limit, workspace_id=workspace_id, agent_id=agent_id, as_of=as_of, include_history=include_history, token_bindings=token_bindings, request_id=request_id))
+        import logging as _log
+        _log.getLogger("memory.debug").warning("SEARCH user_id=%s scope=%s storage_scope=%s query=%s ws=%s cache_key=%s", user_id, scope, storage_scope, query, workspace_id, key)
+        result = self._cached(key, lambda: self._search_hierarchy(user_id=user_id, scope=scope, query=query, limit=limit, workspace_id=workspace_id, agent_id=agent_id, as_of=as_of, include_history=include_history, token_bindings=token_bindings, request_id=request_id))
+        _log.getLogger("memory.debug").warning("SEARCH result_count=%d", len(result))
+        return result
 
     def _search_hierarchy(self, *, user_id: str, scope: str, query: str, limit: int, workspace_id: str | None, agent_id: str | None, as_of: str | None, include_history: bool, token_bindings: dict[str, str] | None, request_id: str | None) -> list[dict[str, Any]]:
+        temporal_intent = extract_temporal_intent(query)
+
+        effective_as_of = as_of
+        effective_include_history = include_history
+
+        if temporal_intent.has_temporal and not as_of and not include_history:
+            if temporal_intent.intent == "current":
+                effective_include_history = False
+            elif temporal_intent.intent in ("before", "historical"):
+                effective_include_history = True
+                if temporal_intent.target_date:
+                    effective_as_of = temporal_intent.target_date.isoformat()
+            elif temporal_intent.intent == "range" and temporal_intent.target_date:
+                effective_as_of = temporal_intent.target_date.isoformat()
+
         l1_items = self.search_l1(user_id=user_id, scope=scope, query=query, limit=limit, workspace_id=workspace_id, agent_id=agent_id, token_bindings=token_bindings, request_id=request_id)
-        l1_items = self.hybrid.filter_temporal(l1_items, as_of=as_of or datetime.now(UTC), include_history=include_history)
-        if self._l1_sufficient(query, l1_items) and not include_history and not as_of:
+        l1_items = self.hybrid.filter_temporal(l1_items, as_of=effective_as_of or datetime.now(UTC), include_history=effective_include_history)
+        if temporal_intent.has_temporal:
+            l1_items = filter_by_temporal_intent(l1_items, temporal_intent)
+        if self._l1_sufficient(query, l1_items) and not effective_include_history and not effective_as_of:
             return l1_items
-        l2_items = self.search_l2(user_id=user_id, scope=scope, query=query, limit=limit, workspace_id=workspace_id, agent_id=agent_id, as_of=as_of, include_history=include_history, token_bindings=token_bindings, request_id=request_id)
+        l2_items = self.search_l2(user_id=user_id, scope=scope, query=query, limit=limit, workspace_id=workspace_id, agent_id=agent_id, as_of=effective_as_of, include_history=effective_include_history, token_bindings=token_bindings, request_id=request_id)
+        if temporal_intent.has_temporal:
+            l2_items = filter_by_temporal_intent(l2_items, temporal_intent)
         return l2_items or l1_items
 
     def remember(self, *, user_id: str, scope: str = "general", key: str, content: str, source: str = "agent", valid_from: str | None = None, valid_until: str | None = None, confidence: float = 0.75, workspace_id: str | None = None, agent_id: str | None = None, request_id: str | None = None) -> None:
@@ -383,11 +407,105 @@ class MemoryClient:
         return self.hot_cache.metrics()
 
     def extract_and_save_workspace_memory(self, *, user_id: str, workspace_id: str, conversation_id: str, source_message_id: str | None, text: str, project_id: str | None = None) -> list[dict[str, Any]]:
-        return self.save_workspace_candidates(
+        """Extract memories using LLM pipeline with governance, then save."""
+        from services.memory_extraction import extract_memories_sync
+        from services.memory_governor import govern_candidate, GovernorDecision, MemoryPolicy
+        from services.memory_pipeline import candidates_to_write_objects
+
+        extraction = extract_memories_sync(
+            text,
+            source_type="user_message",
+        )
+
+        policy = MemoryPolicy()
+        accepted = []
+        for candidate in extraction.candidates:
+            result = govern_candidate(candidate, policy=policy)
+            if result.decision not in (
+                GovernorDecision.REJECT,
+                GovernorDecision.NOOP,
+                GovernorDecision.EXPIRE,
+            ):
+                accepted.append(candidate)
+
+        if not accepted:
+            return []
+
+        write_candidates = candidates_to_write_objects(
+            accepted,
             user_id=user_id,
             workspace_id=workspace_id,
             conversation_id=conversation_id,
             source_message_id=source_message_id,
-            candidates=extract_durable_memories(text),
             project_id=project_id,
         )
+
+        saved = self.save_workspace_candidates(
+            user_id=user_id,
+            workspace_id=workspace_id,
+            conversation_id=conversation_id,
+            source_message_id=source_message_id,
+            candidates=write_candidates,
+            project_id=project_id,
+        )
+        return saved
+
+    def current_state(self, *, user_id: str, workspace_id: str, project_id: str | None = None, memory_type: str | None = None) -> list[dict[str, Any]]:
+        """Return currently valid memories (approved, not superseded, within validity window)."""
+        return list_workspace_memories(
+            self.settings,
+            user_id=user_id,
+            workspace_id=workspace_id,
+            project_id=project_id,
+            limit=200,
+            include_history=False,
+        )
+
+    def historical_state(self, *, user_id: str, workspace_id: str, as_of: str, project_id: str | None = None) -> list[dict[str, Any]]:
+        """Return memories that were valid at a specific point in time."""
+        return list_workspace_memories(
+            self.settings,
+            user_id=user_id,
+            workspace_id=workspace_id,
+            project_id=project_id,
+            limit=200,
+            as_of=as_of,
+            include_history=True,
+        )
+
+    def timeline(self, *, user_id: str, workspace_id: str, project_id: str | None = None, memory_key: str | None = None, start: str | None = None, end: str | None = None, as_of: str | None = None, order: str = "desc", limit: int = 50) -> list[dict[str, Any]]:
+        return timeline_workspace_memories(self.settings, user_id=user_id, workspace_id=workspace_id, project_id=project_id, memory_key=memory_key, start=start, end=end, as_of=as_of, order=order, limit=limit)
+
+    def related(self, *, user_id: str, workspace_id: str, memory_id: str, project_id: str | None = None, limit: int = 10) -> list[dict[str, Any]]:
+        """Return same-project memories related by key/type; excludes source."""
+        records = list_workspace_memories(self.settings, user_id=user_id, workspace_id=workspace_id, project_id=project_id, limit=200, include_history=False)
+        source = next((r for r in records if str(r.get("id")) == str(memory_id)), None)
+        if not source:
+            return []
+        key = str(source.get("memory_key") or "")
+        kind = str(source.get("memory_type") or "")
+        related = [r for r in records if str(r.get("id")) != str(memory_id) and (r.get("memory_key") == key or r.get("memory_type") == kind)]
+        return related[:max(1, min(limit, 200))]
+
+    def memory_versions(self, *, user_id: str, workspace_id: str, memory_key: str, project_id: str | None = None) -> list[dict[str, Any]]:
+        """Return the full version history for a specific memory key."""
+        if not postgres_enabled(self.settings):
+            return []
+        with _connect(self.settings) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT
+                        id::text, memory_type, memory_key, content,
+                        importance_score, confidence_score, source,
+                        lifecycle_status, revision, supersedes_memory_id::text,
+                        valid_from, valid_until, created_at, updated_at
+                    FROM user_memories
+                    WHERE user_id = %s AND workspace_id = %s
+                      AND memory_key = %s
+                      AND (%s::uuid IS NULL OR project_id = %s::uuid)
+                    ORDER BY revision ASC
+                    """,
+                    (user_id, workspace_id, memory_key, project_id, project_id),
+                )
+                return [dict(row) for row in cur.fetchall()]

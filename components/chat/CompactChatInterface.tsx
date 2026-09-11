@@ -23,10 +23,18 @@ import ModelPicker from "@/components/chat/ModelPicker";
 import { Message, Model } from "@/components/chat/types";
 
 const SUGGESTIONS = [
-  "What are the advantages of using Next.js?",
-  "Write code to demonstrate Dijkstra's algorithm",
-  "Help me write an essay about Silicon Valley",
-  "What is the weather in San Francisco?",
+  {
+    label: "Summarize",
+    prompt: "Summarize this file for me",
+  },
+  {
+    label: "Explain",
+    prompt: "What is this file about?",
+  },
+  {
+    label: "Key points",
+    prompt: "List the key points from the document",
+  },
 ];
 
 type Props = {
@@ -309,25 +317,25 @@ function Welcome({
   disabled?: boolean;
 }) {
   return (
-    <div className="flex w-full max-w-xl flex-col items-center gap-6">
+    <div className="flex w-full max-w-xl flex-col items-center gap-4 sm:gap-6">
       <div className="text-center">
-        <h1 className="text-2xl font-medium text-white">
+        <h1 className="text-lg font-medium text-white sm:text-2xl">
           What can I help with?
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-xs text-zinc-500 sm:text-sm">
           Ask a question, write code, or explore ideas.
         </p>
       </div>
-      <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2">
+      <div className="flex w-full flex-wrap justify-center gap-1.5 sm:grid sm:grid-cols-2 sm:gap-2">
         {SUGGESTIONS.map((s) => (
           <button
-            key={s}
+            key={s.prompt}
             type="button"
-            onClick={() => onSuggestion(s)}
+            onClick={() => onSuggestion(s.prompt)}
             disabled={disabled}
-            className="rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-3 text-left text-sm text-zinc-400 transition hover:border-zinc-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-full border border-zinc-800 bg-zinc-900 px-2.5 py-1.5 text-xs text-zinc-400 transition hover:border-zinc-600 hover:text-white disabled:cursor-not-allowed disabled:opacity-50 sm:rounded-xl sm:px-3 sm:py-3 sm:text-left sm:text-sm"
           >
-            {s}
+            {s.label}
           </button>
         ))}
       </div>

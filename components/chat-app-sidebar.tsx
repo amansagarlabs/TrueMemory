@@ -39,6 +39,7 @@ import {
   Pin,
   PinOff,
   SlidersHorizontal,
+  Code2,
   Star,
   StarOff,
   Trash2,
@@ -100,6 +101,7 @@ type ConversationDialogState =
 
 const PRIMARY_NAVIGATION = [
   { label: "Chats", href: "/chat", icon: MessageCircle },
+  { label: "Developer", href: "/developer", icon: Code2 },
   { label: "Skills", href: "/skills", icon: IconSparkles },
   { label: "Automations", href: "/projects", icon: Activity },
   { label: "Personalization", href: "/profile", icon: SlidersHorizontal },
@@ -234,10 +236,16 @@ export function ChatAppSidebar({
       void loadRecents();
     }
 
+    function handleNewChat() {
+      startNewChat();
+    }
+
     window.addEventListener(CHAT_RECENTS_CHANGED_EVENT, handleRecentsChanged);
+    window.addEventListener(CHAT_NEW_EVENT, handleNewChat);
     return () => {
       window.clearTimeout(timer);
       window.removeEventListener(CHAT_RECENTS_CHANGED_EVENT, handleRecentsChanged);
+      window.removeEventListener(CHAT_NEW_EVENT, handleNewChat);
     };
   }, [loadRecents]);
 

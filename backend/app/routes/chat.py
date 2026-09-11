@@ -86,6 +86,27 @@ from services.project_context import (
     ensure_project_mention,
     retrieve_project_context_nodes,
 )
+from services.jit_retrieval import (
+    decide_retrieval,
+    retrieve_for_agent,
+    format_memory_for_context,
+    RetrievalTrigger,
+)
+from services.agent_memory_tools import AgentMemoryTools, MemoryContext
+from services.agent_memory_capture import AgentMemoryCapture
+# Phase 8.5: Removed automatic application-level memory retrieval
+# Keep: role, project, high-priority preferences (mandatory context)
+# Let model control additional memory retrieval via tools
+from services.tool_calling_loop import (
+    ToolCallLoopResult,
+    run_tool_calling_loop,
+    build_tool_calling_messages,
+    build_memory_tool_system_prompt,
+    get_memory_tool_definitions_as_tool_defs,
+)
+from services.memory_tool_registry import get_memory_tool_definitions
+from services.llm_provider import LLMProvider, Message, ToolDefinition
+from services.providers import create_openrouter_provider
 from services.context_retrieval import (
     CallableContextProvider,
     ContextProviderRegistry,
@@ -1135,7 +1156,12 @@ async def _chat_event_stream(
     ):
         recent_messages = []
 
-    effective_mode = query_mode
+    # Phase 8.5: Mandatory context injection
+    # Keep: role, project, high-priority preferences (always injected)
+    # Remove: automatic application-level memory retrieval for every request
+    # Let model control additional memory retrieval via tools
+
+    # Effective mode routing
     if is_coding_chat:
         effective_mode = QueryMode.DIRECT
     if effective_mode == QueryMode.AUTO:
@@ -2016,51 +2042,152 @@ async def _chat_event_stream(
             yield sse("token", {"content": safe_answer})
         else:
             try:
-                stream = (
-                    stream_ollama_completion(
+                # Native memory tool calling loop
+                # Build memory context for tool executor
+                memory_context = MemoryContext(
+                    user_id=user_id,
+                    workspace_id=workspace_id,
+                    project_id=project_id,
+                    conversation_id=conversation_id,
+                )
+
+                # Get proactive memory context from application-level orchestration
+                proactive_memory_context = None
+                if profile_memories:
+                    proactive_parts = []
+                    for item in profile_memories:
+                        key = item.get("key", "")
+                        content = item.get("content", "")
+                        if key and content:
+                            proactive_parts.append(f"{key}: {content}")
+                    if proactive_parts:
+                        proactive_memory_context = "\n".join(proactive_parts)
+
+                # Prepare messages with memory tool system prompt
+                tool_messages = build_tool_calling_messages(
+                    base_messages=[Message(role=m["role"], content=m.get("content")) for m in messages],
+                    proactive_context=proactive_memory_context,
+                )
+
+                # Create provider (provider-independent interface)
+                if requested_local_model:
+                    # For local models, create Ollama provider or use simple streaming
+                    # For now, use simple streaming without tools
+                    stream = stream_ollama_completion(
                         base_url=settings.ollama_base_url,
                         model=local_model,
                         messages=messages,
                         max_tokens=settings.openrouter_max_tokens,
                     )
-                    if requested_local_model
-                    else stream_chat_completion(
+                    async for token in stream:
+                        safe_token = stream_guard.push(token)
+                        full_answer.append(safe_token)
+                        if safe_token and not validate_fresh_answer:
+                            yield sse("token", {"content": safe_token})
+                        if streaming_message_id and len(full_answer) % 12 == 0:
+                            try:
+                                update_streaming_message(
+                                    settings,
+                                    message_id=streaming_message_id,
+                                    user_id=resolved_user_id,
+                                    content="".join(full_answer),
+                                )
+                            except Exception:
+                                streaming_message_id = None
+                        elif local_streaming_message_id and len(full_answer) % 12 == 0:
+                            try:
+                                update_local_message(
+                                    settings,
+                                    message_id=local_streaming_message_id,
+                                    user_id=user_id,
+                                    content="".join(full_answer),
+                                )
+                            except Exception:
+                                local_streaming_message_id = None
+                    safe_token = stream_guard.finish()
+                    if safe_token:
+                        full_answer.append(safe_token)
+                        if not validate_fresh_answer:
+                            yield sse("token", {"content": safe_token})
+                    tool_loop_result = ToolCallLoopResult(
+                        content="".join(full_answer),
+                        tool_calls_executed=0,
+                        attribution_events=[],
+                        total_tool_ms=0.0,
+                        tool_calls_made=[],
+                    )
+                else:
+                    # Create provider using provider interface
+                    # OpenRouter is one implementation; swap provider here for other LLMs
+                    provider = create_openrouter_provider(
                         api_key=settings.openrouter_api_key,
                         model=response_model,
-                        messages=messages,
-                        max_tokens=settings.openrouter_max_tokens,
                     )
-                )
-                async for token in stream:
-                    safe_token = stream_guard.push(token)
-                    full_answer.append(safe_token)
-                    if safe_token and not validate_fresh_answer:
-                        yield sse("token", {"content": safe_token})
-                    if streaming_message_id and len(full_answer) % 12 == 0:
-                        try:
-                            update_streaming_message(
-                                settings,
-                                message_id=streaming_message_id,
-                                user_id=resolved_user_id,
-                                content="".join(full_answer),
-                            )
-                        except Exception:
-                            streaming_message_id = None
-                    elif local_streaming_message_id and len(full_answer) % 12 == 0:
-                        try:
-                            update_local_message(
-                                settings,
-                                message_id=local_streaming_message_id,
-                                user_id=user_id,
-                                content="".join(full_answer),
-                            )
-                        except Exception:
-                            local_streaming_message_id = None
-                safe_token = stream_guard.finish()
-                if safe_token:
-                    full_answer.append(safe_token)
-                    if not validate_fresh_answer:
-                        yield sse("token", {"content": safe_token})
+
+                    # Run the tool calling loop with provider interface
+                    tool_loop_result = None
+                    async for event in run_tool_calling_loop(
+                        provider=provider,
+                        model=response_model,
+                        messages=tool_messages,
+                        context=memory_context,
+                        tools=get_memory_tool_definitions_as_tool_defs(),
+                        max_tool_rounds=5,
+                        max_tokens=settings.openrouter_max_tokens,
+                        run_id=conversation_id,
+                        settings=settings,
+                    ):
+                        if isinstance(event, str):
+                            # Text token
+                            safe_token = stream_guard.push(event)
+                            full_answer.append(safe_token)
+                            if safe_token and not validate_fresh_answer:
+                                yield sse("token", {"content": safe_token})
+                            if streaming_message_id and len(full_answer) % 12 == 0:
+                                try:
+                                    update_streaming_message(
+                                        settings,
+                                        message_id=streaming_message_id,
+                                        user_id=resolved_user_id,
+                                        content="".join(full_answer),
+                                    )
+                                except Exception:
+                                    streaming_message_id = None
+                            elif local_streaming_message_id and len(full_answer) % 12 == 0:
+                                try:
+                                    update_local_message(
+                                        settings,
+                                        message_id=local_streaming_message_id,
+                                        user_id=user_id,
+                                        content="".join(full_answer),
+                                    )
+                                except Exception:
+                                    local_streaming_message_id = None
+                        elif isinstance(event, dict):
+                            if "tool_started" in event:
+                                yield sse("memory.tool.started", {
+                                    "tool_name": event["tool_started"],
+                                    "tool_call_id": event.get("tool_call_id"),
+                                    "arguments": event.get("arguments", {}),
+                                })
+                            elif "tool_completed" in event:
+                                yield sse("memory.tool.completed", {
+                                    "tool_name": event["tool_completed"],
+                                    "tool_call_id": event.get("tool_call_id"),
+                                    "success": event.get("success", False),
+                                    "execution_time_ms": event.get("execution_time_ms", 0),
+                                })
+                            elif "decision_event" in event:
+                                yield sse("memory.decision", event["decision_event"])
+                            elif "action_event" in event:
+                                yield sse("memory.action", event["action_event"])
+                            elif "influence_event" in event:
+                                yield sse("memory.influence", event["influence_event"])
+                    safe_token = stream_guard.finish()
+                    if safe_token:
+                        full_answer.append(safe_token)
+                        if not validate_fresh_answer:
+                            yield sse("token", {"content": safe_token})
             except Exception as vision_error:
                 if (
                     not requested_local_model
@@ -2444,6 +2571,25 @@ async def _chat_event_stream(
         question=question,
         answer=answer_text,
     )
+
+    # Agent Memory Capture: Capture agent behavior as durable memory
+    if resolved_user_id and workspace_id:
+        try:
+            agent_capture = AgentMemoryCapture(settings)
+            capture_context = MemoryContext(
+                user_id=user_id,
+                workspace_id=workspace_id,
+                project_id=project_id,
+                conversation_id=conversation_id,
+            )
+            agent_capture.capture_tool_result(
+                tool_name="agent_response",
+                result=answer_text[:500],
+                context=capture_context,
+                should_persist=False,
+            )
+        except Exception:
+            pass
 
     yield sse(
         "done",

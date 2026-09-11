@@ -1,0 +1,44 @@
+services:
+  postgres-test:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: truememory_test
+      POSTGRES_USER: truememory_test
+      POSTGRES_PASSWORD: ${TRUEMEMORY_TEST_DB_PASSWORD:?set test-only password}
+    ports:
+      - "${TRUEMEMORY_TEST_DB_PORT:-55432}:5432"
+    volumes:
+      - ./backend/db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U truememory_test -d truememory_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  api-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+    env_file: [.env]
+    environment:
+      TEST_ENV: "true"
+      DATABASE_URL: postgresql://truememory_test:${TRUEMEMORY_TEST_DB_PASSWORD}@postgres-test:5432/truememory_test
+      KONTEXT_ENABLE_TEST_AUTH: "1"
+      MEMORY_DB_PATH: /tmp/truememory-test.db
+    ports:
+      - "${TRUEMEMORY_TEST_API_PORT:-18000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/v1/memory/health', timeout=3)"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  mcp-test:
+    image: curlimages/curl:8.10.1
+    depends_on:
+      api-test:
+        condition: service_healthy
+    entrypoint: ["sh", "-c", "curl --fail http://api-test:8000/v1/memory/health"]

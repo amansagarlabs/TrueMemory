@@ -100,8 +100,24 @@ export declare class TrueMemory {
         key: string;
         scope: string;
     }>;
+    store(input: MemoryInput, options?: RequestOptions): Promise<{
+        saved: boolean;
+        id: string;
+        key: string;
+        scope: string;
+    }>;
     search(input?: RecallInput, options?: RequestOptions): Promise<MemoryResult>;
     retrieve(input?: RecallInput, options?: RequestOptions): Promise<MemoryResult>;
+    currentState(input: {
+        workspace_id: string;
+        project_id?: string;
+    }, options?: RequestOptions): Promise<MemoryResult>;
+    timeline(input: {
+        workspace_id: string;
+        project_id?: string;
+        as_of?: string;
+    }, options?: RequestOptions): Promise<MemoryResult>;
+    related(input?: RecallInput, options?: RequestOptions): Promise<MemoryResult>;
     update(input: {
         id: string;
         content: string;

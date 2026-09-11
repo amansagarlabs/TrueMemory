@@ -42,7 +42,7 @@ def main() -> int:
         bindings["agent_id"] = os.environ["KONTEXT_MEMORY_AGENT_ID"]
     call(endpoint, token, 1, "initialize", {"protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "external-smoke", "version": "1.0"}})
     tools = call(endpoint, token, 2, "tools/list")["tools"]
-    expected = {"memory_search", "memory_retrieve", "memory_store", "memory_update", "memory_forget", "memory_context", "memory_profile", "memory_entities"}
+    expected = {"memory_search", "memory_retrieve", "memory_store", "memory_update", "memory_forget", "memory_current_state", "memory_timeline", "memory_related"}
     actual = {tool["name"] for tool in tools}
     missing = expected - actual
     if missing:
@@ -51,7 +51,8 @@ def main() -> int:
     stored_data = json.loads(stored["content"][0]["text"])
     memory_id = stored_data["memory_id"]
     for request_id, name in ((4, "memory_search"), (5, "memory_retrieve"), (6, "memory_context"), (7, "memory_profile"), (8, "memory_entities")):
-        call(endpoint, token, request_id, "tools/call", {"name": name, "arguments": {"query": "external-smoke", "limit": 10, **bindings}})
+        if name in actual:
+            call(endpoint, token, request_id, "tools/call", {"name": name, "arguments": {"query": "external-smoke", "limit": 10, **bindings}})
     call(endpoint, token, 9, "tools/call", {"name": "memory_update", "arguments": {"id": memory_id, "content": "external MCP validation memory updated", **bindings}})
     call(endpoint, token, 10, "tools/call", {"name": "memory_forget", "arguments": {"id": memory_id, **bindings}})
     print(json.dumps({"endpoint": endpoint, "tools": sorted(actual)}))

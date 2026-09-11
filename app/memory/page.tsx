@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ChangeEvent, useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { ChangeEvent, Suspense, useCallback, useEffect, useRef, useState } from "react";
 import {
   ArrowLeft, Check, Database, Download, Pencil, Pin, PinOff,
   Search, Trash2, Upload, UserRound, X,
@@ -9,6 +10,7 @@ import {
 import { AuthenticatedAppShell } from "@/components/authenticated-app-shell";
 import { PaperDither } from "@/components/ui/paper-dither";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MemoryGraph } from "@/components/memory-graph";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter,
   DialogHeader, DialogTitle,
@@ -21,6 +23,16 @@ type MemoryStatus = "all" | "pending" | "approved" | "rejected" | "superseded" |
 type MemoryType = "all" | "profile" | "fact" | "preference" | "episode" | "entity";
 
 export default function MemoryPage() {
+  return (
+    <Suspense>
+      <MemoryPageContent />
+    </Suspense>
+  );
+}
+
+function MemoryPageContent() {
+  const searchParams = useSearchParams();
+  const graphMode = searchParams.get("view") === "graph";
   const [items, setItems] = useState<MemoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -121,7 +133,7 @@ export default function MemoryPage() {
 
   return (
     <AuthenticatedAppShell>
-    <div className="theme-surface-page min-h-screen bg-[var(--chat-background)] text-[var(--chat-foreground)]">
+    {graphMode ? <GraphWorkspace items={items} loading={loading} /> : <div className="theme-surface-page min-h-screen bg-[var(--chat-background)] text-[var(--chat-foreground)]">
         <div className="mx-auto max-w-[1280px] px-5 py-7 sm:px-8 lg:px-10">
           <Link href="/dashboard" className="inline-flex min-h-11 items-center gap-2 text-sm text-white/45 hover:text-white">
             <ArrowLeft className="size-4" aria-hidden="true" />Dashboard
@@ -203,9 +215,13 @@ export default function MemoryPage() {
             </DialogFooter>
           </DialogContent>
         </Dialog>
-      </div>
+      </div>}
     </AuthenticatedAppShell>
   );
+}
+
+function GraphWorkspace({ items, loading }: { items: MemoryItem[]; loading: boolean }) {
+  return <div className="theme-surface-page min-h-screen bg-[#090b0c] text-white"><div className="mx-auto max-w-[1500px] px-5 py-7 sm:px-8 lg:px-10"><div className="flex items-center justify-between"><Link href="/memory" className="inline-flex min-h-11 items-center gap-2 text-sm text-white/45 hover:text-white"><ArrowLeft className="size-4" aria-hidden="true" />Memory library</Link><span className="font-mono text-[10px] uppercase tracking-[.16em] text-white/25">TrueMemory / Graph</span></div>{loading ? <div className="mt-4 min-h-[620px] animate-pulse rounded-[24px] bg-white/[.04]" /> : <MemoryGraph items={items} />}</div></div>;
 }
 
 function MemoryCard({ item, onAction, onEdit }: {

@@ -47,8 +47,12 @@ class TrueMemory:
             raise KontextError(message, exc.code, request_id, details)
 
     async def remember(self, key: str, content: str, *, signal=None, **kwargs): return await self._request("/v1/memories", method="POST", payload={"key": key, "content": content, **kwargs}, safe=False, signal=signal)
+    async def store(self, key: str, content: str, *, signal=None, **kwargs): return await self._request("/v1/memory/store", method="POST", payload={"key": key, "content": content, **kwargs}, safe=False, signal=signal)
     async def search(self, query: str = "", *, signal=None, **kwargs): return await self._request("/v1/memories/search", method="POST", payload={"query": query, **kwargs}, signal=signal)
     async def retrieve(self, query: str = "", *, signal=None, **kwargs): return await self._request("/v1/memories/retrieve", method="POST", payload={"query": query, **kwargs}, signal=signal)
+    async def current_state(self, *, workspace_id: str, project_id=None, signal=None): return await self._request("/v1/memory/current-state", method="POST", payload={"workspace_id": workspace_id, "project_id": project_id}, signal=signal)
+    async def timeline(self, *, workspace_id: str, project_id=None, as_of=None, signal=None): return await self._request("/v1/memory/timeline", method="POST", payload={"workspace_id": workspace_id, "project_id": project_id, "as_of": as_of}, signal=signal)
+    async def related(self, query: str = "", *, signal=None, **kwargs): return await self._request("/v1/memory/related", method="POST", payload={"query": query, **kwargs}, signal=signal)
     async def update(self, memory_id: str, content: str, *, signal=None, **kwargs): return await self._request("/v1/memories/update", method="POST", payload={"id": memory_id, "content": content, **kwargs}, safe=False, signal=signal)
     async def forget(self, memory_id: str, *, signal=None, **kwargs): return await self._request("/v1/memories/forget", method="POST", payload={"id": memory_id, **kwargs}, safe=False, signal=signal)
     async def context(self, query: str = "", *, signal=None, **kwargs): return await self.retrieve(query, signal=signal, **kwargs)

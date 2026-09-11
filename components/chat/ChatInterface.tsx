@@ -152,20 +152,19 @@ import {
 
 const SUGGESTIONS = [
   {
-    label: "Summarize a PDF",
+    label: "Summarize",
+    mobileLabel: "Summarize",
     prompt: "Summarize this file for me",
   },
   {
-    label: "Explain this",
+    label: "Explain",
+    mobileLabel: "Explain",
     prompt: "What is this file about?",
   },
   {
-    label: "Extract key points",
+    label: "Key points",
+    mobileLabel: "Key points",
     prompt: "List the key points from the document",
-  },
-  {
-    label: "Simplify the language",
-    prompt: "Give me a short explanation in simple words",
   },
 ];
 
@@ -4396,32 +4395,33 @@ function Welcome({
   onSuggestion,
   disabled,
 }: {
-  onSuggestion: (suggestion: string) => void;
+  onSuggestion: (s: string) => void;
   disabled?: boolean;
 }) {
   return (
-    <section data-welcome className="flex w-full max-w-2xl flex-col items-center px-4 py-6 text-center sm:py-8">
-      <div className="flex size-14 items-center justify-center rounded-[18px] bg-[var(--chat-surface-muted)] p-3 shadow-[0_12px_30px_-18px_var(--chat-accent)]" aria-label="TrueMemory">
+    <section data-welcome className="flex w-full max-w-2xl flex-col items-center px-3 py-4 text-center sm:px-4 sm:py-6 md:py-8">
+      <div className="flex size-10 items-center justify-center rounded-[14px] bg-[var(--chat-surface-muted)] p-2.5 shadow-[0_12px_30px_-18px_var(--chat-accent)] sm:size-14 sm:rounded-[18px] sm:p-3" aria-label="TrueMemory">
         <Image src="/truememory-mark.svg" alt="TrueMemory" width={64} height={64} className="size-full" />
       </div>
-      <h2 className="mt-2 text-balance font-heading text-2xl font-semibold tracking-[-0.04em] text-[var(--chat-foreground)] sm:text-3xl">
+      <h2 className="mt-2 text-balance font-heading text-lg font-semibold tracking-[-0.04em] text-[var(--chat-foreground)] sm:text-2xl md:text-3xl">
         What are you working on?
       </h2>
-      <p className="mt-2 max-w-xl text-pretty text-sm leading-6 text-[var(--chat-muted-foreground)]">
+      <p className="mt-1.5 max-w-xl text-pretty text-xs leading-5 text-[var(--chat-muted-foreground)] sm:mt-2 sm:text-sm sm:leading-6">
         Ask anything, attach a PDF, or use live web context.
       </p>
 
-      <div className="mt-5 flex w-full flex-wrap justify-center gap-2">
+      <div className="mt-3 flex w-full flex-wrap justify-center gap-1.5 sm:mt-5 sm:gap-2">
         {SUGGESTIONS.map((suggestion) => (
           <button
             key={suggestion.prompt}
             type="button"
             onClick={() => onSuggestion(suggestion.prompt)}
             disabled={disabled}
-            className="group inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--chat-border)] bg-[var(--chat-surface)] px-3.5 text-sm font-medium text-[var(--chat-muted-foreground)] shadow-[0_8px_20px_-18px_rgba(64,43,24,0.34)] transition-[background-color,border-color,transform] duration-150 hover:border-[var(--chat-border-strong)] hover:bg-[var(--chat-surface-muted)] hover:text-[var(--chat-foreground)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+            className="group inline-flex min-h-8 items-center gap-1 rounded-full border border-[var(--chat-border)] bg-[var(--chat-surface)] px-2.5 text-xs font-medium text-[var(--chat-muted-foreground)] shadow-[0_8px_20px_-18px_rgba(64,43,24,0.34)] transition-[background-color,border-color,transform] duration-150 hover:border-[var(--chat-border-strong)] hover:bg-[var(--chat-surface-muted)] hover:text-[var(--chat-foreground)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-11 sm:gap-2 sm:px-3.5 sm:text-sm"
           >
-            {suggestion.label}
-            <ArrowUpRight className="size-3.5 shrink-0 text-[var(--chat-accent)] transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            <span className="sm:hidden">{suggestion.mobileLabel}</span>
+            <span className="hidden sm:inline">{suggestion.label}</span>
+            <ArrowUpRight className="size-3 shrink-0 text-[var(--chat-accent)] transition-transform duration-150 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 sm:size-3.5" />
           </button>
         ))}
       </div>

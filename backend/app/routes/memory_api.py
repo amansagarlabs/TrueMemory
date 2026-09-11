@@ -77,24 +77,40 @@ def _authorize_bindings(auth: AuthContext, *, workspace_id: str | None, agent_id
 
 
 def _effective_scope(auth: AuthContext, requested: str) -> str:
+    """Validate requested scope against token bindings, return canonical scope."""
     bound_workspace = auth.token_bindings.get("workspace_id")
     if not bound_workspace:
         return requested
+    # Token is bound to a workspace: validate scope matches, return 'general'
+    # so _storage_scope can properly encode workspace via workspace_id param.
     prefix = f"workspace:{bound_workspace}"
-    if requested == "general":
-        return prefix
-    if requested != prefix:
-        raise HTTPException(status_code=403, detail="memory_workspace_forbidden")
-    return requested
+    if requested in ("general", prefix):
+        return "general"
+    raise HTTPException(status_code=403, detail="memory_workspace_forbidden")
+
+
+def _scope_workspace_id(auth: AuthContext, requested_workspace_id: str | None) -> str | None:
+    """Return workspace_id to pass to MemoryClient based on token bindings."""
+    bound_ws = auth.token_bindings.get("workspace_id")
+    if bound_ws:
+        return bound_ws  # use the bound workspace_id
+    return requested_workspace_id
 
 
 def _parse_id(memory_id: str) -> tuple[str, str]:
-    parts = memory_id.split(":", 3)
-    if len(parts) == 4 and parts[0] == "profile" and parts[1] == "workspace":
-        return f"workspace:{parts[2]}", parts[3]
-    if len(parts) != 3 or parts[0] != "profile":
+    # ID format: profile:{scope}:{key}
+    # scope may contain pipes, e.g. "general|workspace:WS_A"
+    # We extract the base scope (before any |) for use with _effective_scope.
+    if not memory_id.startswith("profile:"):
         raise HTTPException(status_code=400, detail="Invalid memory id")
-    return parts[1], parts[2]
+    remainder = memory_id[len("profile:"):]
+    # key is the last colon-separated segment
+    full_scope, _, key = remainder.rpartition(":")
+    if not full_scope or not key:
+        raise HTTPException(status_code=400, detail="Invalid memory id")
+    # Extract base scope: first segment before any pipe
+    base_scope = full_scope.split("|", 1)[0]
+    return base_scope, key
 
 
 def _client() -> MemoryClient:
@@ -114,24 +130,27 @@ async def memory_metrics(auth: AuthContext = Depends(require_scope("memory"))):
 
 @router.get("/memories")
 async def list_memories(scope: str = "general", limit: int = 50, workspace_id: str | None = None, agent_id: str | None = None, auth: AuthContext = Depends(require_scope("memory"))):
-    _authorize_bindings(auth, workspace_id=workspace_id, agent_id=agent_id)
-    return {"items": _client().list(user_id=_user(auth), scope=_effective_scope(auth, scope), limit=limit, workspace_id=workspace_id, agent_id=agent_id)}
+    ws_id = _scope_workspace_id(auth, workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=agent_id)
+    return {"items": _client().list(user_id=_user(auth), scope=_effective_scope(auth, scope), limit=limit, workspace_id=ws_id, agent_id=agent_id)}
 
 
 @router.post("/memories")
 async def write_memory(payload: MemoryWrite, auth: AuthContext = Depends(require_scope("memory"))):
     scope = _effective_scope(auth, payload.scope.strip() or "general")
-    _authorize_bindings(auth, workspace_id=payload.workspace_id, agent_id=payload.agent_id)
+    ws_id = _scope_workspace_id(auth, payload.workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=payload.agent_id)
     key = payload.key.strip()
-    _client().remember(user_id=_user(auth), scope=scope, key=key, content=payload.content, source=payload.source, valid_from=payload.valid_from, valid_until=payload.valid_until, confidence=payload.confidence, workspace_id=payload.workspace_id, agent_id=payload.agent_id)
+    _client().remember(user_id=_user(auth), scope=scope, key=key, content=payload.content, source=payload.source, valid_from=payload.valid_from, valid_until=payload.valid_until, confidence=payload.confidence, workspace_id=ws_id, agent_id=payload.agent_id)
     storage_scope = _client()._storage_scope(scope, workspace_id=payload.workspace_id, agent_id=payload.agent_id)
     return {"saved": True, "id": f"profile:{storage_scope}:{key}", "key": key, "scope": scope}
 
 
 async def _recall(payload: MemoryRecall, auth: AuthContext) -> dict:
-    _authorize_bindings(auth, workspace_id=payload.workspace_id, agent_id=payload.agent_id)
+    ws_id = _scope_workspace_id(auth, payload.workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=payload.agent_id)
     scope = _effective_scope(auth, payload.scope.strip() or "general")
-    items = _client().search(user_id=_user(auth), scope=scope, query=payload.query, limit=payload.limit, workspace_id=payload.workspace_id, agent_id=payload.agent_id, as_of=payload.as_of, include_history=payload.include_history, token_bindings={str(key): str(value) for key, value in auth.token_bindings.items() if value})
+    items = _client().search(user_id=_user(auth), scope=scope, query=payload.query, limit=payload.limit, workspace_id=ws_id, agent_id=payload.agent_id, as_of=payload.as_of, include_history=payload.include_history, token_bindings={str(key): str(value) for key, value in auth.token_bindings.items() if value})
     tier = str(items[0].get("retrieval_tier") or "L1_structured") if items else "L1_structured"
     return {"items": items, "count": len(items), "tier": tier}
 
@@ -145,6 +164,16 @@ async def search_memories(payload: MemoryRecall, auth: AuthContext = Depends(req
 async def retrieve_memories(payload: MemoryRecall, auth: AuthContext = Depends(require_scope("memory"))):
     return await _recall(payload, auth)
 
+# Canonical provider-neutral operation aliases.  The legacy /memories routes
+# remain supported for existing clients; both paths use the same core.
+@router.post("/memory/search")
+async def canonical_search(payload: MemoryRecall, auth: AuthContext = Depends(require_scope("memory"))):
+    return await _recall(payload, auth)
+
+@router.post("/memory/retrieve")
+async def canonical_retrieve(payload: MemoryRecall, auth: AuthContext = Depends(require_scope("memory"))):
+    return await _recall(payload, auth)
+
 
 @router.post("/memories/update")
 async def update_memory(payload: MemoryMutation, auth: AuthContext = Depends(require_scope("memory"))):
@@ -152,8 +181,9 @@ async def update_memory(payload: MemoryMutation, auth: AuthContext = Depends(req
         raise HTTPException(status_code=422, detail="content is required")
     scope, key = _parse_id(payload.id)
     scope = _effective_scope(auth, scope)
-    _authorize_bindings(auth, workspace_id=payload.workspace_id, agent_id=payload.agent_id)
-    updated = _client().update(user_id=_user(auth), scope=scope, key=key, content=payload.content, source=payload.source, valid_from=payload.valid_from, valid_until=payload.valid_until, confidence=payload.confidence, workspace_id=payload.workspace_id, agent_id=payload.agent_id)
+    ws_id = _scope_workspace_id(auth, payload.workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=payload.agent_id)
+    updated = _client().update(user_id=_user(auth), scope=scope, key=key, content=payload.content, source=payload.source, valid_from=payload.valid_from, valid_until=payload.valid_until, confidence=payload.confidence, workspace_id=ws_id, agent_id=payload.agent_id)
     return {"updated": updated, "id": payload.id}
 
 
@@ -161,17 +191,27 @@ async def update_memory(payload: MemoryMutation, auth: AuthContext = Depends(req
 async def forget_memory(payload: MemoryMutation, auth: AuthContext = Depends(require_scope("memory"))):
     scope, key = _parse_id(payload.id)
     scope = _effective_scope(auth, scope)
-    _authorize_bindings(auth, workspace_id=payload.workspace_id, agent_id=payload.agent_id)
-    forgotten = _client().forget(user_id=_user(auth), scope=scope, key=key, workspace_id=payload.workspace_id, agent_id=payload.agent_id)
+    ws_id = _scope_workspace_id(auth, payload.workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=payload.agent_id)
+    forgotten = _client().forget(user_id=_user(auth), scope=scope, key=key, workspace_id=ws_id, agent_id=payload.agent_id)
     return {"forgotten": forgotten, "id": payload.id}
+
+@router.post("/memory/store")
+async def canonical_store(payload: MemoryWrite, auth: AuthContext = Depends(require_scope("memory"))):
+    return await write_memory(payload, auth)
+
+@router.post("/memory/forget")
+async def canonical_forget(payload: MemoryMutation, auth: AuthContext = Depends(require_scope("memory"))):
+    return await forget_memory(payload, auth)
 
 
 @router.get("/memories/{memory_id}")
 async def get_memory(memory_id: str, workspace_id: str | None = None, agent_id: str | None = None, auth: AuthContext = Depends(require_scope("memory"))):
     scope, key = _parse_id(memory_id)
-    _authorize_bindings(auth, workspace_id=workspace_id, agent_id=agent_id)
     scope = _effective_scope(auth, scope)
-    items = _client().search(user_id=_user(auth), scope=scope, query=key, limit=100, workspace_id=workspace_id, agent_id=agent_id)
+    ws_id = _scope_workspace_id(auth, workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=agent_id)
+    items = _client().search(user_id=_user(auth), scope=scope, query=key, limit=100, workspace_id=ws_id, agent_id=agent_id)
     item = next((item for item in items if item.get("key") == key), None)
     if not item:
         raise HTTPException(status_code=404, detail="Memory not found")
@@ -182,10 +222,11 @@ async def get_memory(memory_id: str, workspace_id: str | None = None, agent_id: 
 async def patch_memory(memory_id: str, payload: MemoryMutation, auth: AuthContext = Depends(require_scope("memory"))):
     scope, key = _parse_id(memory_id)
     scope = _effective_scope(auth, scope)
-    _authorize_bindings(auth, workspace_id=payload.workspace_id, agent_id=payload.agent_id)
+    ws_id = _scope_workspace_id(auth, payload.workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=payload.agent_id)
     if payload.content is None:
         raise HTTPException(status_code=422, detail="content is required")
-    updated = _client().update(user_id=_user(auth), scope=scope, key=key, content=payload.content, source=payload.source, valid_from=payload.valid_from, valid_until=payload.valid_until, confidence=payload.confidence, workspace_id=payload.workspace_id, agent_id=payload.agent_id)
+    updated = _client().update(user_id=_user(auth), scope=scope, key=key, content=payload.content, source=payload.source, valid_from=payload.valid_from, valid_until=payload.valid_until, confidence=payload.confidence, workspace_id=ws_id, agent_id=payload.agent_id)
     if not updated:
         raise HTTPException(status_code=404, detail="Memory not found")
     return {"updated": True, "id": memory_id}
@@ -194,6 +235,89 @@ async def patch_memory(memory_id: str, payload: MemoryMutation, auth: AuthContex
 @router.delete("/memories/{memory_id}")
 async def delete_memory(memory_id: str, workspace_id: str | None = None, agent_id: str | None = None, auth: AuthContext = Depends(require_scope("memory"))):
     scope, key = _parse_id(memory_id)
-    _authorize_bindings(auth, workspace_id=workspace_id, agent_id=agent_id)
     scope = _effective_scope(auth, scope)
-    return {"forgotten": _client().forget(user_id=_user(auth), scope=scope, key=key, workspace_id=workspace_id, agent_id=agent_id), "id": memory_id}
+    ws_id = _scope_workspace_id(auth, workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=agent_id)
+    return {"forgotten": _client().forget(user_id=_user(auth), scope=scope, key=key, workspace_id=ws_id, agent_id=agent_id), "id": memory_id}
+
+
+class StateQuery(BaseModel):
+    workspace_id: str = Field(min_length=1, max_length=120)
+    project_id: str | None = Field(default=None, max_length=120)
+    as_of: str | None = Field(default=None, max_length=80)
+    memory_key: str | None = Field(default=None, max_length=200)
+    start: str | None = Field(default=None, max_length=80)
+    end: str | None = Field(default=None, max_length=80)
+    order: str = Field(default="desc", pattern="^(asc|desc)$")
+    limit: int = Field(default=50, ge=1, le=200)
+    cursor: str | None = None
+    include_history: bool = True
+
+
+@router.post("/memories/current-state")
+async def current_state(payload: StateQuery, auth: AuthContext = Depends(require_scope("memory"))):
+    ws_id = _scope_workspace_id(auth, payload.workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=None)
+    items = _client().current_state(
+        user_id=_user(auth),
+        workspace_id=ws_id,
+        project_id=payload.project_id,
+    )
+    return {"items": items, "count": len(items), "as_of": "now"}
+
+@router.post("/memory/current-state")
+async def canonical_current_state(payload: StateQuery, auth: AuthContext = Depends(require_scope("memory"))):
+    return await current_state(payload, auth)
+
+
+@router.post("/memories/historical-state")
+async def historical_state(payload: StateQuery, auth: AuthContext = Depends(require_scope("memory"))):
+    if not payload.as_of:
+        raise HTTPException(status_code=422, detail="as_of is required for historical state")
+    ws_id = _scope_workspace_id(auth, payload.workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=None)
+    items = _client().historical_state(
+        user_id=_user(auth),
+        workspace_id=ws_id,
+        as_of=payload.as_of,
+        project_id=payload.project_id,
+    )
+    return {"items": items, "count": len(items), "as_of": payload.as_of}
+
+@router.post("/memory/timeline")
+async def canonical_timeline(payload: StateQuery, auth: AuthContext = Depends(require_scope("memory"))):
+    ws_id = _scope_workspace_id(auth, payload.workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=None)
+    items = _client().timeline(user_id=_user(auth), workspace_id=ws_id,
+        project_id=payload.project_id, memory_key=payload.memory_key, start=payload.start,
+        end=payload.end, as_of=payload.as_of, order=payload.order, limit=payload.limit)
+    return {"items": items, "count": len(items), "next_cursor": None}
+
+@router.post("/memory/related")
+async def canonical_related(payload: MemoryRecall, auth: AuthContext = Depends(require_scope("memory"))):
+    if not payload.workspace_id:
+        return await _recall(payload, auth)
+    ws_id = _scope_workspace_id(auth, payload.workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=payload.agent_id)
+    scope = _effective_scope(auth, payload.scope.strip() or "general")
+    items = _client().related(user_id=_user(auth), workspace_id=ws_id, memory_id=payload.query, project_id=None, limit=payload.limit)
+    return {"items": items, "count": len(items), "scope": scope, "relationship": "same_key_or_memory_type"}
+
+
+class VersionQuery(BaseModel):
+    workspace_id: str = Field(min_length=1, max_length=120)
+    memory_key: str = Field(min_length=1, max_length=200)
+    project_id: str | None = Field(default=None, max_length=120)
+
+
+@router.post("/memories/versions")
+async def memory_versions(payload: VersionQuery, auth: AuthContext = Depends(require_scope("memory"))):
+    ws_id = _scope_workspace_id(auth, payload.workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=None)
+    items = _client().memory_versions(
+        user_id=_user(auth),
+        workspace_id=ws_id,
+        memory_key=payload.memory_key,
+        project_id=payload.project_id,
+    )
+    return {"items": items, "count": len(items)}

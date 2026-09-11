@@ -106,8 +106,12 @@ export class TrueMemory {
         return new RateLimitError(String(message), status, requestId, payload, retryAfter ? Number(retryAfter) : undefined); if (status >= 500)
         return new ServerError(...args); return new KontextError(...args); }
     remember(input, options) { return this.request("/v1/memories", { method: "POST", body: JSON.stringify(input) }, options); }
+    store(input, options) { return this.request("/v1/memory/store", { method: "POST", body: JSON.stringify(input) }, options); }
     search(input = {}, options) { return this.request("/v1/memories/search", { method: "POST", body: JSON.stringify(input) }, options); }
     retrieve(input = {}, options) { return this.request("/v1/memories/retrieve", { method: "POST", body: JSON.stringify(input) }, options); }
+    currentState(input, options) { return this.request("/v1/memory/current-state", { method: "POST", body: JSON.stringify(input) }, options); }
+    timeline(input, options) { return this.request("/v1/memory/timeline", { method: "POST", body: JSON.stringify(input) }, options); }
+    related(input = {}, options) { return this.request("/v1/memory/related", { method: "POST", body: JSON.stringify(input) }, options); }
     update(input, options) { return this.request("/v1/memories/update", { method: "POST", body: JSON.stringify(input) }, options); }
     forget(input, options) { return this.request("/v1/memories/forget", { method: "POST", body: JSON.stringify(input) }, options); }
     context(input = {}, options) { return this.retrieve(input, options); }

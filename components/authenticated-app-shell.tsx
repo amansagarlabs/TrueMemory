@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Suspense, useCallback, useEffect, useState, type ReactNode } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Grid2X2, GitBranch, Home, LogOut, MessageCircle, Network, Plus, Search, Settings } from "lucide-react";
+import { Grid2X2, GitBranch, Home, LogOut, MessageCircle, Network, Plus, Search, Settings, PanelLeft } from "lucide-react";
 
 import { ChatAppSidebar } from "@/components/chat-app-sidebar";
 import { CreateWorkspaceDialog } from "@/components/create-workspace-dialog";
 import { TrueMemoryCommandPalette } from "@/components/true-memory-command-palette";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarInset, SidebarProvider, SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
 import { clearAuthSession, isAuthenticated, loadAuthUser } from "@/lib/auth";
 import type { AuthUser, AuthWorkspace } from "@/lib/types";
 import {
@@ -28,6 +29,94 @@ const CHAT_TOP_NAVIGATION = [
   { label: "Memories", href: "/memory", icon: Grid2X2 },
   { label: "Assistant", href: "/chat", icon: MessageCircle },
 ] as const;
+
+function MobileAwareHeader({
+  pathname,
+  signOut,
+  setCreateDialogOpen,
+}: {
+  pathname: string;
+  signOut: () => void;
+  setCreateDialogOpen: (open: boolean) => void;
+}) {
+  const { openMobile, isMobile } = useSidebar();
+
+  // Hide header when sidebar is open on mobile
+  if (isMobile && openMobile) return null;
+
+  return (
+    <header className="sticky top-0 z-[60] h-14 border-b border-[var(--chat-border)] bg-[color-mix(in_srgb,var(--chat-background)_88%,transparent)] backdrop-blur-xl md:h-16">
+      <div className="relative mx-auto flex h-full items-center gap-2 px-3 sm:px-4 md:gap-4 md:px-6">
+        {/* Mobile: Hamburger menu + App name */}
+        <div className="flex items-center gap-2 md:hidden">
+          <SidebarTrigger
+            aria-label="Open sidebar"
+            title="Open sidebar"
+            className="inline-flex size-9 items-center justify-center rounded-lg text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)] active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-[var(--chat-focus)]"
+          >
+            <PanelLeft className="size-5" />
+          </SidebarTrigger>
+          <Link href="/dashboard" className="flex items-center gap-1.5">
+            <span className="flex size-7 items-center justify-center rounded-[9px] bg-[var(--chat-highlight)] p-1">
+              <Image src="/truememory-mark.svg" alt="" width={28} height={28} className="size-full object-contain" />
+            </span>
+            <span className="text-[15px] font-semibold text-[var(--chat-foreground)]">TrueMemory</span>
+          </Link>
+        </div>
+
+        {/* Desktop: Navigation island */}
+        <Suspense fallback={<NavigationIsland pathname={pathname} />}>
+          <QueryAwareNavigationIsland pathname={pathname} />
+        </Suspense>
+
+        {/* Right side actions */}
+        <div className="ml-auto flex items-center gap-1.5 sm:gap-2">
+          {/* Mobile: New chat + Search */}
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event("kontext-chat-new"))}
+            aria-label="New chat"
+            className="inline-flex size-9 items-center justify-center rounded-full border border-[var(--chat-border)] text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)] md:hidden"
+          >
+            <Plus className="size-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event("truememory:open-command-palette"))}
+            aria-label="Search TrueMemory"
+            className="inline-flex size-9 items-center justify-center rounded-full border border-[var(--chat-border)] text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)]"
+          >
+            <Search className="size-4" />
+          </button>
+          {/* Desktop only */}
+          <button
+            type="button"
+            onClick={() => setCreateDialogOpen(true)}
+            aria-label="Add memory"
+            className="hidden size-9 items-center justify-center rounded-full border border-[var(--chat-border)] text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)] sm:inline-flex"
+          >
+            <Plus className="size-4" />
+          </button>
+          <Link
+            href="/profile"
+            aria-label="Settings and profile"
+            className="hidden size-9 items-center justify-center rounded-full border border-[var(--chat-border)] text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)] sm:inline-flex"
+          >
+            <Settings className="size-4" />
+          </Link>
+          <button
+            type="button"
+            onClick={signOut}
+            aria-label="Log out"
+            className="hidden size-9 items-center justify-center rounded-full border border-[var(--chat-border)] text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)] md:inline-flex"
+          >
+            <LogOut className="size-4" />
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+}
 
 function NavigationIsland({
   pathname,
@@ -218,20 +307,7 @@ export function AuthenticatedAppShell({
       <SidebarProvider className="bg-[var(--chat-frame)]">
         <ChatAppSidebar user={user} workspaces={workspaces} activeWorkspaceId={activeWorkspaceId} onSelectWorkspace={selectWorkspace} onCreateWorkspace={() => setCreateDialogOpen(true)} onSignOut={signOut} stats={stats} features={{ agents: PLAN_AGENTS[user.plan] }} workspacesLoading={workspacesLoading} />
         <SidebarInset id="main-content" className="m-2 h-[calc(100svh-1rem)] min-h-0 min-w-0 self-start overflow-hidden rounded-[24px] border border-[var(--chat-frame-border)] bg-[var(--chat-background)] text-[var(--chat-foreground)] shadow-[0_1px_2px_rgba(0,0,0,.08),0_18px_48px_-34px_rgba(0,0,0,.65)] md:ml-0">
-        <header className="sticky top-0 z-[60] h-16 border-b border-[var(--chat-border)] bg-[color-mix(in_srgb,var(--chat-background)_88%,transparent)] backdrop-blur-xl">
-          <div className="relative mx-auto flex h-full items-center gap-4 px-4 sm:px-6">
-            <SidebarTrigger className="inline-flex size-9 rounded-lg border border-[var(--chat-border)] bg-[var(--chat-surface)] text-[var(--chat-muted-foreground)] shadow-sm transition-[background-color,color,transform] duration-150 hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)] active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-[var(--chat-focus)] md:hidden" />
-            <Suspense fallback={<NavigationIsland pathname={pathname} />}>
-              <QueryAwareNavigationIsland pathname={pathname} />
-            </Suspense>
-            <div className="ml-auto flex items-center gap-2">
-              <button type="button" onClick={() => window.dispatchEvent(new Event("truememory:open-command-palette"))} aria-label="Search TrueMemory" className="inline-flex size-9 items-center justify-center rounded-full border border-[var(--chat-border)] text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)]"><Search className="size-4" /></button>
-              <button type="button" onClick={() => setCreateDialogOpen(true)} aria-label="Add memory" className="hidden size-9 items-center justify-center rounded-full border border-[var(--chat-border)] text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)] sm:inline-flex"><Plus className="size-4" /></button>
-              <Link href="/profile" aria-label="Settings and profile" className="hidden size-9 items-center justify-center rounded-full border border-[var(--chat-border)] text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)] sm:inline-flex"><Settings className="size-4" /></Link>
-              <button type="button" onClick={signOut} aria-label="Log out" className="size-9 rounded-full border border-[var(--chat-border)] text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)]"><LogOut className="mx-auto size-4" /></button>
-            </div>
-          </div>
-        </header>
+        <MobileAwareHeader pathname={pathname} signOut={signOut} setCreateDialogOpen={setCreateDialogOpen} />
         <TrueMemoryCommandPalette />
         <div className={variant === "chat" ? "min-h-0 flex-1 overflow-hidden" : "min-h-0 flex-1 overflow-y-auto"}>{children}</div>
         <CreateWorkspaceDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} onSubmit={createWorkspace} />
