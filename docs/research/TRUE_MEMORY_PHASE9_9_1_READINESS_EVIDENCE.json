@@ -1,0 +1,82 @@
+{
+  "phase": "9.9.1",
+  "name": "Live Provider Gate Readiness",
+  "timestamp": "2026-09-14T15:41:47Z",
+  "checks": {
+    "environment": {
+      "api_key_present": true,
+      "api_key_length": 73,
+      "live_tests_enabled": false,
+      "api_key_source": "env"
+    },
+    "tool_registry": {
+      "tools_registered": 6,
+      "tool_names": [
+        "memory_search",
+        "memory_current_state",
+        "memory_timeline",
+        "memory_store",
+        "memory_forget",
+        "memory_related"
+      ],
+      "definitions_generated": 6,
+      "all_have_schemas": true,
+      "all_have_descriptions": true,
+      "status": "READY"
+    },
+    "executor": {
+      "instantiable": true,
+      "tool_definitions_count": 6,
+      "attribution_events_list": true,
+      "status": "READY"
+    },
+    "attribution_chain": {
+      "decision_event": true,
+      "action_event": true,
+      "influence_event": true,
+      "outcome_event": true,
+      "chain_linkage_valid": true,
+      "status": "READY"
+    },
+    "tool_calling_loop": {
+      "importable": true,
+      "parameters": [
+        "provider",
+        "model",
+        "messages",
+        "context",
+        "tools",
+        "max_tool_rounds",
+        "max_tokens",
+        "on_token",
+        "run_id",
+        "settings",
+        "telemetry"
+      ],
+      "has_provider": true,
+      "has_model": true,
+      "has_messages": true,
+      "has_context": true,
+      "has_tools": true,
+      "has_telemetry": true,
+      "status": "READY"
+    },
+    "telemetry": {
+      "importable": true,
+      "instantiable": "needs_args",
+      "status": "READY"
+    },
+    "provider_probe": {
+      "skipped": true,
+      "reason": "Use --probe to actually test provider connectivity"
+    }
+  },
+  "overall": {
+    "infrastructure_ready": true,
+    "provider_ready": null,
+    "live_test_enabled": false,
+    "blocked_reasons": [
+      "TRUEMEMORY_LIVE_MODEL_TESTS not enabled"
+    ]
+  }
+}
