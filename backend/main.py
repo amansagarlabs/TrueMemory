@@ -25,6 +25,7 @@ load_dotenv(_PROJECT_ROOT / ".env")
 load_dotenv(Path(__file__).resolve().parent / ".env", override=True)
 
 from app.config import get_settings
+from app.logging_config import setup_logging
 from app.routes import auth, chat, coding, health, pipeline, upload, ocr, amancrawl, dashboard, subscriptions, integrations, query, evaluation, knowledge, projects, skills, workspaces, models, memory_api, memory_mcp, ingestion
 from services.memory_store import init_memory_store
 from services.memory_hot_cache import ensure_hot_cache_schema
@@ -56,6 +57,9 @@ def _validate_runtime_configuration(settings) -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Startup / shutdown — Step 7 will connect Milvus here."""
+    # Setup structured logging
+    setup_logging()
+
     settings = get_settings()
     _validate_runtime_configuration(settings)
     app.state.settings = settings
@@ -64,6 +68,20 @@ async def lifespan(app: FastAPI):
     ensure_rate_limit_schema(settings)
     if postgres_enabled(settings):
         ensure_memory_ingestion_schema(settings)
+
+    # Initialize connection pool
+    from services.postgres_pool import get_pool
+    get_pool(settings)
+
+    # Initialize metrics
+    from app.metrics import get_metrics
+    metrics = get_metrics()
+    metrics.set("startup_time", time.time())
+
+    # Initialize audit logger
+    from app.audit import audit_log, AuditEvent
+    audit_log(AuditEvent.AUTH_LOGIN, details={"event": "server_startup"})
+
     if settings.warm_retrieval_models:
         from app.routes.chat import warm_hybrid_retriever
 
@@ -74,6 +92,13 @@ async def lifespan(app: FastAPI):
             pass
     yield
 
+    # Shutdown
+    from app.shutdown import get_shutdown_handler
+    handler = get_shutdown_handler()
+    handler.request_shutdown()
+    handler.cleanup_pool()
+    handler.cleanup_audit()
+
 
 api = FastAPI(
     title="Kontext API",
@@ -82,13 +107,27 @@ api = FastAPI(
     lifespan=lifespan,
 )
 
+# Register global exception handlers
+from app.middleware.exception_handler import register_exception_handlers
+register_exception_handlers(api)
+
+# Add security headers middleware
+from app.middleware.security_headers import SecurityHeadersMiddleware
+api.add_middleware(SecurityHeadersMiddleware)
+
 
 @api.middleware("http")
 async def request_observability(request, call_next):
     """Correlate requests and record safe boundary timing metadata."""
     raw_request_id = request.headers.get("x-request-id", "").strip()
     request_id = raw_request_id[:128] if raw_request_id and all(char.isalnum() or char in "-_." for char in raw_request_id) else str(uuid.uuid4())
+    request.state.request_id = request_id
     started = time.perf_counter()
+
+    # Increment request counter
+    from app.metrics import increment_counter
+    increment_counter("requests_total", labels={"method": request.method, "path": request.url.path})
+
     try:
         response = await call_next(request)
     except Exception:
@@ -96,9 +135,16 @@ async def request_observability(request, call_next):
             "request_failed",
             extra={"request_id": request_id, "method": request.method, "path": request.url.path},
         )
+        increment_counter("requests_failed", labels={"method": request.method, "path": request.url.path})
         raise
+
     duration_ms = round((time.perf_counter() - started) * 1000, 2)
     response.headers["X-Request-ID"] = request_id
+
+    # Record latency
+    from app.metrics import record_metric
+    record_metric("request_latency_ms", duration_ms, labels={"method": request.method, "path": request.url.path})
+
     request_logger.info(
         "request_complete",
         extra={
