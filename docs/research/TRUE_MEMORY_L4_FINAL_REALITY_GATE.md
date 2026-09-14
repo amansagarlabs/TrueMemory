@@ -25,7 +25,7 @@ Requirements:
 - [ ] Failure safety verified with live model
 - [x] L3 regression remains healthy
 
-**Result**: NOT ACHIEVED — Live model testing blocked by no credits
+**Result**: NOT ACHIEVED — Live model testing blocked by no credits (verified 2026-09-14: OpenRouter rate limit, free-tier exhausted, 50/50 requests used, resets midnight UTC)
 
 ### Status B: L4 HARDENED — LIVE EVIDENCE PARTIAL
 
