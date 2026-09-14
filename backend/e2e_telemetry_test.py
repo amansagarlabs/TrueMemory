@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
-"""TrueMemory Phase 9.8 E2E - Telemetry & Observation Test
-
-Tests that observation events are generated for store/search/update/forget operations.
-"""
+"""TrueMemory Phase 9.8 E2E - Telemetry & Observation Test"""
 import urllib.request
 import json
 import sys
 
 BASE = "http://127.0.0.1:8000"
 WS_A = "96b143b1-5169-4f5e-a863-b9e54c7ccccf"
-TOKEN_WS = "knt_pZOULE2tlYXVsOBeokYQNXYRqsoxy4l96Ylg33Lho_yu0UFfn7XHIxoGE6vv9Vf"
+TOKEN_WS = "knt_pZOULE2tlYXVsOBeokYQNXYRqsoxy4l96Ylg3K3Lho_yu0UFfn7XHIxoGE6vv9Vf"
 results = {}
 
 def call(method, path, data=None):
@@ -36,31 +33,31 @@ def test(name, fn):
 print("\n=== 1. METRICS ENDPOINT ===")
 def t_metrics():
     s, r = call("GET", "/v1/memory/metrics")
-    return s == 200 and isinstance(r, dict), f"s={s} keys={list(r.keys())[:5]}"
+    return s == 200 and isinstance(r, dict), f"s={s} type={type(r).__name__}"
 test("metrics", t_metrics)
 
-# === 2. STORE generates observation ===
+# === 2. STORE ===
 print("\n=== 2. STORE + OBSERVATION ===")
 def t_store():
     s, r = call("POST", "/v1/memory/store", {"key": "telem1", "content": "Telemetry test.", "source": "e2e-telem", "workspace_id": WS_A})
     return s == 200 and r.get("saved"), f"s={s}"
 test("store", t_store)
 
-# === 3. SEARCH generates observation ===
+# === 3. SEARCH ===
 print("\n=== 3. SEARCH + OBSERVATION ===")
 def t_search():
     s, r = call("POST", "/v1/memory/search", {"query": "Telemetry", "workspace_id": WS_A, "limit": 10})
     return s == 200, f"s={s} n={r.get('count', 0)}"
 test("search", t_search)
 
-# === 4. UPDATE generates observation ===
+# === 4. UPDATE ===
 print("\n=== 4. UPDATE + OBSERVATION ===")
 def t_update():
     s, r = call("POST", "/v1/memories/update", {"id": "profile:general:telem1", "content": "Telemetry updated.", "source": "e2e-telem", "workspace_id": WS_A})
     return s == 200, f"s={s}"
 test("update", t_update)
 
-# === 5. FORGET generates observation ===
+# === 5. FORGET ===
 print("\n=== 5. FORGET + OBSERVATION ===")
 def t_forget():
     s, r = call("POST", "/v1/memory/forget", {"id": "profile:general:telem1", "workspace_id": WS_A})
@@ -71,7 +68,7 @@ test("forget", t_forget)
 print("\n=== 6. CACHE METRICS ===")
 def t_cache():
     s, r = call("GET", "/v1/memory/metrics")
-    return s == 200 and "cache" in str(r).lower() or isinstance(r, dict), f"s={s} type={type(r).__name__}"
+    return s == 200 and isinstance(r, dict), f"s={s} keys={list(r.keys())[:5]}"
 test("cache_metrics", t_cache)
 
 # === SUMMARY ===

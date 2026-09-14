@@ -1,0 +1,18 @@
+{
+  "user_a_id": "9899dd22-571d-4712-b9e6-4357d93e4c3f",
+  "user_b_id": "c9b8ef49-0f66-45b0-a156-03915201871d",
+  "workspace_a_id": "1d3b8006-cb12-402d-86ec-4d90fb03b700",
+  "workspace_b_id": "3bdfd4b9-016b-46ba-9228-6d69f04b0861",
+  "project_a_id": "7da846bd-f93e-4192-8f8f-13c9b4c7b912",
+  "project_b_id": "087de8a7-111f-49bb-bc8c-61f8ff90bbcd",
+  "agent_a_id": "32187e35-008d-40d5-9d8d-a6ab3f0db0e5",
+  "agent_b_id": "b7d9da88-ee0a-4556-9ecc-6259dbfaabc6",
+  "agent_c_id": "ed9407e1-fa6f-4dc0-8a58-e9a1e2375ab4",
+  "tokens": {
+    "token_a_ws": "knt_e5xpiyFrwS502b3LwFbd8oBXtNhMINzvfH96Pn1Y97v9FKOaQBgpwZIQMX53JYUu",
+    "token_a_agent": "knt_aUqTVLimo99opNAunPGG_dik5YyOKy6tZOLxbo9ucHrUAUdH0pl33-A0PY8jAxmT",
+    "token_b_agent": "knt_2i2vnij78sdNy26yPWWZTe0xAkNqpxS56UnKc6MJUE0cM6UMd71Pm6G6iCVW-4LO",
+    "token_c_agent": "knt_TMlMrXPKm9GwkUgbjxAReW2Z8GT_EbuA2BTHGW8onh5-cTYF2GMKPm0Bd9zVBc3s",
+    "token_b_ws": "knt_XoGzub1BUc0e7DRYbj2nUO_9tfnEDXvaHs6QbnLoTjZOHvB20j8SaRsQf2YG9e6T"
+  }
+}

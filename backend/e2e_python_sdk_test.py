@@ -2,6 +2,7 @@
 """TrueMemory Phase 9.8 E2E Test Suite - Python SDK (memory_client.py)"""
 import sys
 import os
+import json
 sys.path.insert(0, "/app")
 os.environ["KONTEXT_ENABLE_TEST_AUTH"] = "1"
 
@@ -74,18 +75,18 @@ def t_forget_gone():
 test("sdk_forget", t_forget)
 test("sdk_forget_gone", t_forget_gone)
 
-# === 7. CONTEXT BUILDING ===
+# === 7. CONTEXT BUILDER ===
 print("\n=== 7. SDK CONTEXT ===")
 def t_context():
     client.remember(user_id=USER, scope="general", key="ctx1", content="Context test memory.", source="e2e-sdk", workspace_id=WS_A)
-    ctx = client.build_context(user_id=USER, query="context", scope="general", workspace_id=WS_A)
-    return isinstance(ctx, dict), f"type={type(ctx).__name__}"
+    ctx = client.context(user_id=USER, scope="general", workspace_id=WS_A)
+    return ctx is not None and hasattr(ctx, "scope"), f"type={type(ctx).__name__}"
 test("sdk_context", t_context)
 
 # === 8. HOT CACHE ===
 print("\n=== 8. SDK HOT CACHE ===")
 def t_cache():
-    m = client.remember(user_id=USER, scope="general", key="cache1", content="Cache test.", source="e2e-sdk", workspace_id=WS_A)
+    client.remember(user_id=USER, scope="general", key="cache1", content="Cache test.", source="e2e-sdk", workspace_id=WS_A)
     items1 = client.search(user_id=USER, scope="general", query="Cache", limit=10, workspace_id=WS_A)
     items2 = client.search(user_id=USER, scope="general", query="Cache", limit=10, workspace_id=WS_A)
     metrics = client.cache_metrics()

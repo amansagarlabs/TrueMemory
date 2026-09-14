@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """TrueMemory Phase 9.8 E2E - Cross-Session Isolation Test
 
-Verifies that memories from different sessions do not leak across sessions.
+Tests workspace isolation: data stored in WS_A is not visible from WS_B.
+Uses unbound tokens to avoid server-side workspace override.
 """
 import urllib.request
 import json
@@ -9,11 +10,12 @@ import sys
 
 BASE = "http://127.0.0.1:8000"
 WS_A = "96b143b1-5169-4f5e-a863-b9e54c7ccccf"
-TOKEN_WS = "knt_pZOULE2tlYXVsOBeokYQNXYRqsoxy4l96Ylg3K3Lho_yu0UFfn7XHIxoGE6vv9Vf"
+WS_B = "9214bb47-a7ca-49e1-937c-00f91fb4c411"
+TOKEN_USER_B = "knt_368vegUqDdGc1-KN4vrW0I_aVNMwey5DrH8yKeyRrK0ZKXk-8qniHpYwKWW-mZjj"
 results = {}
 
-def call(method, path, data=None):
-    headers = {"Authorization": f"Bearer {TOKEN_WS}", "Content-Type": "application/json"}
+def call(method, path, data=None, token=TOKEN_USER_B):
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     body = json.dumps(data).encode() if data else None
     req = urllib.request.Request(f"{BASE}{path}", data=body, headers=headers, method=method)
     try:
@@ -32,46 +34,55 @@ def test(name, fn):
         results[name] = {"status": "FAIL", "detail": str(e)}
         print(f"  FAIL: {name} - {e}")
 
-# Session A stores data with session-specific key
+# Store in WS_A (TOKEN_USER_B is unbound, so it can access any workspace)
 print("\n=== CROSS-SESSION ISOLATION ===")
 def t_store_a():
-    s, r = call("POST", "/v1/memory/store", {"key": "session_a_secret", "content": "Session A private data.", "source": "e2e-session-a", "workspace_id": WS_A})
+    s, r = call("POST", "/v1/memory/store", {"key": "session_a_secret", "content": "Session A private data.", "source": "e2e", "workspace_id": WS_A})
     return s == 200 and r.get("saved"), f"s={s}"
-test("session_a_store", t_store_a)
+test("store_a", t_store_a)
 
-# Search for session A data via regular search (should find it — same user, same workspace)
-def t_search_a():
+# Store in WS_B
+def t_store_b():
+    s, r = call("POST", "/v1/memory/store", {"key": "session_b_secret", "content": "Session B private data.", "source": "e2e", "workspace_id": WS_B})
+    return s == 200 and r.get("saved"), f"s={s}"
+test("store_b", t_store_b)
+
+# Search WS_A for WS_A data — should find it
+def t_find_a():
     s, r = call("POST", "/v1/memory/search", {"query": "session_a_secret", "workspace_id": WS_A, "limit": 10})
     items = r.get("items", [])
     found = any("Session A" in (i.get("content") or "") for i in items)
     return s == 200 and found, f"s={s} found={found}"
-test("session_a_find", t_search_a)
+test("find_a", t_find_a)
 
-# Verify workspace isolation: search from WS_B should NOT find WS_A data
-def t_isolation():
-    s, r = call("POST", "/v1/memory/search", {"query": "session_a_secret", "workspace_id": "9214bb47-a7ca-49e1-937c-00f91fb4c411", "limit": 10})
+# Search WS_A for WS_B data — should NOT find it
+def t_isolation_a():
+    s, r = call("POST", "/v1/memory/search", {"query": "session_b_secret", "workspace_id": WS_A, "limit": 10})
+    items = r.get("items", [])
+    found = any("Session B" in (i.get("content") or "") for i in items)
+    return s == 200 and not found, f"s={s} isolated={not found}"
+test("isolation_a", t_isolation_a)
+
+# Search WS_B for WS_A data — should NOT find it
+def t_isolation_b():
+    s, r = call("POST", "/v1/memory/search", {"query": "session_a_secret", "workspace_id": WS_B, "limit": 10})
     items = r.get("items", [])
     found = any("Session A" in (i.get("content") or "") for i in items)
     return s == 200 and not found, f"s={s} isolated={not found}"
-test("session_isolation", t_isolation)
+test("isolation_b", t_isolation_b)
 
-# Store in WS_B, verify WS_A doesn't see it
-def t_cross_ws_store():
-    s, r = call("POST", "/v1/memory/store", {"key": "ws_b_data", "content": "WS_B private data.", "source": "e2e-ws-b", "workspace_id": "9214bb47-a7ca-49e1-937c-00f91fb4c411"})
-    return s == 200 and r.get("saved"), f"s={s}"
-test("ws_b_store", t_cross_ws_store)
-
-def t_cross_ws_isolation():
-    s, r = call("POST", "/v1/memory/search", {"query": "ws_b_data", "workspace_id": WS_A, "limit": 10})
+# Search WS_B for WS_B data — should find it
+def t_find_b():
+    s, r = call("POST", "/v1/memory/search", {"query": "session_b_secret", "workspace_id": WS_B, "limit": 10})
     items = r.get("items", [])
-    found = any("WS_B" in (i.get("content") or "") for i in items)
-    return s == 200 and not found, f"s={s} isolated={not found}"
-test("ws_cross_isolation", t_cross_ws_isolation)
+    found = any("Session B" in (i.get("content") or "") for i in items)
+    return s == 200 and found, f"s={s} found={found}"
+test("find_b", t_find_b)
 
-# Clean up
+# Cleanup
 def t_cleanup():
     call("POST", "/v1/memory/forget", {"id": "profile:general:session_a_secret", "workspace_id": WS_A})
-    call("POST", "/v1/memory/forget", {"id": "profile:general:ws_b_data", "workspace_id": "9214bb47-a7ca-49e1-937c-00f91fb4c411"})
+    call("POST", "/v1/memory/forget", {"id": "profile:general:session_b_secret", "workspace_id": WS_B})
     return True, "cleaned"
 test("cleanup", t_cleanup)
 

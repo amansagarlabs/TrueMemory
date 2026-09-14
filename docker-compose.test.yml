@@ -26,6 +26,11 @@ services:
     environment:
       TEST_ENV: "true"
       DATABASE_URL: postgresql://truememory_test:${TRUEMEMORY_TEST_DB_PASSWORD}@postgres-test:5432/truememory_test
+      DATABASE_URL_DOCKER: postgresql://truememory_test:${TRUEMEMORY_TEST_DB_PASSWORD}@postgres-test:5432/truememory_test
+      POSTGRES_DOCKER_HOST: postgres-test
+      POSTGRES_USER: truememory_test
+      POSTGRES_PASSWORD: ${TRUEMEMORY_TEST_DB_PASSWORD}
+      POSTGRES_DB: truememory_test
       KONTEXT_ENABLE_TEST_AUTH: "1"
       MEMORY_DB_PATH: /tmp/truememory-test.db
     ports:
