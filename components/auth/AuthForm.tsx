@@ -6,7 +6,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { saveAuthSession } from "@/lib/auth";
-import { loginWithEmail, signUpWithEmail } from "@/services/auth";
+import { googleLoginUrl, loginWithEmail, signUpWithEmail } from "@/services/auth";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Mode = "login" | "signup";
@@ -201,12 +201,7 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
           <div className="mt-3 grid grid-cols-2 gap-3">
             <button
               type="button"
-              onClick={() =>
-                toast.info("Google sign-in is not configured yet.", {
-                  description: "Use email and password for now.",
-                  duration: 1800,
-                })
-              }
+              onClick={() => window.location.assign(googleLoginUrl())}
               className={socialButtonClass}
             >
               <svg

@@ -491,3 +491,144 @@ def revoke_session_by_token(settings: Any, *, token: str) -> bool:
             row = cur.fetchone()
             conn.commit()
             return bool(row)
+
+
+def find_or_create_google_user(
+    settings: Any,
+    *,
+    google_sub: str,
+    email: str,
+    full_name: str | None = None,
+    avatar_url: str | None = None,
+) -> tuple[dict[str, Any], bool]:
+    """Find or create a user from a verified Google identity.
+
+    Links to an existing account when the email already exists,
+    otherwise creates a new verified user. Returns (user, created).
+    """
+    if not postgres_enabled(settings):
+        raise ValueError("Postgres is not configured.")
+    if not google_sub or not email:
+        raise ValueError("Google identity is incomplete.")
+
+    normalized_email = email.strip().lower()
+    display_name = (full_name or "").strip() or normalized_email.split("@")[0]
+
+    with _connect(settings) as conn:
+        with conn.cursor() as cur:
+            # 1. Existing Google identity → return that user.
+            cur.execute(
+                """
+                SELECT u.id::text AS id, u.email, u.username, u.status, u.plan,
+                       p.full_name
+                FROM auth_identities ai
+                JOIN users u ON u.id = ai.user_id
+                LEFT JOIN user_profiles p ON p.user_id = u.id
+                WHERE ai.provider = 'google' AND ai.provider_user_id = %s
+                LIMIT 1
+                """,
+                (google_sub,),
+            )
+            user = cur.fetchone()
+            if user:
+                if user["status"] != "active":
+                    raise ValueError("Account is not active.")
+                cur.execute(
+                    """
+                    UPDATE users SET last_login_at = NOW(), updated_at = NOW()
+                    WHERE id = %s
+                    """,
+                    (user["id"],),
+                )
+                if avatar_url:
+                    cur.execute(
+                        """
+                        UPDATE user_profiles SET avatar_url = %s, updated_at = NOW()
+                        WHERE user_id = %s AND (avatar_url IS NULL OR avatar_url = '')
+                        """,
+                        (avatar_url[:500], user["id"]),
+                    )
+                conn.commit()
+                return dict(user), False
+
+            # 2. Existing email account → link Google identity.
+            cur.execute("SELECT id::text AS id FROM users WHERE email = %s", (normalized_email,))
+            row = cur.fetchone()
+            if row:
+                user_id = row["id"]
+                cur.execute(
+                    """
+                    INSERT INTO auth_identities (user_id, provider, provider_user_id)
+                    VALUES (%s, 'google', %s)
+                    ON CONFLICT (user_id, provider) DO UPDATE
+                    SET provider_user_id = EXCLUDED.provider_user_id,
+                        updated_at = NOW()
+                    """,
+                    (user_id, google_sub),
+                )
+                cur.execute(
+                    "UPDATE users SET is_email_verified = TRUE, last_login_at = NOW(), updated_at = NOW() WHERE id = %s",
+                    (user_id,),
+                )
+                cur.execute(
+                    """
+                    SELECT u.id::text AS id, u.email, u.username, u.status, u.plan,
+                           p.full_name
+                    FROM users u
+                    LEFT JOIN user_profiles p ON p.user_id = u.id
+                    WHERE u.id = %s
+                    """,
+                    (user_id,),
+                )
+                user = cur.fetchone()
+                conn.commit()
+                return dict(user), False
+
+            # 3. New user.
+            base_username = "".join(
+                ch for ch in normalized_email.split("@")[0].lower() if ch.isalnum() or ch in ("_", "-")
+            )[:30] or f"user-{secrets.token_hex(4)}"
+            username = base_username
+            for _ in range(5):
+                cur.execute("SELECT id FROM users WHERE username = %s", (username,))
+                if not cur.fetchone():
+                    break
+                username = f"{base_username}-{secrets.token_hex(3)}"[:40]
+
+            cur.execute(
+                """
+                INSERT INTO users (email, username, status, is_email_verified)
+                VALUES (%s, %s, 'active', TRUE)
+                RETURNING id::text AS id, email, username, status, plan
+                """,
+                (normalized_email, username),
+            )
+            user = cur.fetchone()
+            user_id = user["id"]
+
+            cur.execute(
+                """
+                INSERT INTO user_profiles (user_id, full_name, avatar_url, onboarding_completed)
+                VALUES (%s, %s, %s, FALSE)
+                ON CONFLICT (user_id) DO NOTHING
+                """,
+                (user_id, display_name[:120], (avatar_url or "")[:500] or None),
+            )
+            cur.execute(
+                """
+                INSERT INTO auth_identities (user_id, provider, provider_user_id)
+                VALUES (%s, 'google', %s)
+                ON CONFLICT DO NOTHING
+                """,
+                (user_id, google_sub),
+            )
+            cur.execute(
+                """
+                INSERT INTO user_roles (user_id, role_id)
+                SELECT %s, id FROM roles WHERE role_key = 'user'
+                ON CONFLICT DO NOTHING
+                """,
+                (user_id,),
+            )
+            conn.commit()
+            return {**dict(user), "full_name": display_name[:120]}, True

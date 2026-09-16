@@ -106,6 +106,10 @@ class Settings:
     github_oauth_redirect_uri: str = "http://localhost:8000/api/integrations/github/callback"
     github_oauth_frontend_url: str = "http://localhost:3000/connectors"
     github_oauth_scope: str = "read:user user:email"
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_oauth_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
+    google_oauth_frontend_url: str = "http://localhost:3000"
     coding_runtime_enabled: bool = False
     coding_runtime_image: str = "truememory-coding-runtime:local"
     coding_runtime_root: str = "data/coding_workspaces"
@@ -247,6 +251,16 @@ def get_settings() -> Settings:
         github_oauth_scope=os.getenv(
             "GITHUB_OAUTH_SCOPE",
             "read:user user:email",
+        ),
+        google_client_id=os.getenv("GOOGLE_CLIENT_ID", ""),
+        google_client_secret=os.getenv("GOOGLE_CLIENT_SECRET", ""),
+        google_oauth_redirect_uri=os.getenv(
+            "GOOGLE_OAUTH_REDIRECT_URI",
+            "http://localhost:8000/api/auth/google/callback",
+        ),
+        google_oauth_frontend_url=os.getenv(
+            "GOOGLE_OAUTH_FRONTEND_URL",
+            "http://localhost:3000",
         ),
         coding_runtime_enabled=_env_bool("CODING_RUNTIME_ENABLED", False),
         coding_runtime_image=os.getenv(

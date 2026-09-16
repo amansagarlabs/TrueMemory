@@ -64,8 +64,16 @@ export async function loginWithEmail(input: {
   return data as AuthResponse;
 }
 
-export async function fetchMe(token?: string): Promise<{ user: AuthUser }> {
-  let res: Response;
+export function googleLoginUrl(): string {
+  return `${API_URL}/api/auth/google/login`;
+}
+
+export function startGoogleLogin(): void {
+  if (typeof window === "undefined") return;
+  window.location.assign(googleLoginUrl());
+}
+
+export async function fetchMe(token?: string): Promise<{ user: AuthUser }> {  let res: Response;
   try {
     res = await credentialedFetch(`${API_URL}/api/auth/me`, {
       headers: token ? { Authorization: `Bearer ${token}` } : undefined,

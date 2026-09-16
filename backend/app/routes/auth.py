@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, Header, HTTPException, Request, Response
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, Request, Response
 from fastapi.encoders import jsonable_encoder
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from pydantic import BaseModel, Field
 
 from app.config import get_settings
@@ -14,12 +14,20 @@ from services.auth_store import (
     create_api_token,
     create_session,
     create_user_with_password,
+    find_or_create_google_user,
     get_user_from_api_token,
     get_user_from_token,
     refresh_session,
     revoke_session_by_token,
     revoke_api_token,
     update_user_profile,
+)
+from services.google_oauth import (
+    create_google_oauth_state,
+    exchange_code_for_tokens,
+    fetch_google_userinfo,
+    google_authorize_url,
+    verify_google_oauth_state,
 )
 from services.memory_core import MemoryClient
 from services.postgres_store import postgres_enabled
@@ -174,6 +182,82 @@ async def login(body: LoginRequest, request: Request):
     }))
     _set_session_cookies(response, session, settings)
     return response
+
+
+def _google_result_redirect(settings, status: str, detail: str | None = None):
+    target = str(settings.google_oauth_frontend_url).rstrip("/")
+    query = f"?google={status}"
+    if detail:
+        from urllib.parse import quote
+        query += f"&detail={quote(detail[:160])}"
+    return RedirectResponse(url=f"{target}{query}", status_code=303)
+
+
+@router.get("/google/login")
+async def google_login():
+    """Start Google OAuth sign-in. Redirects to the Google consent screen."""
+    settings = get_settings()
+    if not settings.google_client_id or not settings.google_client_secret:
+        raise HTTPException(
+            status_code=503,
+            detail="Google sign-in is not configured. Set GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET.",
+        )
+    try:
+        state = create_google_oauth_state(settings)
+        return RedirectResponse(google_authorize_url(settings, state), status_code=303)
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail="Google sign-in is not configured.") from exc
+
+
+@router.get("/google/callback")
+async def google_callback(
+    request: Request,
+    code: str | None = Query(default=None),
+    state: str | None = Query(default=None),
+    error: str | None = Query(default=None),
+):
+    """Google OAuth callback. Creates a session and redirects to the frontend."""
+    settings = get_settings()
+    if error:
+        return _google_result_redirect(settings, "error", "Google sign-in was cancelled.")
+    if not code or not state:
+        return _google_result_redirect(settings, "error", "Google sign-in was incomplete.")
+    try:
+        verify_google_oauth_state(settings, state)
+        tokens = await exchange_code_for_tokens(settings, code)
+        access_token = str(tokens.get("access_token") or "")
+        if not access_token:
+            raise RuntimeError("google_token_missing")
+        profile = await fetch_google_userinfo(access_token)
+        google_sub = str(profile.get("sub") or "")
+        email = str(profile.get("email") or "")
+        if not google_sub or not email:
+            raise RuntimeError("google_profile_incomplete")
+        if not bool(profile.get("email_verified", True)):
+            raise RuntimeError("google_email_unverified")
+
+        user, created = find_or_create_google_user(
+            settings,
+            google_sub=google_sub,
+            email=email,
+            full_name=str(profile.get("name") or ""),
+            avatar_url=str(profile.get("picture") or ""),
+        )
+        session = create_session(
+            settings,
+            user_id=str(user["id"]),
+            user_agent=request.headers.get("user-agent"),
+            ip_address=request.client.host if request.client else None,
+        )
+        target = str(settings.google_oauth_frontend_url).rstrip("/")
+        destination = "/onboarding?google=new" if created else "/chat?google=1"
+        response = RedirectResponse(url=f"{target}{destination}", status_code=303)
+        _set_session_cookies(response, session, settings)
+        return response
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning("Google OAuth callback failed: %s", exc)
+        return _google_result_redirect(settings, "error", "Google sign-in could not be completed.")
 
 
 @router.get("/me")
