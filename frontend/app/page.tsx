@@ -20,6 +20,7 @@ import {
   Search,
   ShieldCheck,
   Workflow,
+  X,
 } from "lucide-react"
 
 import { FumadocsNav } from "@/components/ui/fumadocs-nav"
@@ -552,10 +553,10 @@ export default function Home() {
           <button
             type="button"
             onClick={() => setShowPromoBanner(false)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-white/80 hover:text-white"
+            className="absolute right-1 top-1/2 inline-flex size-10 -translate-y-1/2 items-center justify-center rounded-full text-white/80 transition-colors hover:bg-black/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/80"
             aria-label="Dismiss promo banner"
           >
-            ×
+            <X aria-hidden="true" className="size-4" strokeWidth={2.5} />
           </button>
         </div>
       )}

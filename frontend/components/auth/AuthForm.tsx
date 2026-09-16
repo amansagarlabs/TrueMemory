@@ -259,7 +259,7 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
                 window.setTimeout(() => window.location.assign(googleLoginUrl(redirectTo)), 3000);
               }}
               disabled={Boolean(socialLoading)}
-              className={`${socialButtonClass} relative ${!isSignup && lastUsedProvider === "google" ? "pr-24" : ""}`}
+              className={`${socialButtonClass} relative`}
             >
               <svg
                 aria-hidden="true"
@@ -286,7 +286,7 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
                 />
               </svg>
               {socialLoading === "google" ? <LoaderCircle aria-label="Signing in" className="size-4 animate-spin" /> : "Google"}
-              {!isSignup && lastUsedProvider === "google" ? <LastUsedBadge /> : null}
+              {lastUsedProvider === "google" ? <LastUsedBadge /> : null}
             </button>
             <button
               type="button"
@@ -297,7 +297,7 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
                 window.setTimeout(() => window.location.assign(githubLoginUrl(redirectTo)), 3000);
               }}
               disabled={Boolean(socialLoading)}
-              className={`${socialButtonClass} relative ${!isSignup && lastUsedProvider === "github" ? "pr-24" : ""}`}
+              className={`${socialButtonClass} relative`}
             >
               <svg
                 aria-hidden="true"
@@ -329,7 +329,7 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
                 />
               </svg>
               {socialLoading === "github" ? <LoaderCircle aria-label="Signing in" className="size-4 animate-spin" /> : "GitHub"}
-              {!isSignup && lastUsedProvider === "github" ? <LastUsedBadge /> : null}
+              {lastUsedProvider === "github" ? <LastUsedBadge /> : null}
             </button>
           </div>
         </div>
@@ -338,7 +338,7 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
           <button
             type="submit"
             disabled={loading}
-            className={`auth-submit-button group relative isolate w-full cursor-pointer overflow-hidden rounded-[12px] px-4 py-3 text-sm font-semibold shadow-[0_12px_28px_-18px_rgba(246,232,121,0.7)] transition-[background-color,color,transform,box-shadow] duration-150 hover:-translate-y-px hover:shadow-[0_16px_34px_-18px_rgba(246,232,121,0.85)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6e879]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 ${!isSignup && lastUsedProvider === "email" ? "pr-24" : ""}`}
+            className="auth-submit-button group relative isolate w-full cursor-pointer overflow-visible rounded-[12px] px-4 py-3 text-sm font-semibold shadow-[0_12px_28px_-18px_rgba(246,232,121,0.7)] transition-[background-color,color,transform,box-shadow] duration-150 hover:-translate-y-px hover:shadow-[0_16px_34px_-18px_rgba(246,232,121,0.85)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6e879]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
           >
             <span
               aria-hidden="true"
@@ -354,7 +354,6 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
                   ? "Sign up"
                   : "Login"}
             </span>
-            {!isSignup && lastUsedProvider === "email" ? <LastUsedBadge dark /> : null}
           </button>
         </div>
       </form>
@@ -366,10 +365,10 @@ function LastUsedBadge({ dark = false }: { dark?: boolean }) {
   return (
     <span
       aria-label="Last used sign-in method"
-      className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-full border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] leading-none ${
+      className={`absolute right-0 top-0 z-20 -translate-y-1/2 translate-x-1/8 rounded-full border px-2 py-1 text-[9px] font-semibold tracking-normal leading-none shadow-sm ${
         dark
-          ? "border-[#171814]/15 bg-[#171814]/10 text-[#171814]/75"
-          : "border-border bg-muted text-muted-foreground dark:border-white/15 dark:bg-white/10 dark:text-white/65"
+          ? "border-white/20 bg-[#171814] text-white"
+          : "border-white/20 bg-[#171814] text-white"
       }`}
     >
       Last used

@@ -157,6 +157,7 @@ def get_settings() -> Settings:
     if use_docker_postgres:
         resolved_database_url = (
             database_url_docker
+            or legacy_database_url
             or _build_postgres_url(
                 host=postgres_docker_host,
                 port=postgres_port,
@@ -164,13 +165,13 @@ def get_settings() -> Settings:
                 user=postgres_user,
                 password=postgres_password,
             )
-            or legacy_database_url
         )
         resolved_postgres_host = postgres_docker_host
         database_mode = "docker"
     else:
         resolved_database_url = (
             database_url_local
+            or legacy_database_url
             or _build_postgres_url(
                 host=postgres_local_host,
                 port=postgres_port,
@@ -178,7 +179,6 @@ def get_settings() -> Settings:
                 user=postgres_user,
                 password=postgres_password,
             )
-            or legacy_database_url
         )
         resolved_postgres_host = postgres_local_host
         database_mode = "local"

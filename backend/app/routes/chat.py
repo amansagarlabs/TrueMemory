@@ -1162,6 +1162,7 @@ async def _chat_event_stream(
     # Let model control additional memory retrieval via tools
 
     # Effective mode routing
+    effective_mode = query_mode
     if is_coding_chat:
         effective_mode = QueryMode.DIRECT
     if effective_mode == QueryMode.AUTO:

@@ -1,4 +1,4 @@
-"""Run the MVP Postgres schema manually against DATABASE_URL."""
+"""Apply all PostgreSQL schema migrations against DATABASE_URL."""
 
 from __future__ import annotations
 
@@ -19,14 +19,19 @@ def main() -> int:
         print("DATABASE_URL is missing in .env")
         return 1
 
-    schema_path = project_root / "backend" / "db" / "init" / "001_mvp_schema.sql"
-    sql = schema_path.read_text(encoding="utf-8")
+    schema_dir = project_root / "backend" / "db" / "init"
+    schema_paths = sorted(schema_dir.glob("*.sql"))
+    if not schema_paths:
+        print(f"No SQL migrations found in {schema_dir}")
+        return 1
 
     with psycopg.connect(database_url, autocommit=True) as conn:
         with conn.cursor() as cur:
-            cur.execute(sql)
+            for schema_path in schema_paths:
+                print(f"Applying {schema_path.name}...")
+                cur.execute(schema_path.read_text(encoding="utf-8"))
 
-    print(f"Postgres schema applied from {schema_path}")
+    print(f"Postgres schema applied from {len(schema_paths)} migration files")
     return 0
 
 
