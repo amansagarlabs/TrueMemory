@@ -65,7 +65,7 @@ export async function loginWithEmail(input: {
 }
 
 export function googleLoginUrl(): string {
-  return `${API_URL}/api/auth/google/login`;
+  return `${API_URL}/api/oauth/google/login`;
 }
 
 export function startGoogleLogin(): void {

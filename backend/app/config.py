@@ -108,7 +108,7 @@ class Settings:
     github_oauth_scope: str = "read:user user:email"
     google_client_id: str = ""
     google_client_secret: str = ""
-    google_oauth_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
+    google_oauth_redirect_uri: str = "http://localhost:8000/api/oauth/google/callback"
     google_oauth_frontend_url: str = "http://localhost:3000"
     coding_runtime_enabled: bool = False
     coding_runtime_image: str = "truememory-coding-runtime:local"
@@ -256,7 +256,7 @@ def get_settings() -> Settings:
         google_client_secret=os.getenv("GOOGLE_CLIENT_SECRET", ""),
         google_oauth_redirect_uri=os.getenv(
             "GOOGLE_OAUTH_REDIRECT_URI",
-            "http://localhost:8000/api/auth/google/callback",
+            "http://localhost:8000/api/oauth/google/callback",
         ),
         google_oauth_frontend_url=os.getenv(
             "GOOGLE_OAUTH_FRONTEND_URL",

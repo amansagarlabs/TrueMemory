@@ -13,7 +13,7 @@ def _settings() -> SimpleNamespace:
     return SimpleNamespace(
         aman_jwt_secret="s" * 48,
         google_client_id="client-id",
-        google_oauth_redirect_uri="http://localhost:8000/api/auth/google/callback",
+        google_oauth_redirect_uri="http://localhost:8000/api/oauth/google/callback",
     )
 
 
