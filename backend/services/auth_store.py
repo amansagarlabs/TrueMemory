@@ -544,7 +544,7 @@ def find_or_create_google_user(
                     cur.execute(
                         """
                         UPDATE user_profiles SET avatar_url = %s, updated_at = NOW()
-                        WHERE user_id = %s AND (avatar_url IS NULL OR avatar_url = '')
+                        WHERE user_id = %s
                         """,
                         (avatar_url[:500], user["id"]),
                     )
@@ -632,3 +632,43 @@ def find_or_create_google_user(
             )
             conn.commit()
             return {**dict(user), "full_name": display_name[:120]}, True
+
+
+def find_or_create_github_user(
+    settings: Any, *, github_id: str, email: str, full_name: str | None = None,
+    avatar_url: str | None = None,
+) -> tuple[dict[str, Any], bool]:
+    """Find or create an account from a verified GitHub identity."""
+    if not postgres_enabled(settings) or not github_id or not email:
+        raise ValueError("GitHub identity is incomplete.")
+    normalized_email = email.strip().lower()
+    display_name = (full_name or "").strip() or normalized_email.split("@")[0]
+    with _connect(settings) as conn:
+        with conn.cursor() as cur:
+            cur.execute("SELECT u.id::text AS id, u.email, u.username, u.status, u.plan, p.full_name FROM auth_identities ai JOIN users u ON u.id = ai.user_id LEFT JOIN user_profiles p ON p.user_id = u.id WHERE ai.provider = 'github' AND ai.provider_user_id = %s LIMIT 1", (github_id,))
+            user = cur.fetchone()
+            if not user:
+                cur.execute("SELECT id::text AS id FROM users WHERE email = %s", (normalized_email,))
+                row = cur.fetchone()
+                if row:
+                    user_id = row["id"]
+                    cur.execute("INSERT INTO auth_identities (user_id, provider, provider_user_id) VALUES (%s, 'github', %s) ON CONFLICT (user_id, provider) DO UPDATE SET provider_user_id = EXCLUDED.provider_user_id, updated_at = NOW()", (user_id, github_id))
+                    cur.execute("UPDATE users SET is_email_verified = TRUE, last_login_at = NOW(), updated_at = NOW() WHERE id = %s", (user_id,))
+                    cur.execute("SELECT u.id::text AS id, u.email, u.username, u.status, u.plan, p.full_name FROM users u LEFT JOIN user_profiles p ON p.user_id = u.id WHERE u.id = %s", (user_id,))
+                    user = cur.fetchone()
+                else:
+                    base = "".join(ch for ch in normalized_email.split("@")[0] if ch.isalnum() or ch in "_-")[:30] or f"user-{secrets.token_hex(4)}"
+                    username = base
+                    cur.execute("SELECT id FROM users WHERE username = %s", (username,))
+                    if cur.fetchone(): username = f"{base}-{secrets.token_hex(3)}"[:40]
+                    cur.execute("INSERT INTO users (email, username, status, is_email_verified) VALUES (%s, %s, 'active', TRUE) RETURNING id::text AS id, email, username, status, plan", (normalized_email, username))
+                    user = cur.fetchone(); user_id = user["id"]
+                    cur.execute("INSERT INTO user_profiles (user_id, full_name, onboarding_completed) VALUES (%s, %s, FALSE) ON CONFLICT (user_id) DO NOTHING", (user_id, display_name[:120]))
+                    cur.execute("INSERT INTO auth_identities (user_id, provider, provider_user_id) VALUES (%s, 'github', %s) ON CONFLICT DO NOTHING", (user_id, github_id))
+                    cur.execute("INSERT INTO user_roles (user_id, role_id) SELECT %s, id FROM roles WHERE role_key = 'user' ON CONFLICT DO NOTHING", (user_id,))
+            if user["status"] != "active": raise ValueError("Account is not active.")
+            if avatar_url:
+                cur.execute("UPDATE user_profiles SET avatar_url = %s, updated_at = NOW() WHERE user_id = %s", (avatar_url[:500], user["id"]))
+            cur.execute("UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = %s", (user["id"],))
+            conn.commit()
+            return dict(user), not bool(user.get("full_name"))

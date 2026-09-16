@@ -4,6 +4,7 @@ import { GeistPixelGrid } from "geist/font/pixel";
 import { GeistMono } from "geist/font/mono";
 import { AgentNavigationDock } from "@/components/agent-navigation-dock";
 import { ThemeSync } from "@/components/theme-sync";
+import { ThemeInit } from "@/components/theme-init";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -29,19 +30,6 @@ const stackSansNotch = localFont({
   weight: "200 800",
   style: "normal",
 });
-const themeInitScript = `
-  (() => {
-    try {
-      const storedTheme = localStorage.getItem("theme");
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      const isDark = storedTheme ? storedTheme === "dark" : prefersDark;
-      const root = document.documentElement;
-      root.classList.toggle("dark", isDark);
-      root.style.colorScheme = isDark ? "dark" : "light";
-    } catch {}
-  })();
-`;
-
 export const metadata: Metadata = {
   title: "TrueMemory | Universal AI Memory",
   description:
@@ -65,7 +53,7 @@ export default function RootLayout({
       className={`${stackSansText.variable} ${stackSansHeadline.variable} ${stackSansNotch.variable} ${geistMono.variable} ${GeistPixelGrid.variable} h-full antialiased`}
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col bg-background text-foreground">
-        <script id="theme-init" dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <ThemeInit />
         <ThemeSync />
         <AgentNavigationDock />
         {children}

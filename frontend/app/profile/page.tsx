@@ -42,6 +42,7 @@ import { useToast } from "@/hooks/use-toast";
 import { updateProfile } from "@/services/auth";
 
 const AVATAR_KEY = "kontext-dither-avatar";
+const AVATAR_DISPLAY_KEY = "kontext-avatar-display";
 
 const avatars: Array<{
   id: string;
@@ -73,6 +74,11 @@ export default function ProfilePage() {
   const [selectedAvatar, setSelectedAvatar] = useState(() => {
     if (typeof window === "undefined") return avatars[0].id;
     return localStorage.getItem(AVATAR_KEY) || avatars[0].id;
+  });
+  const [avatarDisplay, setAvatarDisplay] = useState<"photo" | "dither">(() => {
+    if (typeof window === "undefined") return "dither";
+    const stored = localStorage.getItem(AVATAR_DISPLAY_KEY);
+    return stored === "photo" || stored === "dither" ? stored : "dither";
   });
   const [activeTab, setActiveTab] = useState<ProfileTab>("overview");
   const [isEditing, setIsEditing] = useState(false);
@@ -133,6 +139,11 @@ export default function ProfilePage() {
     setSelectedAvatar(id);
     localStorage.setItem(AVATAR_KEY, id);
     setShowAvatarPicker(false);
+  }
+
+  function chooseAvatarDisplay(display: "photo" | "dither") {
+    setAvatarDisplay(display);
+    localStorage.setItem(AVATAR_DISPLAY_KEY, display);
   }
 
   function signOut() {
@@ -227,7 +238,11 @@ export default function ProfilePage() {
                 className="group relative block"
                 aria-label="Change avatar"
               >
-                <DitherAvatar avatar={selected} className="size-24 shrink-0 sm:size-32" />
+                {avatarDisplay === "photo" && user.avatar_url ? (
+                  <img src={user.avatar_url} alt={`${displayName}'s profile`} className="size-24 shrink-0 rounded-full object-cover sm:size-32" />
+                ) : (
+                  <DitherAvatar avatar={selected} className="size-24 shrink-0 sm:size-32" />
+                )}
                 <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition group-hover:opacity-100">
                   <Camera aria-hidden="true" className="size-6 text-white" />
                 </span>
@@ -601,6 +616,10 @@ export default function ProfilePage() {
           <div className="mx-4 w-full max-w-md rounded-2xl border border-white/10 bg-[#10100f] p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Choose your avatar</h3>
+              <div className="mt-4 flex gap-2" role="group" aria-label="Avatar style">
+                <button type="button" onClick={() => chooseAvatarDisplay("photo")} disabled={!user.avatar_url} className={`rounded-full border px-3 py-2 text-xs ${avatarDisplay === "photo" && user.avatar_url ? "border-[#f6e879]/70 text-[#f6e879]" : "border-white/10 text-white/50"}`}>Use profile photo</button>
+                <button type="button" onClick={() => chooseAvatarDisplay("dither")} className={`rounded-full border px-3 py-2 text-xs ${avatarDisplay === "dither" ? "border-[#f6e879]/70 text-[#f6e879]" : "border-white/10 text-white/50"}`}>Use dither avatar</button>
+              </div>
               <button type="button" onClick={() => setShowAvatarPicker(false)} className="text-white/40 hover:text-white">
                 <X className="size-5" />
               </button>

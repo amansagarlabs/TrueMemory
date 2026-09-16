@@ -64,8 +64,16 @@ export async function loginWithEmail(input: {
   return data as AuthResponse;
 }
 
-export function googleLoginUrl(): string {
-  return `${API_URL}/api/oauth/google/login`;
+export function googleLoginUrl(redirect?: string): string {
+  const url = new URL(`${API_URL}/api/oauth/google/login`);
+  if (redirect) url.searchParams.set("redirect", redirect);
+  return url.toString();
+}
+
+export function githubLoginUrl(redirect?: string): string {
+  const url = new URL(`${API_URL}/api/oauth/github/login`);
+  if (redirect) url.searchParams.set("redirect", redirect);
+  return url.toString();
 }
 
 export function startGoogleLogin(): void {
