@@ -1,19 +1,49 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState, useSyncExternalStore } from "react";
+import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
-import { saveAuthSession } from "@/lib/auth";
-import { googleLoginUrl, loginWithEmail, signUpWithEmail } from "@/services/auth";
+import { loadAuthUser, saveAuthSession } from "@/lib/auth";
+import { githubLoginUrl, googleLoginUrl, loginWithEmail, signUpWithEmail } from "@/services/auth";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Mode = "login" | "signup";
 type FieldName = "fullName" | "email" | "password";
+type LastUsedProvider = "google" | "github" | "email";
+
+const LAST_USED_PROVIDER_KEY = "truememory:last-auth-provider";
+let authSnapshotRaw: string | null | undefined;
+let authSnapshotUser: ReturnType<typeof loadAuthUser> = null;
+
+function readAuthUserSnapshot() {
+  const raw = window.localStorage.getItem("app-agent-auth-user");
+  if (raw === authSnapshotRaw) return authSnapshotUser;
+  authSnapshotRaw = raw;
+  authSnapshotUser = raw ? (() => {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  })() : null;
+  return authSnapshotUser;
+}
+
+function readLastUsedProvider(): LastUsedProvider | null {
+  const storedProvider = window.localStorage.getItem(LAST_USED_PROVIDER_KEY);
+  return storedProvider === "google" || storedProvider === "github" || storedProvider === "email"
+    ? storedProvider
+    : null;
+}
+
+function subscribeToLastUsedProvider(onChange: () => void) {
+  window.addEventListener("truememory:last-auth-provider", onChange);
+  return () => window.removeEventListener("truememory:last-auth-provider", onChange);
+}
 
 function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const requestedRedirect = searchParams.get("redirect");
   const redirectTo =
@@ -25,10 +55,30 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
   const [fullName, setFullName] = useState("");
   const [mode, setMode] = useState<Mode>(initialMode);
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<"google" | "github" | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<FieldName, string>>>({});
+  const lastUsedProvider = useSyncExternalStore(
+    subscribeToLastUsedProvider,
+    readLastUsedProvider,
+    () => null,
+  );
   const toast = useToast();
 
+  function rememberProvider(provider: LastUsedProvider) {
+    window.localStorage.setItem(LAST_USED_PROVIDER_KEY, provider);
+    window.dispatchEvent(new Event("truememory:last-auth-provider"));
+  }
+
   const isSignup = mode === "signup";
+  const existingUser = useSyncExternalStore(
+    (onChange) => {
+      window.addEventListener("kontext-auth-user-changed", onChange);
+      return () => window.removeEventListener("kontext-auth-user-changed", onChange);
+    },
+    readAuthUserSnapshot,
+    () => null,
+  );
+  const firstName = existingUser?.full_name?.trim().split(/\s+/)[0] || existingUser?.username;
   const socialButtonClass =
     "inline-flex h-10 cursor-pointer items-center justify-center gap-2 rounded-[12px] border border-border bg-background px-3.5 text-[13px] font-medium text-foreground/80 transition-[background-color,border-color,color,transform,box-shadow,opacity] duration-150 hover:-translate-y-px hover:border-border hover:bg-muted hover:text-foreground hover:shadow-[0_10px_24px_-18px_rgba(0,0,0,0.25)] active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/40 disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:bg-white/[0.03] dark:text-white/85 dark:hover:border-white/20 dark:hover:bg-white/[0.06] dark:hover:text-white dark:focus-visible:ring-[#f6e879]/50";
 
@@ -87,6 +137,7 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
         : await loginWithEmail({ email: trimmedEmail, password: trimmedPassword });
 
       saveAuthSession(result.session, result.user);
+      if (!isSignup) rememberProvider("email");
       // Reload after persisting auth so the onboarding/auth guards read the
       // newly-created session from a clean document. Soft navigation can race
       // the first client render on signup in the production app shell.
@@ -110,7 +161,7 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
           TrueMemory workspace
         </p>
         <h1 className="mt-4 font-heading text-3xl font-semibold tracking-[-0.05em] text-foreground sm:text-4xl dark:text-[#f4f3ec]">
-          {isSignup ? "Create your account" : "Welcome back"}
+          {isSignup ? "Create your account" : firstName ? `Welcome back, ${firstName}` : "Welcome back"}
         </h1>
         <p className="mt-3 text-sm leading-7 text-muted-foreground dark:text-white/50">
           {isSignup
@@ -201,8 +252,14 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
           <div className="mt-3 grid grid-cols-2 gap-3">
             <button
               type="button"
-              onClick={() => window.location.assign(googleLoginUrl())}
-              className={socialButtonClass}
+              onClick={() => {
+                if (socialLoading) return;
+                if (!isSignup) rememberProvider("google");
+                setSocialLoading("google");
+                window.setTimeout(() => window.location.assign(googleLoginUrl(redirectTo)), 3000);
+              }}
+              disabled={Boolean(socialLoading)}
+              className={`${socialButtonClass} relative ${!isSignup && lastUsedProvider === "google" ? "pr-24" : ""}`}
             >
               <svg
                 aria-hidden="true"
@@ -228,17 +285,19 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
                   d="M43.611 20.083H42V20H24v8h11.303a12.04 12.04 0 0 1-4.087 5.571l.003-.002 6.19 5.238C36.971 39.205 44 34 44 24c0-1.341-.138-2.65-.389-3.917"
                 />
               </svg>
-              Google
+              {socialLoading === "google" ? <LoaderCircle aria-label="Signing in" className="size-4 animate-spin" /> : "Google"}
+              {!isSignup && lastUsedProvider === "google" ? <LastUsedBadge /> : null}
             </button>
             <button
               type="button"
-              onClick={() =>
-                toast.info("GitHub sign-in is not configured yet.", {
-                  description: "Use email and password for now.",
-                  duration: 1800,
-                })
-              }
-              className={socialButtonClass}
+              onClick={() => {
+                if (socialLoading) return;
+                if (!isSignup) rememberProvider("github");
+                setSocialLoading("github");
+                window.setTimeout(() => window.location.assign(githubLoginUrl(redirectTo)), 3000);
+              }}
+              disabled={Boolean(socialLoading)}
+              className={`${socialButtonClass} relative ${!isSignup && lastUsedProvider === "github" ? "pr-24" : ""}`}
             >
               <svg
                 aria-hidden="true"
@@ -269,7 +328,8 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
                   d="M512 0C229.12 0 0 229.12 0 512c0 226.56 146.56 417.92 350.08 485.76 25.6 4.48 35.2-10.88 35.2-24.32 0-12.16-.64-52.48-.64-95.36-128.64 23.68-161.92-31.36-172.16-60.16-5.76-14.72-30.72-60.16-52.48-72.32-17.92-9.6-43.52-33.28-.64-33.92 40.32-.64 69.12 37.12 78.72 52.48 46.08 77.44 119.68 55.68 149.12 42.24 4.48-33.28 17.92-55.68 32.64-68.48-113.92-12.8-232.96-56.96-232.96-252.8 0-55.68 19.84-101.76 52.48-137.6-5.12-12.8-23.04-65.28 5.12-135.68 0 0 42.88-13.44 140.8 52.48 40.96-11.52 84.48-17.28 128-17.28s87.04 5.76 128 17.28c97.92-66.56 140.8-52.48 140.8-52.48 28.16 70.4 10.24 122.88 5.12 135.68 32.64 35.84 52.48 81.28 52.48 137.6 0 196.48-119.68 240-233.6 252.8 18.56 16 34.56 46.72 34.56 94.72 0 68.48-.64 123.52-.64 140.8 0 13.44 9.6 29.44 35.2 24.32C877.44 929.92 1024 737.92 1024 512 1024 229.12 794.88 0 512 0"
                 />
               </svg>
-              GitHub
+              {socialLoading === "github" ? <LoaderCircle aria-label="Signing in" className="size-4 animate-spin" /> : "GitHub"}
+              {!isSignup && lastUsedProvider === "github" ? <LastUsedBadge /> : null}
             </button>
           </div>
         </div>
@@ -278,7 +338,7 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
           <button
             type="submit"
             disabled={loading}
-            className="auth-submit-button group relative isolate w-full cursor-pointer overflow-hidden rounded-[12px] px-4 py-3 text-sm font-semibold shadow-[0_12px_28px_-18px_rgba(246,232,121,0.7)] transition-[background-color,color,transform,box-shadow] duration-150 hover:-translate-y-px hover:shadow-[0_16px_34px_-18px_rgba(246,232,121,0.85)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6e879]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50"
+            className={`auth-submit-button group relative isolate w-full cursor-pointer overflow-hidden rounded-[12px] px-4 py-3 text-sm font-semibold shadow-[0_12px_28px_-18px_rgba(246,232,121,0.7)] transition-[background-color,color,transform,box-shadow] duration-150 hover:-translate-y-px hover:shadow-[0_16px_34px_-18px_rgba(246,232,121,0.85)] active:translate-y-0 active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#f6e879]/60 focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 ${!isSignup && lastUsedProvider === "email" ? "pr-24" : ""}`}
           >
             <span
               aria-hidden="true"
@@ -294,10 +354,26 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
                   ? "Sign up"
                   : "Login"}
             </span>
+            {!isSignup && lastUsedProvider === "email" ? <LastUsedBadge dark /> : null}
           </button>
         </div>
       </form>
     </div>
+  );
+}
+
+function LastUsedBadge({ dark = false }: { dark?: boolean }) {
+  return (
+    <span
+      aria-label="Last used sign-in method"
+      className={`absolute right-2 top-1/2 -translate-y-1/2 rounded-full border px-2 py-1 text-[9px] font-semibold uppercase tracking-[0.08em] leading-none ${
+        dark
+          ? "border-[#171814]/15 bg-[#171814]/10 text-[#171814]/75"
+          : "border-border bg-muted text-muted-foreground dark:border-white/15 dark:bg-white/10 dark:text-white/65"
+      }`}
+    >
+      Last used
+    </span>
   );
 }
 

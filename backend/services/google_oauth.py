@@ -35,12 +35,16 @@ def _secret(settings: Any) -> bytes:
     return value.encode("utf-8")
 
 
-def create_google_oauth_state(settings: Any, *, ttl_seconds: int = 600) -> str:
+def create_google_oauth_state(
+    settings: Any, *, redirect: str = "/chat", provider: str = "google", ttl_seconds: int = 600
+) -> str:
     """Create a signed, expiring state token for the Google OAuth flow."""
+    safe_redirect = redirect if redirect.startswith("/") and not redirect.startswith("//") else "/chat"
     payload = {
-        "provider": "google",
+        "provider": provider,
         "exp": int(time.time()) + ttl_seconds,
         "nonce": secrets.token_urlsafe(18),
+        "redirect": safe_redirect,
     }
     encoded = base64.urlsafe_b64encode(
         json.dumps(payload, separators=(",", ":")).encode("utf-8")
@@ -49,7 +53,7 @@ def create_google_oauth_state(settings: Any, *, ttl_seconds: int = 600) -> str:
     return f"{encoded}.{base64.urlsafe_b64encode(signature).decode('ascii').rstrip('=')}"
 
 
-def verify_google_oauth_state(settings: Any, state: str) -> dict[str, Any]:
+def verify_google_oauth_state(settings: Any, state: str, *, provider: str = "google") -> dict[str, Any]:
     """Verify a state token created by `create_google_oauth_state`."""
     try:
         encoded, signature = state.split(".", 1)
@@ -60,7 +64,7 @@ def verify_google_oauth_state(settings: Any, state: str) -> dict[str, Any]:
         payload = json.loads(
             base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4)).decode("utf-8")
         )
-        if payload.get("provider") != "google":
+        if payload.get("provider") != provider:
             raise ValueError("wrong provider")
         if int(payload.get("exp", 0)) < int(time.time()):
             raise ValueError("expired state")
