@@ -6,6 +6,7 @@ or bearer token. Scope checks enforced per operation.
 """
 
 import logging
+import os
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -21,8 +22,19 @@ from agents.crawl_agents import WebIntelligenceCrew, synthesize_answer
 router = APIRouter(prefix="/api/AmanCrawl", tags=["AmanCrawl"])
 logger = logging.getLogger(__name__)
 
-# Initialize crew
-crew = WebIntelligenceCrew()
+# CrewAI is optional. Do not prevent the whole API from starting when an
+# OpenRouter key has not been configured; direct crawl/search endpoints can
+# still serve traffic.
+crew = WebIntelligenceCrew() if os.getenv("OPENROUTER_API_KEY", "").strip() else None
+
+
+def require_crew() -> WebIntelligenceCrew:
+    if crew is None:
+        raise HTTPException(
+            status_code=503,
+            detail="CrewAI features require OPENROUTER_API_KEY to be configured.",
+        )
+    return crew
 
 
 # ── Request models ─────────────────────────────────────────────────────────
@@ -301,7 +313,7 @@ async def api_crew_scrape(
     log_operation(auth, "crew_scrape", extra={"url": req.url, "use_crew": req.use_crew, "has_instruction": bool(req.instruction)})
     try:
         if req.use_crew:
-            result = await crew.scrape(req.url, req.instruction)
+            result = await require_crew().scrape(req.url, req.instruction)
             return {"user_id": auth.user_id, **result}
         else:
             result = await scrape_url(url=req.url, formats=["markdown", "text"])
@@ -329,7 +341,7 @@ async def api_crew_crawl(
     log_operation(auth, "crew_crawl", extra={"url": req.url, "max_pages": req.max_pages, "has_instruction": bool(req.instruction)})
     try:
         if req.use_crew:
-            result = await crew.crawl(req.url, req.max_pages, req.instruction)
+            result = await require_crew().crawl(req.url, req.max_pages, req.instruction)
             return {"user_id": auth.user_id, **result}
         else:
             result = await crawl_site(url=req.url, max_pages=req.max_pages)
@@ -358,7 +370,7 @@ async def api_crew_research(
     log_operation(auth, "crew_research", extra={"query": req.query, "url": req.url, "has_instruction": bool(req.instruction)})
     try:
         if req.use_crew:
-            result = await crew.research(req.query, req.url, req.instruction)
+            result = await require_crew().research(req.query, req.url, req.instruction)
             return {"user_id": auth.user_id, **result}
         else:
             search_result = await search_web(query=req.query, num_results=5)
