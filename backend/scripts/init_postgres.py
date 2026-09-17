@@ -9,7 +9,9 @@ import psycopg
 
 
 def main() -> int:
-    project_root = Path(__file__).resolve().parents[2]
+    # In the Render image, /app is the backend project root. The previous
+    # parents[2] lookup resolved to the filesystem root and missed migrations.
+    project_root = Path(__file__).resolve().parents[1]
     load_dotenv(project_root / ".env")
 
     import os
@@ -19,7 +21,7 @@ def main() -> int:
         print("DATABASE_URL is missing in .env")
         return 1
 
-    schema_dir = project_root / "backend" / "db" / "init"
+    schema_dir = project_root / "db" / "init"
     schema_paths = sorted(schema_dir.glob("*.sql"))
     if not schema_paths:
         print(f"No SQL migrations found in {schema_dir}")
