@@ -9,3 +9,5 @@ data
 *.pyo
 *.pyd
 *.log
+.env
+.env.*
