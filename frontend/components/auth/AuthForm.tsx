@@ -256,7 +256,7 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
                 if (socialLoading) return;
                 if (!isSignup) rememberProvider("google");
                 setSocialLoading("google");
-                window.setTimeout(() => window.location.assign(googleLoginUrl(redirectTo)), 3000);
+                window.setTimeout(() => window.location.assign(googleLoginUrl(isSignup ? "/onboarding" : redirectTo)), 3000);
               }}
               disabled={Boolean(socialLoading)}
               className={`${socialButtonClass} relative`}
@@ -294,7 +294,7 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
                 if (socialLoading) return;
                 if (!isSignup) rememberProvider("github");
                 setSocialLoading("github");
-                window.setTimeout(() => window.location.assign(githubLoginUrl(redirectTo)), 3000);
+                window.setTimeout(() => window.location.assign(githubLoginUrl(isSignup ? "/onboarding" : redirectTo)), 3000);
               }}
               disabled={Boolean(socialLoading)}
               className={`${socialButtonClass} relative`}
