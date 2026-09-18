@@ -20,7 +20,7 @@ router = APIRouter()
 async def root():
     """Browser-friendly root — avoids 404 when you open http://localhost:8000"""
     return {
-        "service": "ai-pdf-learning-workspace",
+        "service": "TrueMemory",
         "status": "ok",
         "docs": "/docs",
         "health": "/health",
@@ -34,7 +34,7 @@ async def health_check(request: Request):
     ingestion_worker = ingestion_worker_is_healthy(settings)
     return {
         "status": "ok",
-        "service": "ai-pdf-learning-workspace",
+        "service": "TrueMemory",
         "step": 10,
         "message": "Backend ready. POST /api/chat/stream for RAG chat.",
         "zilliz_configured": bool(settings.milvus_address and settings.milvus_token),
@@ -59,7 +59,7 @@ async def readiness_check() -> dict[str, object]:
         raise HTTPException(status_code=503, detail={"status": "not_ready", "postgres": postgres})
     return {
         "status": "ready",
-        "service": "ai-pdf-learning-workspace",
+        "service": "TrueMemory",
         "dependencies": {"postgres": "ready", "memory_ingestion_worker": "ready" if ingestion_worker else "not_seen"},
     }
 

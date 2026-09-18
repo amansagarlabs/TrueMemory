@@ -1,4 +1,4 @@
-# Local development stack: backend + local Postgres. Vector DB stays on Zilliz / Milvus.
+# TrueMemory application stack. PostgreSQL is hosted by Supabase; vector DB stays on Zilliz / Milvus.
 services:
   coding-runtime:
     image: truememory-coding-runtime:local
@@ -22,52 +22,18 @@ services:
       timeout: 5s
       retries: 3
 
-  postgres:
-    image: postgres:16
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-ai_workspace}
-      POSTGRES_USER: ${POSTGRES_USER:-postgres}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./backend/db/init:/docker-entrypoint-initdb.d:ro
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
-      interval: 10s
-      timeout: 5s
-      retries: 6
-      start_period: 10s
-
-  pgadmin:
-    image: dpage/pgadmin4:latest
-    depends_on:
-      - postgres
-    ports:
-      - "${PGADMIN_PORT:-5050}:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@local.dev}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin123}
-    volumes:
-      - pgadmin_data:/var/lib/pgadmin
-    restart: unless-stopped
-
   backend:
     image: truememory-backend:local
     build:
       context: ./backend
       dockerfile: Dockerfile
     depends_on:
-      postgres:
-        condition: service_healthy
       coding-runtime:
         condition: service_completed_successfully
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       HF_HOME: /root/.cache/huggingface
       MEMORY_DB_PATH: /app/data/memory.db
@@ -101,13 +67,11 @@ services:
     # avoiding a second concurrent export prevents BuildKit tag collisions.
     image: truememory-backend:local
     depends_on:
-      postgres:
-        condition: service_healthy
       coding-runtime:
         condition: service_completed_successfully
     command: ["python", "-m", "worker.coding_worker"]
     env_file:
-      - .env
+      - ./backend/.env
     environment:
       HF_HOME: /root/.cache/huggingface
       MEMORY_DB_PATH: /app/data/memory.db
@@ -141,11 +105,13 @@ services:
     # queue semantics; it does not create a second memory store.
     image: truememory-backend:local
     depends_on:
-      postgres:
-        condition: service_healthy
+      backend:
+        condition: service_started
     command: ["python", "-m", "worker.memory_ingestion_worker"]
     env_file:
-      - .env
+      # Use the hosted Supabase database for the API container. The root .env
+      # is still used for Compose interpolation and local-only services.
+      - ./backend/.env
     environment:
       HF_HOME: /root/.cache/huggingface
       MEMORY_DB_PATH: /app/data/memory.db
@@ -161,8 +127,6 @@ services:
     restart: unless-stopped
 
 volumes:
-  postgres_data:
-  pgadmin_data:
   huggingface_cache:
   coding_workspaces:
     name: truememory-coding-workspaces
