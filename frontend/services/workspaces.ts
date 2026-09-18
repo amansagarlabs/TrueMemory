@@ -3,10 +3,23 @@ import type { AuthWorkspace } from "@/lib/types";
 import { API_URL } from "@/services/api";
 
 export async function fetchWorkspaces(): Promise<AuthWorkspace[]> {
-  const response = await fetch(`${API_URL}/api/workspaces`, {
-    headers: buildAuthHeaders("Kontext Memory"),
-    cache: "no-store",
-  });
+  const controller = new AbortController();
+  const timeout = window.setTimeout(() => controller.abort(), 15000);
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}/api/workspaces`, {
+      headers: buildAuthHeaders("Kontext Memory"),
+      cache: "no-store",
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "AbortError") {
+      throw new Error("Workspace service timed out. Please try again.");
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timeout);
+  }
   if (!response.ok) throw new Error(`Workspaces could not be loaded (${response.status}).`);
   const data = await response.json();
   return (data.items ?? []) as AuthWorkspace[];
