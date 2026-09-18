@@ -4,13 +4,18 @@ from __future__ import annotations
 
 import time
 from functools import lru_cache
+from typing import Any
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
 
 
 @lru_cache(maxsize=1)
-def _load_model(model_name: str) -> SentenceTransformer:
+def _load_model(model_name: str) -> Any:
+    # Keep the ML stack out of the web process baseline. Render's Free
+    # instance serves lexical retrieval in production; embeddings are loaded
+    # only by ingestion or an explicitly enabled semantic-retrieval request.
+    from sentence_transformers import SentenceTransformer
+
     return SentenceTransformer(model_name)
 
 
