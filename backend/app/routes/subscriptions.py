@@ -21,6 +21,8 @@ from services.subscription_service import (
     create_polar_checkout,
     sync_polar_subscription,
     verify_polar_signature,
+    record_polar_checkout,
+    sync_polar_checkout,
 )
 
 
@@ -115,12 +117,22 @@ async def api_create_checkout(
     """Create a hosted Polar checkout; entitlement changes happen by webhook."""
     from app.config import get_settings
     try:
-        return {"checkout": create_polar_checkout(
+        checkout = create_polar_checkout(
             get_settings(),
             user_id=auth.user_id,
             plan_key=req.plan_key,
             billing_cycle=req.billing_cycle,
-        )}
+        )
+        checkout_id = checkout.get("id")
+        if checkout_id:
+            record_polar_checkout(
+                get_settings(),
+                checkout_id=str(checkout_id),
+                user_id=auth.user_id,
+                plan_key=req.plan_key,
+                billing_cycle=req.billing_cycle,
+            )
+        return {"checkout": checkout}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -142,7 +154,10 @@ async def api_polar_webhook(request: Request):
         raise HTTPException(status_code=401, detail="Invalid Polar webhook signature")
     try:
         event = __import__("json").loads(body)
-        if str(event.get("type", "")).startswith("subscription."):
+        event_type = str(event.get("type", ""))
+        if event_type.startswith("checkout."):
+            sync_polar_checkout(settings, event)
+        if event_type.startswith("subscription."):
             sync_polar_subscription(settings, event)
     except (ValueError, TypeError) as exc:
         raise HTTPException(status_code=400, detail="Invalid Polar webhook payload") from exc

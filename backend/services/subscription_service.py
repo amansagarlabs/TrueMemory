@@ -283,6 +283,50 @@ def create_polar_checkout(settings, *, user_id: str, plan_key: str, billing_cycl
     return response.json()
 
 
+def record_polar_checkout(
+    settings,
+    *,
+    checkout_id: str,
+    user_id: str,
+    plan_key: str,
+    billing_cycle: str,
+) -> None:
+    """Persist the checkout before the browser is redirected to Polar."""
+    with _connect(settings) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO polar_checkouts (checkout_id, user_id, plan_key, billing_cycle)
+                VALUES (%s, %s, %s, %s)
+                ON CONFLICT (checkout_id) DO UPDATE SET updated_at = NOW()
+                """,
+                (checkout_id, user_id, plan_key.lower(), billing_cycle),
+            )
+            conn.commit()
+
+
+def sync_polar_checkout(settings, event: dict[str, Any]) -> None:
+    """Record checkout status and link a subscription when Polar sends it."""
+    data = event.get("data") or {}
+    checkout_id = str(data.get("id") or "")
+    if not checkout_id:
+        return
+    status = str(data.get("status") or event.get("type", "")).lower()
+    subscription_id = data.get("subscription_id") or data.get("subscriptionId")
+    with _connect(settings) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE polar_checkouts
+                SET status = %s, subscription_id = COALESCE(%s, subscription_id),
+                    metadata = %s::jsonb, updated_at = NOW()
+                WHERE checkout_id = %s
+                """,
+                (status, str(subscription_id) if subscription_id else None, json.dumps(data), checkout_id),
+            )
+            conn.commit()
+
+
 def verify_polar_signature(
     payload: bytes,
     signature: str,
