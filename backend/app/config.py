@@ -54,6 +54,7 @@ class Settings:
     ollama_base_url: str = "http://host.docker.internal:11434"
     ollama_model: str = "qwen3-coder:30b"
     ollama_fallback_enabled: bool = True
+    local_model_enabled: bool = False
 
     # Embeddings — Step 6
     embedding_model: str = "all-MiniLM-L6-v2"
@@ -197,7 +198,16 @@ def get_settings() -> Settings:
         openrouter_max_tokens=max(256, min(int(os.getenv("OPENROUTER_MAX_TOKENS", "2048")), 8192)),
         ollama_base_url=os.getenv("OLLAMA_BASE_URL", "http://host.docker.internal:11434").rstrip("/"),
         ollama_model=os.getenv("OLLAMA_MODEL", "qwen3-coder:30b"),
-        ollama_fallback_enabled=_env_bool("OLLAMA_FALLBACK_ENABLED", True),
+        ollama_fallback_enabled=_env_bool(
+            "OLLAMA_FALLBACK_ENABLED",
+            os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "development")).strip().lower()
+            not in {"production", "prod"},
+        ),
+        local_model_enabled=_env_bool(
+            "LOCAL_MODEL_ENABLED",
+            os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "development")).strip().lower()
+            not in {"production", "prod"},
+        ),
         embedding_model=os.getenv("EMBEDDING_MODEL", "all-MiniLM-L6-v2"),
         embedding_dimension=int(os.getenv("EMBEDDING_DIMENSION", "384")),
         chunk_size=int(os.getenv("CHUNK_SIZE", "500")),
@@ -224,7 +234,11 @@ def get_settings() -> Settings:
         memory_hot_max_entries=int(os.getenv("MEMORY_HOT_MAX_ENTRIES", "512")),
         memory_l2_candidate_limit=int(os.getenv("MEMORY_L2_CANDIDATE_LIMIT", "200")),
         memory_l2_rrf_k=int(os.getenv("MEMORY_L2_RRF_K", "60")),
-        memory_l2_semantic_enabled=_env_bool("MEMORY_L2_SEMANTIC_ENABLED", True),
+        memory_l2_semantic_enabled=_env_bool(
+            "MEMORY_L2_SEMANTIC_ENABLED",
+            os.getenv("APP_ENV", os.getenv("ENVIRONMENT", "development")).strip().lower()
+            not in {"production", "prod"},
+        ),
         memory_l2_embedding_retry_seconds=float(os.getenv("MEMORY_L2_EMBEDDING_RETRY_SECONDS", "30")),
         memory_rate_limit=int(os.getenv("MEMORY_RATE_LIMIT", "120")),
         memory_rate_window_seconds=float(os.getenv("MEMORY_RATE_WINDOW_SECONDS", "60")),

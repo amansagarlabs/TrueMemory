@@ -1090,7 +1090,12 @@ async def _chat_event_stream(
         default_model=settings.openrouter_model,
         vision_model=settings.openrouter_vision_model,
     )
-    requested_local_model = is_local_model(selected_model)
+    # Ollama is a developer-only provider unless explicitly provisioned as a
+    # separate production service. Render's web service must use OpenRouter;
+    # otherwise a stale UI selection can hang until the instance is restarted.
+    requested_local_model = is_local_model(selected_model) and bool(
+        getattr(settings, "local_model_enabled", False)
+    )
     local_model = resolve_local_model(selected_model, settings.ollama_model)
 
     yield sse(
