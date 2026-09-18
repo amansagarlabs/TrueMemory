@@ -2,25 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 
 const AUTH_SERVICE_URL = process.env.AMAN_AUTH_SERVICE_URL || "http://localhost:8000";
 
-// Protected route prefixes
-const PROTECTED_PATHS = [
-  "/dashboard",
-  "/workspace",
-  "/workspaces",
-  "/profile",
-  "/subscription",
-  "/integrations",
-  "/onboarding",
-  "/memory",
-  "/brain-memory",
-  "/artifacts",
-  "/artifcat",
-  "/chat",
-  "/settings",
-  "/benchmarks",
-  "/amancrawl",
-];
-
 const API_PROTECTED_PATHS = [
   "/api/agent",
   "/api/crawl",
@@ -32,10 +13,7 @@ const API_PROTECTED_PATHS = [
 ];
 
 function isProtectedPath(pathname: string): boolean {
-  return (
-    PROTECTED_PATHS.some((p) => pathname.startsWith(p)) ||
-    API_PROTECTED_PATHS.some((p) => pathname.startsWith(p))
-  );
+  return API_PROTECTED_PATHS.some((p) => pathname.startsWith(p));
 }
 
 async function verifySession(
