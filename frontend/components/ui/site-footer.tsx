@@ -113,10 +113,16 @@ export function SiteFooter() {
         <div className="flex flex-col gap-3 pt-6 font-mono text-[10px] uppercase tracking-[0.14em] text-[#687064] sm:flex-row sm:items-center sm:justify-between">
           <span>&copy; 2026 TrueMemory</span>
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
-            <span className="inline-flex items-center gap-2">
+            <a
+              className="inline-flex items-center gap-2 transition-colors hover:text-[#e76f22] dark:hover:text-white"
+              href="https://stats.uptimerobot.com/eD8ep8ubpb"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="TrueMemory service status"
+            >
               <span className="size-1.5 rounded-full bg-emerald-500" aria-hidden="true" />
-              Systems operational
-            </span>
+              All systems normal
+            </a>
             <span className="inline-flex items-center gap-2">
               <Check aria-hidden="true" className="size-3 text-[#496b63] dark:text-[#CAE0DA]" />
               Open source &middot; built in India
