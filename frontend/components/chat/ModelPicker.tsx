@@ -5,7 +5,7 @@ import { Check, ChevronDown, Search, X } from "lucide-react";
 import { MODEL_PROVIDERS, MODELS, Model } from "@/components/chat/types";
 import { credentialedFetch } from "@/lib/auth";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://truememory.onrender.com";
 
 interface Props {
   selected: Model | null;

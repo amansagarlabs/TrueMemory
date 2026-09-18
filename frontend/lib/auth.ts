@@ -93,7 +93,7 @@ export function credentialedFetch(
 
 // ── Server-side session verification ───────────────────────────────────────
 
-const AUTH_SERVICE_URL = process.env.AMAN_AUTH_SERVICE_URL || "http://localhost:8000";
+const AUTH_SERVICE_URL = process.env.AMAN_AUTH_SERVICE_URL || process.env.NEXT_PUBLIC_API_URL || "https://truememory.onrender.com";
 
 /**
  * Verify a session token server-side. Used in middleware and API routes.

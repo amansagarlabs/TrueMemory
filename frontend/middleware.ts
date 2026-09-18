@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const AUTH_SERVICE_URL = process.env.AMAN_AUTH_SERVICE_URL || "http://localhost:8000";
+const AUTH_SERVICE_URL = process.env.AMAN_AUTH_SERVICE_URL || process.env.NEXT_PUBLIC_API_URL || "https://truememory.onrender.com";
 
 const API_PROTECTED_PATHS = [
   "/api/agent",

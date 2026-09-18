@@ -5,7 +5,7 @@ import { Copy, Check, Code2, Braces, Terminal, Radio } from "lucide-react";
 import { AuthenticatedAppShell } from "@/components/authenticated-app-shell";
 import { buildAuthHeaders, credentialedFetch as fetch } from "@/lib/auth";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://truememory.onrender.com";
 
 const examples = {
   REST: `curl -X POST ${API_URL}/v1/memories \\

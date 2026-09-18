@@ -24,7 +24,7 @@ import { loadActiveProjectId } from "@/lib/active-project";
 import { prepareQueryInput } from "@/lib/query-input";
 
 const API_URL =
-  process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+  process.env.NEXT_PUBLIC_API_URL ?? "https://truememory.onrender.com";
 
 const RUNTIME_QUESTION_RE =
   /\b(current\s+)?(date|time|day of (the )?week|timezone)\b|\bwhat day is it\b/i;

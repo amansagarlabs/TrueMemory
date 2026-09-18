@@ -6,7 +6,7 @@ import { buildAuthHeaders, credentialedFetch as fetch, loadAuthUser } from "@/li
 import { loadActiveProjectId } from "@/lib/active-project";
 import { loadActiveWorkspaceId } from "@/lib/workspaces";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://truememory.onrender.com";
 
 export interface CrawlUsage {
   used: number;

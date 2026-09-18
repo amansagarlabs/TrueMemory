@@ -7,7 +7,7 @@
 
 import { buildAuthHeaders, credentialedFetch as fetch } from "@/lib/auth";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://truememory.onrender.com";
 
 export interface ScrapeResult {
   url: string;
@@ -166,7 +166,7 @@ export async function scrapeUrl(
 }
 
 export async function getInteractSessionStatus(scrapeId: string): Promise<{ status: string; canRestore: boolean; lastAction?: string } | null> {
-  const data = await fetch(`/api/web/interact/${encodeURIComponent(scrapeId)}/status`, { method: "GET", headers: authHeaders() });
+  const data = await fetch(`${API_URL}/api/web/interact/${encodeURIComponent(scrapeId)}/status`, { method: "GET", headers: authHeaders() });
   if (data.status === 404) return null;
   const body = await data.json().catch(() => null);
   if (!body?.success) return null;
@@ -174,7 +174,7 @@ export async function getInteractSessionStatus(scrapeId: string): Promise<{ stat
 }
 
 export async function restoreInteractSession(scrapeId: string): Promise<{ status: string; canRestore: boolean; lastAction?: string }> {
-  const response = await fetch(`/api/web/interact/${encodeURIComponent(scrapeId)}/restore`, {
+  const response = await fetch(`${API_URL}/api/web/interact/${encodeURIComponent(scrapeId)}/restore`, {
     method: "POST",
     headers: authHeaders(),
   });
@@ -186,7 +186,7 @@ export async function restoreInteractSession(scrapeId: string): Promise<{ status
 }
 
 export async function discardInteractSession(scrapeId: string): Promise<void> {
-  const response = await fetch(`/api/web/interact/${encodeURIComponent(scrapeId)}`, {
+  const response = await fetch(`${API_URL}/api/web/interact/${encodeURIComponent(scrapeId)}`, {
     method: "DELETE",
     headers: authHeaders(),
   });

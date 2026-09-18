@@ -4,7 +4,7 @@
 
 import { buildAuthHeaders, credentialedFetch as fetch } from "@/lib/auth";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://truememory.onrender.com";
 
 export type PlatformStatus = {
   id: string;

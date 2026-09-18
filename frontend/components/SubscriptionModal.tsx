@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Check, Zap, Sparkles } from "lucide-react";
 import { buildAuthHeaders } from "@/lib/auth";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://truememory.onrender.com";
 
 interface Plan {
   id: string;

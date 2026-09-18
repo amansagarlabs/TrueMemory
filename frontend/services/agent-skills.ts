@@ -1,6 +1,6 @@
 import { buildAuthHeaders, credentialedFetch as fetch } from "@/lib/auth";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://truememory.onrender.com";
 const ENABLED_SKILLS_KEY = "kontext-enabled-agent-skills";
 
 export type AgentSkill = {

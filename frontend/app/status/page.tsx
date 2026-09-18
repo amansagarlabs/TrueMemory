@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { SiteFooter } from "@/components/ui/site-footer";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://truememory.onrender.com";
 
 interface ServiceStatus {
   name: string;
