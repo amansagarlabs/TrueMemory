@@ -11,6 +11,8 @@ import uuid
 import hashlib
 import hmac
 import json
+import base64
+import time
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
@@ -281,13 +283,40 @@ def create_polar_checkout(settings, *, user_id: str, plan_key: str, billing_cycl
     return response.json()
 
 
-def verify_polar_signature(payload: bytes, signature: str, secret: str) -> bool:
-    """Verify Polar's HMAC webhook signature when configured."""
+def verify_polar_signature(
+    payload: bytes,
+    signature: str,
+    secret: str,
+    *,
+    webhook_id: str = "",
+    webhook_timestamp: str = "",
+) -> bool:
+    """Verify Polar's signed webhook headers and reject replayed deliveries."""
     if not secret or not signature:
         return False
+    if webhook_id and webhook_timestamp:
+        try:
+            if abs(time.time() - int(webhook_timestamp)) > 300:
+                return False
+        except ValueError:
+            return False
+        signed = f"{webhook_id}.{webhook_timestamp}.".encode() + payload
+        key = secret.encode()
+        # Standard Webhooks secrets are base64-encoded after the whsec_
+        # prefix. Polar secrets are also accepted as raw bytes for local/test
+        # configurations that do not use that prefix.
+        if secret.startswith("whsec_"):
+            try:
+                key = base64.b64decode(secret[6:])
+            except (ValueError, base64.binascii.Error):
+                return False
+        expected = base64.b64encode(hmac.new(key, signed, hashlib.sha256).digest()).decode()
+        return any(
+            hmac.compare_digest(expected, item.removeprefix("v1,"))
+            for item in signature.split()
+        )
     expected = hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
-    supplied = signature.removeprefix("sha256=")
-    return hmac.compare_digest(expected, supplied)
+    return hmac.compare_digest(expected, signature.removeprefix("sha256="))
 
 
 def sync_polar_subscription(settings, event: dict[str, Any]) -> None:

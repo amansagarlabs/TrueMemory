@@ -132,7 +132,13 @@ async def api_polar_webhook(request: Request):
     settings = get_settings()
     body = await request.body()
     signature = request.headers.get("webhook-signature", "")
-    if not verify_polar_signature(body, signature, settings.polar_webhook_secret):
+    if not verify_polar_signature(
+        body,
+        signature,
+        settings.polar_webhook_secret,
+        webhook_id=request.headers.get("webhook-id", ""),
+        webhook_timestamp=request.headers.get("webhook-timestamp", ""),
+    ):
         raise HTTPException(status_code=401, detail="Invalid Polar webhook signature")
     try:
         event = __import__("json").loads(body)
