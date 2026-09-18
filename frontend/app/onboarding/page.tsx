@@ -85,6 +85,8 @@ function OnboardingContent() {
   });
   const [heardAbout, setHeardAbout] = useState(() => readParam(searchParams, "heardAbout", "agent"));
   const [hydrated, setHydrated] = useState(false);
+  const [finishing, setFinishing] = useState(false);
+  const [finishError, setFinishError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) router.replace("/login?redirect=/onboarding");
@@ -157,31 +159,39 @@ function OnboardingContent() {
   const currentUser = user;
 
   async function finish() {
-    const existing = loadWorkspaces(currentUser);
-    let workspace = existing[0];
-    if (!workspace) {
-      const remote = await fetchWorkspaces().catch(() => []);
-      workspace = remote[0];
+    if (finishing) return;
+    setFinishing(true);
+    setFinishError(null);
+    try {
+      const existing = loadWorkspaces(currentUser);
+      let workspace = existing[0];
+      if (!workspace) {
+        const remote = await fetchWorkspaces();
+        workspace = remote[0];
+      }
+      if (!workspace) {
+        workspace = {
+          id: crypto.randomUUID(),
+          name: workspaceName.trim() || "my-workspace",
+          platform: "Kontext Memory",
+          last_active: new Date().toISOString(),
+        } satisfies AuthWorkspace;
+        workspace = await persistWorkspace(workspace);
+        saveWorkspaces(currentUser.id, [workspace]);
+      }
+      await updateProfile({
+        onboarding_persona: role,
+        onboarding_heard_about: heardAbout,
+        onboarding_use_case: goal,
+        onboarding_workspace_name: workspaceName,
+        onboarding_step: "workspace",
+      }).then((updatedUser) => saveAuthUser(updatedUser)).catch(() => undefined);
+      completeOnboarding(currentUser.id);
+      window.location.assign(`/chat?workspace=${encodeURIComponent(workspace.id)}`);
+    } catch (error) {
+      setFinishError(error instanceof Error ? error.message : "Could not create your Space.");
+      setFinishing(false);
     }
-    if (!workspace) {
-      workspace = {
-        id: crypto.randomUUID(),
-        name: workspaceName.trim() || "my-workspace",
-        platform: "Kontext Memory",
-        last_active: new Date().toISOString(),
-      } satisfies AuthWorkspace;
-      workspace = await persistWorkspace(workspace);
-      saveWorkspaces(currentUser.id, [workspace]);
-    }
-    await updateProfile({
-      onboarding_persona: role,
-      onboarding_heard_about: heardAbout,
-      onboarding_use_case: goal,
-      onboarding_workspace_name: workspaceName,
-      onboarding_step: "workspace",
-    }).then((updatedUser) => saveAuthUser(updatedUser)).catch(() => undefined);
-    completeOnboarding(currentUser.id);
-    window.location.assign(`/chat?workspace=${encodeURIComponent(workspace.id)}`);
   }
 
   return (
@@ -264,7 +274,8 @@ function OnboardingContent() {
               </div>
             </div>
           </Onboarding.Step>
-          <Onboarding.Navigation className="mt-9 border-0 p-0 [&_button]:border-white/10 [&_button]:bg-white/[.04] [&_button]:text-white [&_[data-slot=onboarding-next]]:bg-[#f6e879] [&_[data-slot=onboarding-next]]:text-[#171814] [&_[data-slot=onboarding-complete]]:bg-[#f6e879] [&_[data-slot=onboarding-complete]]:text-[#171814]" completeLabel="Get started" />
+          {finishError ? <p role="alert" className="mt-4 text-sm text-[#ff8f70]">{finishError}</p> : null}
+          <Onboarding.Navigation className="mt-9 border-0 p-0 [&_button]:border-white/10 [&_button]:bg-white/[.04] [&_button]:text-white [&_[data-slot=onboarding-next]]:bg-[#f6e879] [&_[data-slot=onboarding-next]]:text-[#171814] [&_[data-slot=onboarding-complete]]:bg-[#f6e879] [&_[data-slot=onboarding-complete]]:text-[#171814]" completeLabel={finishing ? "Creating Space…" : "Get started"} />
         </Onboarding>
       </section>
     </main>
