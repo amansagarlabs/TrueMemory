@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { X, Check, Zap, Sparkles } from "lucide-react";
-import { buildAuthHeaders } from "@/lib/auth";
+import { createPolarCheckout } from "@/services/subscriptions";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://truememory.onrender.com";
 
@@ -100,6 +100,7 @@ export default function SubscriptionModal({ isOpen, onClose, feature, currentPla
   const [plans, setPlans] = useState<Plan[]>(FALLBACK_PLANS);
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
   const [upgrading, setUpgrading] = useState<string | null>(null);
+  const [upgradeError, setUpgradeError] = useState("");
 
   useEffect(() => {
     if (isOpen) {
@@ -114,19 +115,12 @@ export default function SubscriptionModal({ isOpen, onClose, feature, currentPla
 
   async function handleUpgrade(planKey: string) {
     setUpgrading(planKey);
+    setUpgradeError("");
     try {
-      const res = await fetch(`${API_URL}/api/subscriptions/subscribe`, {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json", ...buildAuthHeaders("Subscriptions") },
-        body: JSON.stringify({ plan_key: planKey, billing_cycle: billing }),
-      });
-      if (res.ok) {
-        onUpgrade?.(planKey);
-        onClose();
-        window.location.reload();
-      }
-    } catch {
+      const checkout = await createPolarCheckout(planKey, billing);
+      window.location.assign(checkout.url);
+    } catch (error) {
+      setUpgradeError(error instanceof Error ? error.message : "Unable to start Polar checkout");
     } finally {
       setUpgrading(null);
     }
@@ -174,6 +168,11 @@ export default function SubscriptionModal({ isOpen, onClose, feature, currentPla
             <span className="ml-1.5 rounded-full bg-[#3ddc84]/15 px-1.5 py-0.5 text-[10px] font-semibold text-[#3ddc84]">Save 17%</span>
           </span>
         </div>
+        {upgradeError && (
+          <p className="mb-5 rounded-lg border border-red-300/40 bg-red-50 px-3 py-2 text-center text-xs text-red-700 dark:bg-red-950/20 dark:text-red-300">
+            {upgradeError}
+          </p>
+        )}
 
         {/* Plans */}
         <div className="grid gap-4 sm:grid-cols-3">
