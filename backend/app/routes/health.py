@@ -29,23 +29,16 @@ async def root():
 
 @router.get("/health")
 async def health_check(request: Request):
-    settings = get_settings()
-    postgres = check_postgres_connection(settings)
-    ingestion_worker = ingestion_worker_is_healthy(settings)
+    """Fast liveness probe for Render and external uptime monitors.
+
+    Keep this endpoint independent of remote services. Render must be able to
+    confirm that the process is alive even while Supabase is reconnecting.
+    Dependency checks remain available through /readiness and /api/status.
+    """
     return {
         "status": "ok",
         "service": "TrueMemory",
-        "step": 10,
-        "message": "Backend ready. POST /api/chat/stream for RAG chat.",
-        "zilliz_configured": bool(settings.milvus_address and settings.milvus_token),
-        "openrouter_configured": bool(settings.openrouter_api_key),
-        "postgres_connected": postgres["connected"],
-        "postgres_mode": postgres["mode"],
-        "postgres_database": postgres["database"],
-        "postgres_host": postgres["host"],
-        "postgres_user": postgres.get("user", ""),
-        "postgres_reason": postgres.get("reason", ""),
-        "memory_ingestion_worker": "healthy" if ingestion_worker else "not_seen",
+        "message": "Backend process is running.",
     }
 
 
