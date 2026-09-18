@@ -1102,32 +1102,43 @@ async def _chat_event_stream(
         "status",
         {"message": "Checking current conversation...", "stage": "memory"},
     )
-    recent_messages = memory_client.recent_messages(
+    yield sse(
+        "status",
+        {"message": "Checking saved memory...", "stage": "memory"},
+    )
+
+    # These are synchronous database-backed reads. Running them directly in
+    # the async generator blocks Uvicorn's event loop and makes health checks
+    # and other users wait behind a slow Supabase connection. They are
+    # independent, so execute them concurrently in worker threads.
+    recent_task = asyncio.to_thread(
+        memory_client.recent_messages,
         user_id=user_id,
         conversation_id=conversation_id,
         resolved_user_id=resolved_user_id,
         limit=settings.memory_recent_turns,
     )
-
-    yield sse(
-        "status",
-        {"message": "Checking saved memory...", "stage": "memory"},
-    )
-    profile_memories = memory_client.list(
+    profile_task = asyncio.to_thread(
+        memory_client.list,
         user_id=user_id,
         scope="general",
         limit=settings.memory_profile_items,
         request_id=conversation_id,
     )
-    durable_memories: list[dict] = []
+    durable_task = None
     if resolved_user_id and workspace_id:
-        durable_memories = memory_client.workspace_search(
+        durable_task = asyncio.to_thread(
+            memory_client.workspace_search,
             user_id=resolved_user_id,
             workspace_id=workspace_id,
             project_id=project_id,
             query=question,
             limit=settings.memory_profile_items,
         )
+    recent_messages, profile_memories = await asyncio.gather(recent_task, profile_task)
+    durable_memories: list[dict] = (
+        await durable_task if durable_task is not None else []
+    )
     if "profile-memory" in selected_memory_ids:
         account_memories = _account_profile_memories(account_profile)
         account_keys = {str(item.get("key") or "") for item in account_memories}
