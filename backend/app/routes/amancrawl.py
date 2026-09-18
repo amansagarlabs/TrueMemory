@@ -25,15 +25,16 @@ logger = logging.getLogger(__name__)
 # CrewAI is optional. Do not prevent the whole API from starting when an
 # OpenRouter key has not been configured; direct crawl/search endpoints can
 # still serve traffic.
-crew = WebIntelligenceCrew() if os.getenv("OPENROUTER_API_KEY", "").strip() else None
+crew = None
 
 
 def require_crew() -> WebIntelligenceCrew:
+    global crew
     if crew is None:
-        raise HTTPException(
-            status_code=503,
-            detail="CrewAI features require OPENROUTER_API_KEY to be configured.",
-        )
+        if not os.getenv("OPENROUTER_API_KEY", "").strip():
+            raise HTTPException(status_code=503, detail="CrewAI features require OPENROUTER_API_KEY to be configured.")
+        from agents.crawl_agents import WebIntelligenceCrew as Crew
+        crew = Crew()
     return crew
 
 
