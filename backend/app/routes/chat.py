@@ -2195,9 +2195,18 @@ async def _chat_event_stream(
                         if not validate_fresh_answer:
                             yield sse("token", {"content": safe_token})
             except Exception as vision_error:
+                # Never try the developer-local Ollama fallback in a hosted
+                # production web service. A stale model selection or legacy
+                # environment variable must not send Render to
+                # host.docker.internal, where no Ollama daemon exists.
+                production_environment = str(getattr(settings, "environment", "")).lower() in {
+                    "production",
+                    "prod",
+                }
                 if (
                     not requested_local_model
                     and settings.ollama_fallback_enabled
+                    and not production_environment
                     and not image_content
                 ):
                     logger.warning("OpenRouter failed; falling back to Ollama", exc_info=True)
