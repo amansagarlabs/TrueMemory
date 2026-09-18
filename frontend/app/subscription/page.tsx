@@ -14,13 +14,14 @@ function formatPrice(cents: number, currency: string) {
 export default function SubscriptionPage() {
   const router = useRouter();
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [plansLoading, setPlansLoading] = useState(true);
   const [cycle, setCycle] = useState<"monthly" | "yearly">("monthly");
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!loadAuthUser()) { router.replace("/login?redirect=%2Fsubscription"); return; }
-    fetchPlans().then(setPlans).catch((err) => setError(err.message));
+    fetchPlans().then(setPlans).catch((err) => setError(err.message)).finally(() => setPlansLoading(false));
   }, [router]);
 
   async function upgrade(plan: SubscriptionPlan) {
@@ -49,8 +50,13 @@ export default function SubscriptionPage() {
           </div>
         </div>
         {error && <p className="mb-6 rounded-xl border border-red-400/30 bg-red-50/70 p-3 text-sm text-red-700 dark:bg-red-950/20 dark:text-red-300">{error}</p>}
-        <div className="grid gap-5 lg:grid-cols-3">
-          {plans.map((plan) => {
+        <div className="grid gap-5 lg:grid-cols-3" aria-busy={plansLoading}>
+          {plansLoading ? ["free", "pro", "team"].map((key, index) => <section key={key} aria-label="Loading plan" className="relative flex min-h-[390px] animate-pulse flex-col overflow-hidden rounded-[26px] border border-black/8 bg-white/55 p-7 shadow-[0_14px_45px_rgba(67,42,25,0.06)] dark:border-white/10 dark:bg-white/[0.045]">
+            <div className="mb-7 flex items-center gap-3"><span className="size-10 rounded-xl bg-black/10 dark:bg-white/10" /><div className="flex-1 space-y-2"><div className="h-4 w-24 rounded-full bg-black/10 dark:bg-white/10" /><div className="h-3 w-40 rounded-full bg-black/8 dark:bg-white/8" /></div></div>
+            <div className="h-10 w-32 rounded-lg bg-black/10 dark:bg-white/10" />
+            <div className="mt-8 space-y-4">{[1, 2, 3].map((line) => <div key={line} className="h-4 w-4/5 rounded-full bg-black/8 dark:bg-white/8" />)}</div>
+            <div className="mt-auto h-11 rounded-xl bg-black/10 dark:bg-white/10" />
+          </section>) : plans.map((plan) => {
             const featured = plan.plan_key === "pro";
             const features = plan.plan_key === "free" ? ["100 saved memories", "Basic agent context", "3 connected sources"] : plan.plan_key === "team" ? ["Unlimited workspace context", "Shared agent memory", "Priority support"] : ["500K AI tokens / month", "Deep crawl & extraction", "Priority memory retrieval"];
             return <section key={plan.plan_key} className={`relative flex min-h-[390px] flex-col overflow-hidden rounded-[26px] border p-7 transition duration-300 hover:-translate-y-1 ${featured ? "border-[#ff7442]/60 bg-[#221a15] text-white shadow-[0_24px_70px_rgba(124,55,22,0.25)] dark:bg-[#211914]" : "border-black/8 bg-white/62 shadow-[0_14px_45px_rgba(67,42,25,0.06)] dark:border-white/10 dark:bg-white/[0.045]"}`}>
