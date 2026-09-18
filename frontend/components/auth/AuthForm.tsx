@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { useToast } from "@/hooks/use-toast";
 import { loadAuthUser, saveAuthSession } from "@/lib/auth";
 import { githubLoginUrl, googleLoginUrl, loginWithEmail, signUpWithEmail } from "@/services/auth";
+import { fetchWorkspaces } from "@/services/workspaces";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Mode = "login" | "signup";
@@ -138,10 +139,19 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
 
       saveAuthSession(result.session, result.user);
       if (!isSignup) rememberProvider("email");
+      let hasWorkspace = false;
+      if (!isSignup) {
+        try {
+          hasWorkspace = (await fetchWorkspaces()).length > 0;
+        } catch {
+          // Keep the normal login destination if the workspace check is temporarily unavailable.
+          hasWorkspace = true;
+        }
+      }
       // Reload after persisting auth so the onboarding/auth guards read the
       // newly-created session from a clean document. Soft navigation can race
       // the first client render on signup in the production app shell.
-      window.location.assign(isSignup ? "/onboarding" : redirectTo);
+      window.location.assign(isSignup || !hasWorkspace ? "/onboarding" : redirectTo);
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Authentication failed.",
