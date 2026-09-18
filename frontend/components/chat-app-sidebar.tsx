@@ -92,7 +92,7 @@ import { fetchRecentConversations, updateConversation, type ConversationAction }
 export const CHAT_NEW_EVENT = "kontext-chat-new";
 export const CHAT_OPEN_EVENT = "kontext-chat-open";
 export const CHAT_RECENTS_CHANGED_EVENT = "kontext-chat-recents-changed";
-const RECENT_CHAT_BATCH_SIZE = 200;
+const RECENT_CHAT_BATCH_SIZE = 25;
 
 type ConversationDialogState =
   | { kind: "rename"; chat: RecentConversation }
@@ -197,9 +197,18 @@ export function ChatAppSidebar({
   );
 
   const loadRecents = useCallback(async () => {
+    if (!activeWorkspaceId) {
+      setRecentChats([]);
+      setHasMoreRecents(false);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
-      const items = await fetchRecentConversations(recentLimitRef.current);
+      const items = await fetchRecentConversations(
+        recentLimitRef.current,
+        activeWorkspaceId,
+      );
       setRecentChats(items);
       setHasMoreRecents(items.length >= recentLimitRef.current);
     } catch {
@@ -208,7 +217,7 @@ export function ChatAppSidebar({
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeWorkspaceId]);
 
   const showMoreRecents = useCallback(async () => {
     if (loadingMoreRecents || !hasMoreRecents) return;
