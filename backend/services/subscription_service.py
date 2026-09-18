@@ -8,8 +8,13 @@ and limit enforcement.
 from __future__ import annotations
 
 import uuid
+import hashlib
+import hmac
+import json
 from datetime import datetime, timedelta, timezone
 from typing import Any
+
+import httpx
 
 import psycopg
 from psycopg.rows import dict_row
@@ -240,6 +245,88 @@ def upgrade_subscription(settings, user_id: str, new_plan_key: str) -> dict:
             conn.commit()
 
     return get_user_subscription(settings, user_id)
+
+
+def create_polar_checkout(settings, *, user_id: str, plan_key: str, billing_cycle: str) -> dict:
+    """Create a hosted Polar checkout for a paid plan."""
+    if not settings.polar_access_token:
+        raise ValueError("Polar billing is not configured")
+    if billing_cycle not in {"monthly", "yearly"}:
+        raise ValueError("billing_cycle must be monthly or yearly")
+    products = (
+        settings.polar_product_yearly
+        if billing_cycle == "yearly"
+        else settings.polar_product_monthly
+    )
+    product_id = products.get(plan_key.lower())
+    if not product_id:
+        raise ValueError(f"Polar product is not configured for plan '{plan_key}'")
+    payload = {
+        "products": [product_id],
+        "external_customer_id": str(user_id),
+        "metadata": {"user_id": str(user_id), "plan_key": plan_key.lower()},
+        "success_url": f"{settings.frontend_url}/subscription?checkout_id={{CHECKOUT_ID}}&status=success",
+        "return_url": f"{settings.frontend_url}/subscription",
+    }
+    try:
+        response = httpx.post(
+            f"{settings.polar_api_url}/v1/checkouts/",
+            headers={"Authorization": f"Bearer {settings.polar_access_token}"},
+            json=payload,
+            timeout=15.0,
+        )
+        response.raise_for_status()
+    except httpx.HTTPError as exc:
+        raise ValueError("Polar checkout could not be created") from exc
+    return response.json()
+
+
+def verify_polar_signature(payload: bytes, signature: str, secret: str) -> bool:
+    """Verify Polar's HMAC webhook signature when configured."""
+    if not secret or not signature:
+        return False
+    expected = hmac.new(secret.encode(), payload, hashlib.sha256).hexdigest()
+    supplied = signature.removeprefix("sha256=")
+    return hmac.compare_digest(expected, supplied)
+
+
+def sync_polar_subscription(settings, event: dict[str, Any]) -> None:
+    """Apply an idempotent Polar subscription event to the local plan state."""
+    data = event.get("data") or {}
+    metadata = data.get("metadata") or {}
+    user_id = metadata.get("user_id") or data.get("external_customer_id")
+    plan_key = metadata.get("plan_key")
+    if not user_id or not plan_key:
+        return
+    status = str(data.get("status") or "active").lower()
+    if status in {"active", "trialing"}:
+        current = get_user_subscription(settings, str(user_id))
+        if current and current.get("id"):
+            upgrade_subscription(settings, str(user_id), str(plan_key))
+        else:
+            create_subscription(
+                settings,
+                user_id=str(user_id),
+                plan_key=str(plan_key),
+                payment_provider="polar",
+                payment_subscription_id=str(data.get("id") or ""),
+            )
+        with _connect(settings) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE subscriptions SET payment_provider = 'polar', payment_subscription_id = %s WHERE user_id = %s AND status IN ('active', 'trialing')",
+                    (str(data.get("id") or ""), str(user_id)),
+                )
+                conn.commit()
+    elif status in {"canceled", "revoked", "past_due"}:
+        with _connect(settings) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "UPDATE subscriptions SET status = %s, updated_at = NOW() WHERE user_id = %s AND payment_provider = 'polar'",
+                    ("canceled" if status in {"canceled", "revoked"} else "past_due", str(user_id)),
+                )
+                cur.execute("UPDATE users SET plan = 'free', updated_at = NOW() WHERE id = %s", (str(user_id),))
+                conn.commit()
 
 
 # ── Usage tracking ──────────────────────────────────────────────────────────

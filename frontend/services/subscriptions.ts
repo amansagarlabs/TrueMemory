@@ -23,6 +23,36 @@ export interface UsageSummary {
   usage: Record<string, ResourceUsage>;
 }
 
+export interface SubscriptionPlan {
+  plan_key: string;
+  plan_name: string;
+  description?: string | null;
+  price_monthly_cents: number;
+  price_yearly_cents: number;
+  currency: string;
+}
+
+export async function fetchPlans(): Promise<SubscriptionPlan[]> {
+  const res = await fetch(`${API_URL}/api/subscriptions/plans`);
+  if (!res.ok) throw new Error(`Failed to fetch plans (${res.status})`);
+  return (await res.json()).plans || [];
+}
+
+export async function createPolarCheckout(
+  planKey: string,
+  billingCycle: "monthly" | "yearly" = "monthly",
+): Promise<{ url: string }> {
+  const res = await fetch(`${API_URL}/api/subscriptions/checkout`, {
+    method: "POST",
+    headers: authHeaders(),
+    body: JSON.stringify({ plan_key: planKey, billing_cycle: billingCycle }),
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(body.detail || `Checkout failed (${res.status})`);
+  if (!body.checkout?.url) throw new Error("Polar did not return a checkout URL");
+  return { url: body.checkout.url };
+}
+
 function authHeaders(): Record<string, string> {
   return {
     "Content-Type": "application/json",

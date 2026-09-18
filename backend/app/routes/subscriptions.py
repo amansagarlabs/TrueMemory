@@ -5,7 +5,7 @@ Handles plan listing, subscription management, usage tracking,
 and rate-limit enforcement.
 """
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, Field
 
 from app.auth_middleware import AuthContext, require_auth
@@ -18,6 +18,9 @@ from services.subscription_service import (
     _connect,
     record_usage,
     upgrade_subscription,
+    create_polar_checkout,
+    sync_polar_subscription,
+    verify_polar_signature,
 )
 
 
@@ -32,6 +35,10 @@ class CreateSubRequest(BaseModel):
 
 class UpgradeSubRequest(BaseModel):
     plan_key: str = Field(..., description="New plan key")
+
+class PolarCheckoutRequest(BaseModel):
+    plan_key: str = Field(..., description="Paid plan to purchase")
+    billing_cycle: str = Field(default="monthly", description="monthly or yearly")
 
 class RecordUsageRequest(BaseModel):
     resource_key: str = Field(..., description="Resource being consumed")
@@ -98,6 +105,42 @@ async def api_upgrade(
         return {"subscription": sub}
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/checkout")
+async def api_create_checkout(
+    req: PolarCheckoutRequest,
+    auth: AuthContext = Depends(require_auth),
+):
+    """Create a hosted Polar checkout; entitlement changes happen by webhook."""
+    from app.config import get_settings
+    try:
+        return {"checkout": create_polar_checkout(
+            get_settings(),
+            user_id=auth.user_id,
+            plan_key=req.plan_key,
+            billing_cycle=req.billing_cycle,
+        )}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/polar/webhook")
+async def api_polar_webhook(request: Request):
+    """Receive verified Polar subscription lifecycle events."""
+    from app.config import get_settings
+    settings = get_settings()
+    body = await request.body()
+    signature = request.headers.get("webhook-signature", "")
+    if not verify_polar_signature(body, signature, settings.polar_webhook_secret):
+        raise HTTPException(status_code=401, detail="Invalid Polar webhook signature")
+    try:
+        event = __import__("json").loads(body)
+        if str(event.get("type", "")).startswith("subscription."):
+            sync_polar_subscription(settings, event)
+    except (ValueError, TypeError) as exc:
+        raise HTTPException(status_code=400, detail="Invalid Polar webhook payload") from exc
+    return {"received": True}
 
 
 # ── Usage endpoints ─────────────────────────────────────────────────────────

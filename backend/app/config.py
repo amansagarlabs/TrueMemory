@@ -51,6 +51,12 @@ class Settings:
     openrouter_model: str = OPENROUTER_FREE_MODEL
     openrouter_vision_model: str = OPENROUTER_FREE_VISION_MODEL
     openrouter_max_tokens: int = 2048
+    polar_access_token: str = ""
+    polar_webhook_secret: str = ""
+    polar_api_url: str = "https://api.polar.sh"
+    polar_product_monthly: dict[str, str] = field(default_factory=dict)
+    polar_product_yearly: dict[str, str] = field(default_factory=dict)
+    frontend_url: str = "https://true-memory.vercel.app"
     ollama_base_url: str = "http://host.docker.internal:11434"
     ollama_model: str = "qwen3-coder:30b"
     ollama_fallback_enabled: bool = True
@@ -196,6 +202,20 @@ def get_settings() -> Settings:
         openrouter_model=os.getenv("OPENROUTER_MODEL", OPENROUTER_FREE_MODEL),
         openrouter_vision_model=os.getenv("OPENROUTER_VISION_MODEL", OPENROUTER_FREE_VISION_MODEL),
         openrouter_max_tokens=max(256, min(int(os.getenv("OPENROUTER_MAX_TOKENS", "2048")), 8192)),
+        polar_access_token=os.getenv("POLAR_ACCESS_TOKEN", ""),
+        polar_webhook_secret=os.getenv("POLAR_WEBHOOK_SECRET", ""),
+        polar_api_url=os.getenv("POLAR_API_URL", "https://api.polar.sh").rstrip("/"),
+        polar_product_monthly={
+            key.removeprefix("POLAR_PRODUCT_MONTHLY_").lower(): value
+            for key, value in os.environ.items()
+            if key.startswith("POLAR_PRODUCT_MONTHLY_") and value.strip()
+        },
+        polar_product_yearly={
+            key.removeprefix("POLAR_PRODUCT_YEARLY_").lower(): value
+            for key, value in os.environ.items()
+            if key.startswith("POLAR_PRODUCT_YEARLY_") and value.strip()
+        },
+        frontend_url=os.getenv("FRONTEND_URL", "https://true-memory.vercel.app").rstrip("/"),
         ollama_base_url=os.getenv("OLLAMA_BASE_URL", "http://host.docker.internal:11434").rstrip("/"),
         ollama_model=os.getenv("OLLAMA_MODEL", "qwen3-coder:30b"),
         ollama_fallback_enabled=_env_bool(
