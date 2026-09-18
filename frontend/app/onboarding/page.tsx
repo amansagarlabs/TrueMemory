@@ -11,7 +11,7 @@ import { useInputValidation, sanitizeWorkspaceName, validateWorkspaceName, WORKS
 import { isAuthenticated, loadAuthUser, saveAuthUser } from "@/lib/auth";
 import { completeOnboarding } from "@/lib/onboarding";
 import type { AuthUser, AuthWorkspace } from "@/lib/types";
-import { loadWorkspaces, saveWorkspaces } from "@/lib/workspaces";
+import { saveWorkspaces } from "@/lib/workspaces";
 import { fetchMe, updateProfile } from "@/services/auth";
 import { fetchWorkspaces, persistWorkspace } from "@/services/workspaces";
 
@@ -163,12 +163,8 @@ function OnboardingContent() {
     setFinishing(true);
     setFinishError(null);
     try {
-      const existing = loadWorkspaces(currentUser);
-      let workspace = existing[0];
-      if (!workspace) {
-        const remote = await fetchWorkspaces();
-        workspace = remote[0];
-      }
+      const remote = await fetchWorkspaces();
+      let workspace = remote[0];
       if (!workspace) {
         workspace = {
           id: crypto.randomUUID(),
