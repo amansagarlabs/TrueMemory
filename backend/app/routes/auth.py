@@ -89,7 +89,7 @@ def _set_session_cookies(response: Response, session: dict, settings) -> None:
         "max_age": max_age,
         "httponly": True,
         "secure": bool(settings.auth_cookie_secure),
-        "samesite": "lax",
+        "samesite": "none" if settings.auth_cookie_secure else "lax",
         "path": "/",
     }
     response.set_cookie("aman_session", session["access_token"], **cookie_options)
@@ -103,7 +103,7 @@ def _clear_session_cookies(response: Response, settings) -> None:
             path="/",
             httponly=True,
             secure=bool(settings.auth_cookie_secure),
-            samesite="lax",
+            samesite="none" if settings.auth_cookie_secure else "lax",
         )
 
 
