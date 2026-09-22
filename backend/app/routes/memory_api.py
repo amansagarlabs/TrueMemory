@@ -13,6 +13,8 @@ from services.memory_core import MemoryClient
 from services.rate_limiter import get_rate_limiter
 from services.portable_memory import make_document, validate_document
 from services.memory_notes import extract_note_candidates, extract_note_relationships, render_memory_notes
+from services.experience_capture import Experience, ExperienceSource
+from services.memory_consolidation import consolidate_experiences
 
 router = APIRouter(prefix="/v1", tags=["memory-infrastructure"])
 class MemoryWrite(BaseModel):
@@ -55,6 +57,36 @@ class PortableMemoryRequest(BaseModel):
 class MemoryNotesRequest(BaseModel):
     text: str = Field(min_length=1, max_length=20000)
     selected: list[int] | None = None
+
+
+class ConsolidationExperience(BaseModel):
+    content: str = Field(min_length=1, max_length=4000)
+    source: str = Field(default="user_input", max_length=80)
+    conversation_id: str | None = Field(default=None, max_length=200)
+    run_id: str | None = Field(default=None, max_length=200)
+    metadata: dict = Field(default_factory=dict)
+
+
+class ConsolidationRequest(BaseModel):
+    experiences: list[ConsolidationExperience] = Field(min_length=1, max_length=200)
+    existing_memories: list[dict] = Field(default_factory=list, max_length=500)
+    dry_run: bool = True
+
+
+@router.post("/memory/consolidate/preview")
+async def preview_consolidation(payload: ConsolidationRequest, auth: AuthContext = Depends(require_scope("memory"))):
+    """Explicit developer preview; production remains disabled by configuration."""
+    _user(auth)
+    settings = get_settings()
+    experiences = []
+    for item in payload.experiences:
+        try:
+            source = ExperienceSource(item.source)
+        except ValueError:
+            source = ExperienceSource.AGENT_OBSERVATION
+        experiences.append(Experience(source=source, content=item.content, conversation_id=item.conversation_id, run_id=item.run_id, metadata=item.metadata))
+    report = consolidate_experiences(experiences, existing_memories=payload.existing_memories, mode=getattr(settings, "memory_consolidation_mode", "disabled"), dry_run=True)
+    return report.to_dict()
 
 
 @router.post("/memory/import/notes")

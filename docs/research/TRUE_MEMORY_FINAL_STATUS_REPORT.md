@@ -192,3 +192,6 @@ Phase 11 adds a deterministic, brain-inspired foundation only: bounded working-m
 ## Phase 11.5 runtime validation
 
 Phase 11.5 adds the runtime-validation evidence pack for provider selection, streaming, tool calling, model switching, usage accounting, contextual memory and cross-provider continuity. Deterministic local checks remain the certification baseline. Live OpenAI chat, authenticated browser E2E, measured performance, and cross-provider continuity remain **NOT VERIFIED** because the local OpenAI configuration is a placeholder and no isolated test identity was available. The deployed OpenAI health endpoint proves availability/model discovery only; it does not prove successful chat generation. L4 remains **HARDENED — LIVE EVIDENCE PARTIAL** and L5 remains **NOT IMPLEMENTED**.
+## Phase 11.6 consolidation
+
+Phase 11.6 implements a deterministic, disabled-by-default episodic-to-semantic candidate layer. Repeated evidence, independent stability signals, novelty/conflict signals, dry-run output, Governor/ConflictResolver routing, and lifecycle-shaped events are covered by focused tests. Durable end-to-end commit wiring, browser UI, temporal persistence fixtures, and production performance remain **PARTIAL/NOT VERIFIED**. This is not L5 or adaptive learning.

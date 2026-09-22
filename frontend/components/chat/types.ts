@@ -231,7 +231,7 @@ const CONNECTED_PROVIDER_MODELS: Model[] = [
     provider: "OpenAI",
     group: "OpenAI",
     caps: ["Requires OpenAI", "Paid", "Tools"],
-    disabled: true,
+    disabled: false,
     description: "Fast, low-cost OpenAI model for extraction and simple tasks.",
   },
   {
@@ -241,7 +241,7 @@ const CONNECTED_PROVIDER_MODELS: Model[] = [
     provider: "Google",
     group: "Google",
     caps: ["Requires Google AI", "Paid"],
-    disabled: true,
+    disabled: false,
     description: "Enable the Google provider to route chat requests to Gemini models.",
   },
   {

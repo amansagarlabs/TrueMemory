@@ -859,3 +859,6 @@ Future agentic-brain work must reuse existing MemoryCore, Governor, conflict res
 ## Phase 11.5 validation boundary
 
 Phase 11.5 is an evidence and runtime-validation phase, not a new memory architecture. Provider routing, streaming, tool calling, usage/pricing, model switching, contextual memory and cross-provider test scenarios are documented. Live provider generation, authenticated browser E2E, performance measurements and cross-provider continuity require an isolated test identity and funded/valid provider credentials before they can be certified. No result may be promoted to L4 PROVEN or L5 implementation from documentation alone.
+## Phase 11.6 boundary
+
+The consolidation layer is deterministic, explicit, reversible and disabled by default. It may propose semantic candidates from episodic evidence, but only existing governance and conflict-resolution boundaries may authorize a durable write. No learned novelty, retention, compression or policy mutation is introduced; L5 remains deferred.

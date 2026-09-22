@@ -104,7 +104,9 @@ class Settings:
     memory_l2_semantic_enabled: bool = True
     memory_l2_embedding_retry_seconds: float = 30.0
     memory_rate_limit: int = 120
-    memory_rate_window_seconds: float = 60.0
+      memory_rate_window_seconds: float = 60.0
+      memory_consolidation_mode: str = "disabled"
+      memory_consolidation_mode: str = "disabled"
     use_docker_postgres: bool = False
     postgres_host: str = "localhost"
     postgres_port: int = 5432
@@ -275,7 +277,9 @@ def get_settings() -> Settings:
         ),
         memory_l2_embedding_retry_seconds=float(os.getenv("MEMORY_L2_EMBEDDING_RETRY_SECONDS", "30")),
         memory_rate_limit=int(os.getenv("MEMORY_RATE_LIMIT", "120")),
-        memory_rate_window_seconds=float(os.getenv("MEMORY_RATE_WINDOW_SECONDS", "60")),
+          memory_rate_window_seconds=float(os.getenv("MEMORY_RATE_WINDOW_SECONDS", "60")),
+          memory_consolidation_mode=os.getenv("MEMORY_CONSOLIDATION_MODE", "disabled").strip().lower(),
+          memory_consolidation_mode=os.getenv("MEMORY_CONSOLIDATION_MODE", "disabled").strip().lower(),
         use_docker_postgres=use_docker_postgres,
         postgres_host=resolved_postgres_host,
         postgres_port=int(postgres_port),
