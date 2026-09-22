@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { GeistPixelGrid } from "geist/font/pixel";
 import { GeistMono } from "geist/font/mono";
+import { Analytics } from "@vercel/analytics/next";
 import { AgentNavigationDock } from "@/components/agent-navigation-dock";
 import { ThemeSync } from "@/components/theme-sync";
 import { ThemeInit } from "@/components/theme-init";
@@ -58,6 +59,7 @@ export default function RootLayout({
         <AgentNavigationDock />
         {children}
         <Toaster />
+        <Analytics />
       </body>
     </html>
   );
