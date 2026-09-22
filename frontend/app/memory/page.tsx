@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   fetchRecentMemories, importMemories, updateMemory, type MemoryItem,
-  previewMemoryNotes, saveMemoryNotes, exportMemoryNotes, type MemoryNoteCandidate, type MemoryNoteRelationship,
+  previewMemoryNotes, saveMemoryNotes, exportMemoryNotes, previewConsolidation, commitConsolidation, type MemoryNoteCandidate, type MemoryNoteRelationship, type ConsolidationEpisode, type ConsolidationCandidate,
 } from "@/services/dashboard";
 
 type MemoryStatus = "all" | "pending" | "approved" | "rejected" | "superseded" | "archived";
@@ -48,6 +48,10 @@ function MemoryPageContent() {
   const [selectedNotes, setSelectedNotes] = useState<number[]>([]);
   const [notesBusy, setNotesBusy] = useState(false);
   const [noteRelationships, setNoteRelationships] = useState<MemoryNoteRelationship[]>([]);
+  const [evolutionText, setEvolutionText] = useState("");
+  const [evolutionEpisodes, setEvolutionEpisodes] = useState<ConsolidationEpisode[]>([]);
+  const [evolutionCandidate, setEvolutionCandidate] = useState<ConsolidationCandidate | null>(null);
+  const [evolutionBusy, setEvolutionBusy] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
   const visibleItems = typeFilter === "all"
     ? items
@@ -176,6 +180,13 @@ function MemoryPageContent() {
                 <input ref={fileInput} type="file" accept="application/json,.json" onChange={importFile} className="hidden" />
               </div>
             </div>
+          </section>
+
+          <section className="mt-5 rounded-[20px] border border-[#e85d18]/25 bg-[#17100b] p-5" aria-labelledby="memory-evolution-title">
+            <div className="flex flex-wrap items-start justify-between gap-3"><div><p className="font-mono text-[10px] uppercase tracking-[.16em] text-[#ee7132]">Experimental / explicit approval</p><h2 id="memory-evolution-title" className="mt-2 text-lg font-semibold text-white">Memory Evolution</h2><p className="mt-1 max-w-2xl text-sm leading-6 text-white/45">Preview repeated evidence before it becomes semantic memory. Nothing commits automatically.</p></div><span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/40">Candidate only</span></div>
+            <textarea value={evolutionText} onChange={(event) => setEvolutionText(event.target.value)} rows={3} placeholder={'I prefer TypeScript.\nI still use TypeScript.\nTypeScript is my main frontend language.'} className="mt-4 w-full resize-y rounded-xl border border-white/10 bg-black/25 p-3 text-sm leading-6 text-white outline-none placeholder:text-white/25" />
+            <div className="mt-3 flex flex-wrap gap-2"><button disabled={evolutionBusy || !evolutionText.trim()} onClick={() => void (async () => { setEvolutionBusy(true); try { const episodes = evolutionText.split(/\n+/).map((content) => ({ content, source: "user_input" })); const report = await previewConsolidation(episodes); setEvolutionEpisodes(episodes); setEvolutionCandidate(report.candidates[0] || null); setMessage(report.candidates.length ? "Candidate ready for explicit approval." : report.mode === "disabled" ? "Experimental consolidation is disabled." : "No deterministic candidate found."); } catch (cause) { setMessage(cause instanceof Error ? cause.message : "Could not preview consolidation."); } finally { setEvolutionBusy(false); } })()} className="min-h-10 rounded-xl bg-[#ee7132] px-4 text-sm font-semibold text-white disabled:opacity-40">{evolutionBusy ? "Previewing…" : "Preview evolution"}</button>{evolutionCandidate ? <button disabled={evolutionBusy} onClick={() => void (async () => { setEvolutionBusy(true); try { const result = await commitConsolidation(evolutionCandidate.candidate_id, evolutionEpisodes); setMessage(result.status === "committed" ? `Memory updated at revision ${result.revision || 1}.` : result.status === "stale" ? "Candidate is stale. Create a fresh preview." : result.status === "unchanged" ? "Memory is already current." : `Not committed: ${result.reason || result.status}.`); if (result.status === "committed" || result.status === "unchanged") await reload(); } catch (cause) { setMessage(cause instanceof Error ? cause.message : "Could not commit consolidation."); } finally { setEvolutionBusy(false); } })()} className="min-h-10 rounded-xl border border-emerald-300/30 px-4 text-sm text-emerald-200 disabled:opacity-40">Approve and commit</button> : null}</div>
+            {evolutionCandidate ? <div className="mt-4 grid gap-3 rounded-xl border border-white/10 bg-white/[.03] p-4 md:grid-cols-3"><div><p className="text-xs text-white/35">Proposed state</p><p className="mt-1 text-sm text-white/80">{evolutionCandidate.content}</p></div><div><p className="text-xs text-white/35">Why</p><p className="mt-1 text-sm text-white/65">{evolutionCandidate.reason} · {evolutionCandidate.evidence_ids.length} evidence events</p></div><div><p className="text-xs text-white/35">Candidate ID</p><p className="mt-1 break-all font-mono text-[10px] text-white/45">{evolutionCandidate.candidate_id}</p></div></div> : null}
           </section>
 
           <section className="mt-5 rounded-[20px] border border-[#f6e879]/20 bg-[#15140e] p-5" aria-labelledby="memory-notes-title">

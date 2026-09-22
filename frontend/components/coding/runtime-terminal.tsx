@@ -31,7 +31,7 @@ type RuntimeTerminalProps = {
 };
 
 const WELCOME = [
-  "\x1b[1;38;5;208m\x2588 ContextOS Terminal\x1b[0m",
+  "\x1b[1;38;5;208m\x2588 TrueMemory Terminal\x1b[0m",
   "\x1b[90mType commands or use the input below the terminal.\x1b[0m",
   "\x1b[90m─────────────────────────────────────────────────\x1b[0m",
   "",

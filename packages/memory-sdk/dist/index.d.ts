@@ -43,6 +43,8 @@ export type ProfileResult = {
 export type UsageResult = Record<string, unknown>;
 export type RequestOptions = {
     signal?: AbortSignal;
+    retrySafe?: boolean;
+    idempotencyKey?: string;
 };
 export type ClientOptions = {
     baseUrl: string;
@@ -161,5 +163,10 @@ export declare class TrueMemory {
     importMemory(document: Record<string, unknown>, options?: RequestOptions): Promise<Record<string, unknown>>;
     extractNotes(text: string, options?: RequestOptions): Promise<Record<string, unknown>>;
     importNotes(text: string, selected: number[], options?: RequestOptions): Promise<Record<string, unknown>>;
+    exportNotes(input?: RecallInput, options?: RequestOptions): Promise<{
+        format: string;
+        notes: string;
+        lossy: boolean;
+    }>;
 }
 export { TrueMemory as MemoryClient };

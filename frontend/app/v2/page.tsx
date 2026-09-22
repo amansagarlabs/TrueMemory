@@ -30,16 +30,16 @@ const tools = [
 
 const products = [
   {
-    name: "ContextOS",
+    name: "TrueMemory",
     description: "Memory, artifacts, and agent workflows that persist across sessions.",
     icon: Database,
-    href: "/products/contextos",
+    href: "/products/truememory",
   },
   {
     name: "ContextCrawl",
     description: "Search, scrape, map, crawl, extract, and monitor — one API for web intelligence.",
     icon: Globe,
-    href: "/products/search",
+    href: "/products/contextcrawl",
   },
 ]
 
@@ -210,13 +210,13 @@ export default function V2Home() {
         <div className="mx-auto max-w-[1200px] px-6 py-24 lg:grid lg:grid-cols-[1fr_1fr] lg:gap-12 lg:py-32">
           <div>
             <p className="font-mono text-xs uppercase tracking-widest text-[var(--text-3)]">
-              ContextOS + ContextCrawl
+              TrueMemory + ContextCrawl
             </p>
             <h1 className="mt-6 text-4xl font-bold tracking-tight text-[var(--text-1)] sm:text-5xl lg:text-6xl" style={{ letterSpacing: "-0.03em" }}>
               Web intelligence infrastructure for AI agents.
             </h1>
             <p className="mt-6 max-w-lg text-lg text-[var(--text-2)]">
-              ContextOS remembers your context. ContextCrawl turns the web into agent-ready data.
+              TrueMemory remembers your context. ContextCrawl turns the web into agent-ready data.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -453,13 +453,13 @@ export default function V2Home() {
             <div className="md:col-span-1">
               <div className="flex items-center gap-2">
                 <span className="size-6 rounded-[var(--r-sm)] bg-[var(--brand)]" />
-                <span className="text-sm font-semibold text-[var(--text-1)]">ContextOS</span>
+                <span className="text-sm font-semibold text-[var(--text-1)]">TrueMemory</span>
               </div>
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-widest text-[var(--text-3)]">Products</p>
               <ul className="mt-4 space-y-2.5 text-sm text-[var(--text-3)]">
-                <li><Link href="/products/contextos" className="hover:text-[var(--text-2)]">ContextOS</Link></li>
+                <li><Link href="/products/TrueMemory" className="hover:text-[var(--text-2)]">TrueMemory</Link></li>
                 <li><Link href="/products/search" className="hover:text-[var(--text-2)]">Search API</Link></li>
                 <li><Link href="/products/scrape" className="hover:text-[var(--text-2)]">Scrape API</Link></li>
                 <li><Link href="/products/crawl" className="hover:text-[var(--text-2)]">Crawl API</Link></li>

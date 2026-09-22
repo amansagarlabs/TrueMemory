@@ -195,3 +195,33 @@ Phase 11.5 adds the runtime-validation evidence pack for provider selection, str
 ## Phase 11.6 consolidation
 
 Phase 11.6 implements a deterministic, disabled-by-default episodic-to-semantic candidate layer. Repeated evidence, independent stability signals, novelty/conflict signals, dry-run output, Governor/ConflictResolver routing, and lifecycle-shaped events are covered by focused tests. Durable end-to-end commit wiring, browser UI, temporal persistence fixtures, and production performance remain **PARTIAL/NOT VERIFIED**. This is not L5 or adaptive learning.
+## Phase 11.7 controlled commit
+
+Phase 11.7 adds a deterministic experimental commit endpoint with stable candidate identity, commit-time revalidation, approval gating, Governor/ConflictResolver routing, MemoryClient writes, and idempotent unchanged responses. Memory evolution UI, authenticated browser E2E, full durable revision/provenance fixtures, and measured performance remain **PARTIAL/NOT VERIFIED**. Production consolidation remains disabled and L5 remains **NOT IMPLEMENTED**.
+## Phase 11.8 memory evolution proof layer
+
+Phase 11.8 adds a user-facing experimental preview/approval panel in `/memory`, structured preview/commit client contracts, and explicit stale/unchanged/rejected result handling. It does not auto-commit. Full revision-history UI, disposable browser E2E, and complete storage-backed provenance fixtures remain **NOT VERIFIED**. Production consolidation remains disabled.
+## Phase 11.8 finalization
+
+Focused local proof passes and an in-process consolidation baseline is documented. Storage-backed temporal races, authenticated browser E2E, full backend regression, and full frontend build were not executed because the disposable test environment/test identity was unavailable. Phase 11.8 remains **PARTIAL**.
+## Phase 11.9 performance analysis
+
+An authenticated aggregate performance snapshot now exposes existing HTTP, cache, hybrid, and PostgreSQL pool metrics. Real HTTP/API latency and chat TTFT were not measured in this environment; no bottleneck or production improvement is claimed. Cloudflare/Queue work remains deferred.
+## Phase 11.10 durable async boundary
+
+The existing PostgreSQL ingestion jobs remain the durable async foundation. A provider-neutral `JobQueue` contract and optional Upstash Redis transport now exist; Redis is dispatch-only and not required for synchronous correctness. Full transactional outbox integration, external worker deployment and failure-mode E2E remain **NOT VERIFIED**.
+## Phase 11.11 unified durable jobs
+
+The existing PostgreSQL ingestion job table and worker were audited and retained as the canonical durable substrate. No duplicate job system was created. General atomic MemoryCore-plus-job transactions, a safe dispatcher state, generalized handlers, and disposable Redis/worker failure E2E remain **NOT VERIFIED**.
+## Phase 11.12 canonical async
+
+The existing PostgreSQL job table and polling worker remain canonical; no separate dispatcher state machine was introduced. An authenticated scope-safe `GET /v1/jobs/{job_id}` status endpoint was added. General atomic MemoryCore-plus-job transactions and disposable failure/concurrency E2E remain **NOT VERIFIED**.
+## API reliability
+
+Added centralized safe retry classification/backoff utilities and compatible structured error fields (`code`, `retryable`). Production 502/503/504 root cause remains **NOT VERIFIED** because production response headers/logs were unavailable. Mutation retries require idempotency; streaming responses are not transparently replayed after partial output.
+## Phase 11.14 reliability finalization
+
+Python and TypeScript SDK retry behavior was audited and hardened for retry-safe operations, Retry-After, idempotency keys, and bounded transient statuses. Disposable database/worker/Redis E2E, live SDK tests, and production 502/503/504 diagnostics remain **NOT VERIFIED**.
+## Phase 11.13 transactional outbox audit
+
+The memory write-path audit is documented. Existing source ingestion uses the canonical PostgreSQL durable job system; general profile/workspace/notes/consolidation memory writes do not yet share an atomic memory-plus-job transaction because they do not currently require a follow-up job. Disposable rollback/concurrency/crash and outbox-overhead tests remain **NOT VERIFIED**.

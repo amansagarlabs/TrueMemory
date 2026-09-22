@@ -17,13 +17,21 @@ class TrueMemory:
         body = json.dumps(payload).encode() if payload is not None else None
         headers = {"Authorization": f"Bearer {self.api_key}", "Accept": "application/json", "X-Request-ID": str(uuid.uuid4())}
         if body: headers["Content-Type"] = "application/json"
-        attempts = self.max_retries + 1 if safe else 1
+        idempotency_key = (payload or {}).get("idempotency_key") if payload else None
+        if idempotency_key: headers["Idempotency-Key"] = str(idempotency_key)
+        attempts = self.max_retries + 1 if (safe or idempotency_key) else 1
         for attempt in range(attempts):
             try:
                 return await asyncio.to_thread(self._sync, path, method, body, headers)
-            except ServerError:
-                if attempt + 1 >= attempts: raise
-                await asyncio.sleep(0.1 * (2 ** attempt))
+            except TrueMemoryError as exc:
+                retryable_status = exc.status in {408, 429, 502, 503, 504}
+                # Preserve retries for typed transport/server failures created by
+                # callers or test doubles without an HTTP status.
+                retryable_typed_error = isinstance(exc, ServerError) and not exc.status
+                if not (safe or idempotency_key) or not (retryable_status or retryable_typed_error) or attempt + 1 >= attempts:
+                    raise
+                delay = getattr(exc, "retry_after", None) or 0
+                await asyncio.sleep(delay if delay else 0.1 * (2 ** attempt))
             except (URLError, TimeoutError, OSError) as exc:
                 if attempt + 1 >= attempts: raise NetworkError("Network request failed", details=exc) from exc
                 await asyncio.sleep(0.1 * (2 ** attempt))

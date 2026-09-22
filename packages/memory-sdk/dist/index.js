@@ -50,7 +50,7 @@ export class TrueMemory {
         throw new ValidationError("fetch is unavailable", 0); this.extraHeaders = options.headers ?? {}; }
     async request(path, init = {}, options = {}) {
         const method = (init.method ?? "GET").toUpperCase();
-        const attempts = safeMethods.has(method) ? this.maxRetries + 1 : 1;
+        const attempts = (safeMethods.has(method) || options.retrySafe || options.idempotencyKey) ? this.maxRetries + 1 : 1;
         let last;
         for (let attempt = 0; attempt < attempts; attempt++) {
             const controller = new AbortController();
@@ -62,6 +62,8 @@ export class TrueMemory {
                 headers.set("Authorization", `Bearer ${this.token}`);
                 headers.set("Accept", "application/json");
                 headers.set("X-Request-ID", crypto.randomUUID());
+                if (options.idempotencyKey)
+                    headers.set("Idempotency-Key", options.idempotencyKey);
                 if (init.body)
                     headers.set("Content-Type", "application/json");
                 Object.entries(this.extraHeaders).forEach(([k, v]) => headers.set(k, v));
@@ -74,8 +76,10 @@ export class TrueMemory {
             }
             catch (error) {
                 if (error instanceof KontextError) {
-                    if (error.status >= 500 && attempt + 1 < attempts) {
-                        await new Promise(resolve => setTimeout(resolve, 100 * 2 ** attempt));
+                    const retryable = [408, 429, 502, 503, 504].includes(error.status);
+                    if (retryable && attempt + 1 < attempts) {
+                        const retryAfter = error instanceof RateLimitError ? (error.retryAfter ?? 0) * 1000 : 0;
+                        await new Promise(resolve => setTimeout(resolve, retryAfter || 100 * 2 ** attempt));
                         last = error;
                         continue;
                     }
@@ -107,8 +111,8 @@ export class TrueMemory {
         return new ServerError(...args); return new KontextError(...args); }
     remember(input, options) { return this.request("/v1/memories", { method: "POST", body: JSON.stringify(input) }, options); }
     store(input, options) { return this.request("/v1/memory/store", { method: "POST", body: JSON.stringify(input) }, options); }
-    search(input = {}, options) { return this.request("/v1/memories/search", { method: "POST", body: JSON.stringify(input) }, options); }
-    retrieve(input = {}, options) { return this.request("/v1/memories/retrieve", { method: "POST", body: JSON.stringify(input) }, options); }
+    search(input = {}, options) { return this.request("/v1/memories/search", { method: "POST", body: JSON.stringify(input) }, { ...options, retrySafe: true }); }
+    retrieve(input = {}, options) { return this.request("/v1/memories/retrieve", { method: "POST", body: JSON.stringify(input) }, { ...options, retrySafe: true }); }
     currentState(input, options) { return this.request("/v1/memory/current-state", { method: "POST", body: JSON.stringify(input) }, options); }
     timeline(input, options) { return this.request("/v1/memory/timeline", { method: "POST", body: JSON.stringify(input) }, options); }
     related(input = {}, options) { return this.request("/v1/memory/related", { method: "POST", body: JSON.stringify(input) }, options); }
@@ -123,5 +127,6 @@ export class TrueMemory {
     importMemory(document, options) { return this.request("/v1/memory/import", { method: "POST", body: JSON.stringify({ document }) }, options); }
     extractNotes(text, options) { return this.request("/v1/memory/import/notes", { method: "POST", body: JSON.stringify({ text }) }, options); }
     importNotes(text, selected, options) { return this.request("/v1/memory/import/notes", { method: "POST", body: JSON.stringify({ text, selected }) }, options); }
+    exportNotes(input = {}, options) { return this.request("/v1/memory/export/notes", { method: "POST", body: JSON.stringify(input) }, options); }
 }
 export { TrueMemory as MemoryClient };

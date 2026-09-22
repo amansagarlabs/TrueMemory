@@ -862,3 +862,9 @@ Phase 11.5 is an evidence and runtime-validation phase, not a new memory archite
 ## Phase 11.6 boundary
 
 The consolidation layer is deterministic, explicit, reversible and disabled by default. It may propose semantic candidates from episodic evidence, but only existing governance and conflict-resolution boundaries may authorize a durable write. No learned novelty, retention, compression or policy mutation is introduced; L5 remains deferred.
+## Phase 11.7 boundary
+
+Controlled commit is available only in experimental mode and recomputes candidates at approval time. The UI and browser evidence must remain separate deliverables; a successful API write is not evidence of end-to-end product completion.
+## Phase 11.8 validation boundary
+
+Local component measurements are distinct from production latency. Cloudflare edge/queue work is deferred until storage-backed and browser baselines exist; no infrastructure migration is implied by the current async classification.

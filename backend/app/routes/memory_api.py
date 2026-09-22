@@ -15,6 +15,7 @@ from services.portable_memory import make_document, validate_document
 from services.memory_notes import extract_note_candidates, extract_note_relationships, render_memory_notes
 from services.experience_capture import Experience, ExperienceSource
 from services.memory_consolidation import consolidate_experiences
+from services.memory_ingestion import get_ingestion_job
 
 router = APIRouter(prefix="/v1", tags=["memory-infrastructure"])
 class MemoryWrite(BaseModel):
@@ -73,6 +74,16 @@ class ConsolidationRequest(BaseModel):
     dry_run: bool = True
 
 
+class ConsolidationCommitRequest(ConsolidationRequest):
+    candidate_id: str = Field(min_length=3, max_length=80)
+    approved: bool = False
+
+
+class ConsolidationCommitRequest(ConsolidationRequest):
+    candidate_id: str = Field(min_length=3, max_length=80)
+    approved: bool = False
+
+
 @router.post("/memory/consolidate/preview")
 async def preview_consolidation(payload: ConsolidationRequest, auth: AuthContext = Depends(require_scope("memory"))):
     """Explicit developer preview; production remains disabled by configuration."""
@@ -85,8 +96,85 @@ async def preview_consolidation(payload: ConsolidationRequest, auth: AuthContext
         except ValueError:
             source = ExperienceSource.AGENT_OBSERVATION
         experiences.append(Experience(source=source, content=item.content, conversation_id=item.conversation_id, run_id=item.run_id, metadata=item.metadata))
-    report = consolidate_experiences(experiences, existing_memories=payload.existing_memories, mode=getattr(settings, "memory_consolidation_mode", "disabled"), dry_run=True)
+    current = _client().list(user_id=_user(auth), scope="general", limit=500)
+    report = consolidate_experiences(experiences, existing_memories=current or payload.existing_memories, mode=getattr(settings, "memory_consolidation_mode", "disabled"), dry_run=True)
     return report.to_dict()
+
+
+@router.post("/memory/consolidate/commit")
+async def commit_consolidation(payload: ConsolidationCommitRequest, auth: AuthContext = Depends(require_scope("memory"))):
+    """Recompute and explicitly commit one experimental candidate."""
+    user_id = _user(auth)
+    if not payload.approved:
+        return {"status": "rejected", "reason": "approval_required", "candidate_id": payload.candidate_id}
+    settings = get_settings()
+    if getattr(settings, "memory_consolidation_mode", "disabled") != "experimental":
+        return {"status": "rejected", "reason": "consolidation_disabled", "candidate_id": payload.candidate_id}
+    experiences = []
+    for item in payload.experiences:
+        try:
+            source = ExperienceSource(item.source)
+        except ValueError:
+            source = ExperienceSource.AGENT_OBSERVATION
+        experiences.append(Experience(source=source, content=item.content, conversation_id=item.conversation_id, run_id=item.run_id, metadata=item.metadata))
+    client = _client()
+    current = client.list(user_id=user_id, scope="general", limit=500)
+    report = consolidate_experiences(experiences, existing_memories=current, mode="experimental", dry_run=True)
+    candidate = next((item for item in report.candidates if item.candidate_id == payload.candidate_id), None)
+    if candidate is None:
+        return {"status": "stale", "reason": "candidate_revalidation_failed", "candidate_id": payload.candidate_id}
+    existing = next((item for item in current if item.get("key") == candidate.key and str(item.get("content", "")).casefold() == candidate.content.casefold()), None)
+    if existing:
+        return {"status": "unchanged", "candidate_id": candidate.candidate_id, "semantic_memory": existing, "revision": existing.get("revision", 1)}
+    from services.conflict_resolver import resolve_conflict
+    from services.memory_governor import govern_candidate, GovernorDecision
+    same_key = next((item for item in current if item.get("key") == candidate.key), None)
+    governor = govern_candidate(candidate, same_key)
+    if governor.decision in {GovernorDecision.REJECT, GovernorDecision.NOOP}:
+        return {"status": "rejected", "candidate_id": candidate.candidate_id, "reason": governor.reason, "governor_rule": governor.rule_id}
+    conflict = resolve_conflict(candidate.content, candidate.memory_type, candidate.key, same_key) if same_key else None
+    source = f"consolidation:{candidate.candidate_id};evidence={','.join(candidate.evidence_ids)}"
+    client.remember(user_id=user_id, scope="general", key=candidate.key, content=candidate.content, source=source, confidence=governor.confidence)
+    committed = next((item for item in client.list(user_id=user_id, scope="general", limit=500) if item.get("key") == candidate.key and str(item.get("content", "")).casefold() == candidate.content.casefold()), {"key": candidate.key, "content": candidate.content, "source": source})
+    return {"status": "committed", "candidate_id": candidate.candidate_id, "semantic_memory": committed, "revision": committed.get("revision", 1), "current_state": candidate.value, "conflict_resolution": conflict.resolution.value if conflict else None, "evidence_ids": candidate.evidence_ids}
+
+
+@router.post("/memory/consolidate/commit")
+async def commit_consolidation(payload: ConsolidationCommitRequest, auth: AuthContext = Depends(require_scope("memory"))):
+    """Recompute and explicitly commit one experimental candidate."""
+    user_id = _user(auth)
+    if not payload.approved:
+        return {"status": "rejected", "reason": "approval_required", "candidate_id": payload.candidate_id}
+    settings = get_settings()
+    if getattr(settings, "memory_consolidation_mode", "disabled") != "experimental":
+        return {"status": "rejected", "reason": "consolidation_disabled", "candidate_id": payload.candidate_id}
+    experiences = []
+    for item in payload.experiences:
+        try:
+            source = ExperienceSource(item.source)
+        except ValueError:
+            source = ExperienceSource.AGENT_OBSERVATION
+        experiences.append(Experience(source=source, content=item.content, conversation_id=item.conversation_id, run_id=item.run_id, metadata=item.metadata))
+    client = _client()
+    current = client.list(user_id=user_id, scope="general", limit=500)
+    report = consolidate_experiences(experiences, existing_memories=current, mode="experimental", dry_run=True)
+    candidate = next((item for item in report.candidates if item.candidate_id == payload.candidate_id), None)
+    if candidate is None:
+        return {"status": "stale", "reason": "candidate_revalidation_failed", "candidate_id": payload.candidate_id}
+    existing = next((item for item in current if item.get("key") == candidate.key and str(item.get("content", "")).casefold() == candidate.content.casefold()), None)
+    if existing:
+        return {"status": "unchanged", "candidate_id": candidate.candidate_id, "semantic_memory": existing, "revision": existing.get("revision", 1)}
+    from services.conflict_resolver import resolve_conflict
+    from services.memory_governor import govern_candidate, GovernorDecision
+    same_key = next((item for item in current if item.get("key") == candidate.key), None)
+    governor = govern_candidate(candidate, same_key)
+    if governor.decision in {GovernorDecision.REJECT, GovernorDecision.NOOP}:
+        return {"status": "rejected", "candidate_id": candidate.candidate_id, "reason": governor.reason, "governor_rule": governor.rule_id}
+    conflict = resolve_conflict(candidate.content, candidate.memory_type, candidate.key, same_key) if same_key else None
+    source = f"consolidation:{candidate.candidate_id};evidence={','.join(candidate.evidence_ids)}"
+    client.remember(user_id=user_id, scope="general", key=candidate.key, content=candidate.content, source=source, confidence=governor.confidence)
+    committed = next((item for item in client.list(user_id=user_id, scope="general", limit=500) if item.get("key") == candidate.key and str(item.get("content", "")).casefold() == candidate.content.casefold()), {"key": candidate.key, "content": candidate.content, "source": source})
+    return {"status": "committed", "candidate_id": candidate.candidate_id, "semantic_memory": committed, "revision": committed.get("revision", 1), "current_state": candidate.value, "conflict_resolution": conflict.resolution.value if conflict else None, "evidence_ids": candidate.evidence_ids}
 
 
 @router.post("/memory/import/notes")
@@ -218,10 +306,48 @@ async def memory_health() -> dict[str, str]:
     return {"service": "truememory-memory", "status": "ok"}
 
 
+@router.get("/jobs/{job_id}")
+async def get_job_status(job_id: str, auth: AuthContext = Depends(require_scope("memory"))):
+    """Return scope-safe durable job state without payloads or worker secrets."""
+    user_id = _user(auth)
+    job = get_ingestion_job(get_settings(), job_id=job_id, user_id=user_id, include_items=False)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    return {
+        "job_id": str(job.get("id")),
+        "job_type": job.get("job_kind") or "ingestion",
+        "status": job.get("status"),
+        "created_at": job.get("created_at"),
+        "started_at": job.get("started_at"),
+        "completed_at": job.get("completed_at"),
+        "attempt": job.get("attempt_count", 0),
+        "max_attempts": job.get("max_attempts"),
+        "last_error": job.get("error"),
+        "scope": {"user_id": str(job.get("user_id")), "workspace_id": job.get("workspace_id"), "agent_id": job.get("agent_id")},
+    }
+
+
 @router.get("/memory/metrics")
 async def memory_metrics(auth: AuthContext = Depends(require_scope("memory"))):
     _user(auth)
     return {"cache": _client().cache_metrics()}
+
+
+@router.get("/memory/performance")
+async def memory_performance(auth: AuthContext = Depends(require_scope("memory"))):
+    """Authenticated aggregate performance snapshot without memory content."""
+    _user(auth)
+    from app.metrics import get_metrics
+    from services.postgres_pool import get_pool
+    settings = get_settings()
+    client = _client()
+    return {
+        "request_metrics": get_metrics().get_all(),
+        "cache": client.cache_metrics(),
+        "hybrid": client.hybrid.metrics(),
+        "postgres_pool": get_pool(settings).metrics.to_dict(),
+        "scope": {"user_id": str(auth.user_id), "workspace_id": auth.token_bindings.get("workspace_id")},
+    }
 
 
 @router.get("/memories")

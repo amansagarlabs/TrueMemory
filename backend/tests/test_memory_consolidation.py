@@ -35,3 +35,12 @@ def test_conflicting_state_is_marked_novel_and_governed():
     )
     assert result.candidates[0].novelty["contradiction"] is True
     assert result.metrics["conflict_count"] == 1
+
+
+def test_candidate_identity_is_stable_and_changes_with_evidence():
+    episodes = [_episode("I prefer TypeScript.", "a"), _episode("I still use TypeScript.", "b")]
+    first = consolidate_experiences(episodes, mode="experimental").candidates[0]
+    second = consolidate_experiences(episodes, mode="experimental").candidates[0]
+    changed = consolidate_experiences(episodes + [_episode("TypeScript is my main frontend language.", "c")], mode="experimental").candidates[0]
+    assert first.candidate_id == second.candidate_id
+    assert first.candidate_id != changed.candidate_id

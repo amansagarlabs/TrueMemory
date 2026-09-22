@@ -46,7 +46,7 @@ export function Navigation2() {
               <span className="h-full rounded-[2px] !bg-white" />
             </span>
             <span className="hidden text-[15px] font-semibold tracking-[-0.02em] text-[#171a15] dark:text-white min-[420px]:inline">
-              ContextOS
+              TrueMemory
             </span>
           </Link>
         </div>
@@ -233,7 +233,7 @@ export function Navigation2() {
                   <span className="h-full rounded-[2px] !bg-white" />
                 </span>
                 <span className="text-lg font-bold tracking-tight text-[#171a15] dark:text-white">
-                  ContextOS
+                  TrueMemory
                 </span>
               </div>
 

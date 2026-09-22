@@ -6,6 +6,8 @@ provide an explicit commit function after the Governor has accepted a candidate.
 from __future__ import annotations
 
 import re
+from hashlib import sha256
+from hashlib import sha256
 from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from typing import Any, Callable, Iterable
@@ -42,6 +44,16 @@ class ConsolidationCandidate:
     importance_score: float = 0.75
 
     @property
+    def candidate_id(self) -> str:
+        raw = f"{self.key}|{self.value.casefold()}|{self.scope}|{','.join(sorted(self.evidence_ids))}"
+        return f"cc_{sha256(raw.encode('utf-8')).hexdigest()[:24]}"
+
+    @property
+    def candidate_id(self) -> str:
+        raw = f"{self.key}|{self.value.casefold()}|{self.scope}|{','.join(sorted(self.evidence_ids))}"
+        return f"cc_{sha256(raw.encode('utf-8')).hexdigest()[:24]}"
+
+    @property
     def content(self) -> str:
         return f"{self.key} = {self.value}"
 
@@ -56,7 +68,9 @@ class ConsolidationReport:
     metrics: dict[str, int] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        data = asdict(self)
+        data["candidates"] = [{**asdict(candidate), "candidate_id": candidate.candidate_id, "content": candidate.content} for candidate in self.candidates]
+        return data
 
 
 @dataclass(frozen=True)
@@ -147,6 +161,8 @@ def consolidate_experiences(
         conflict = resolve_conflict(candidate.content, candidate.memory_type, candidate.key, current) if current else None
         governed = govern_candidate(candidate, current, policy=policy)
         decision = {"key": candidate.key, "governor": governed.decision.value, "rule": governed.rule_id, "conflict": conflict.resolution.value if conflict else None, "evidence_ids": candidate.evidence_ids}
+        decision["candidate_id"] = candidate.candidate_id
+        decision["candidate_id"] = candidate.candidate_id
         report.decisions.append(decision)
         report.events.append({"event_type": "memory_consolidation_candidate_created", "candidate": decision})
         if not dry_run and commit and governed.decision not in {GovernorDecision.REJECT, GovernorDecision.NOOP}:

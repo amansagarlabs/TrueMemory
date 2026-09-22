@@ -18,6 +18,7 @@ import time
 import traceback
 from typing import Any
 from uuid import uuid4
+from services.retry_policy import RETRYABLE_STATUSES
 
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -36,11 +37,13 @@ class ErrorClassification:
 
         # HTTP exceptions from Starlette/FastAPI
         if isinstance(exc, StarletteHTTPException):
+            retryable = exc.status_code in RETRYABLE_STATUSES
             return {
                 "error": "http_error",
                 "message": str(exc.detail),
                 "status_code": exc.status_code,
                 "classification": "client_error" if exc.status_code < 500 else "server_error",
+                "retryable": retryable,
             }
 
         # Validation errors
@@ -69,6 +72,7 @@ class ErrorClassification:
                 "message": "A database error occurred",
                 "status_code": 503,
                 "classification": "infrastructure_error",
+                "retryable": True,
             }
 
         # Connection errors
@@ -79,6 +83,7 @@ class ErrorClassification:
                 "message": "A connection error occurred",
                 "status_code": 503,
                 "classification": "infrastructure_error",
+                "retryable": True,
             }
 
         # Default: internal server error
@@ -129,6 +134,8 @@ def register_exception_handlers(app: FastAPI) -> None:
             "error": classification["error"],
             "message": classification["message"],
             "request_id": request_id,
+            "code": classification["error"],
+            "retryable": bool(classification.get("retryable", False)),
         }
 
         # Add detail in non-production
@@ -157,6 +164,8 @@ def register_exception_handlers(app: FastAPI) -> None:
                 "error": "http_error",
                 "message": str(exc.detail),
                 "request_id": request_id,
+                "code": "http_error",
+                "retryable": exc.status_code in RETRYABLE_STATUSES,
             },
             headers={"X-Request-ID": request_id},
         )

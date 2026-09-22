@@ -203,6 +203,24 @@ export async function saveMemoryNotes(text: string, selected: number[]) {
   return data as { count: number };
 }
 
+export interface ConsolidationEpisode { content: string; source?: string; conversation_id?: string; run_id?: string; metadata?: Record<string, unknown>; }
+export interface ConsolidationCandidate { candidate_id: string; key: string; value: string; content: string; evidence_ids: string[]; stability: number; reason: string; signals: Record<string, unknown>; novelty: Record<string, boolean>; }
+export interface ConsolidationReport { mode: string; dry_run: boolean; candidates: ConsolidationCandidate[]; decisions: Array<Record<string, unknown>>; metrics: Record<string, number>; }
+
+export async function previewConsolidation(experiences: ConsolidationEpisode[]): Promise<ConsolidationReport> {
+  const res = await fetch(`${API_URL}/v1/memory/consolidate/preview`, { method: "POST", headers: authHeaders(), body: JSON.stringify({ experiences, dry_run: true }) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Could not preview consolidation.");
+  return data;
+}
+
+export async function commitConsolidation(candidateId: string, experiences: ConsolidationEpisode[]) {
+  const res = await fetch(`${API_URL}/v1/memory/consolidate/commit`, { method: "POST", headers: authHeaders(), body: JSON.stringify({ candidate_id: candidateId, approved: true, experiences, dry_run: false }) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Could not commit consolidation.");
+  return data as { status: "committed" | "unchanged" | "rejected" | "stale"; candidate_id: string; revision?: number; reason?: string; evidence_ids?: string[]; semantic_memory?: MemoryItem };
+}
+
 export async function exportMemoryNotes() {
   const res = await fetch(`${API_URL}/v1/memory/export/notes`, { method: "POST", headers: authHeaders(), body: JSON.stringify({}) });
   const data = await res.json().catch(() => ({}));
