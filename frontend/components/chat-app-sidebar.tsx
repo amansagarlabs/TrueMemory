@@ -126,6 +126,7 @@ const CONTEXT_NAVIGATION: SidebarNavItem[] = [
   { label: "Agent chat", href: "/chat", icon: IconRobot },
   { label: "Skills", href: "/skills", icon: IconSparkles },
   { label: "Benchmarks", href: "/benchmarks", icon: IconChartBar },
+  { label: "Usage", href: "/usage", icon: IconChartBar },
 ];
 
 const RETRIEVAL_NAVIGATION: SidebarNavItem[] = [
@@ -873,15 +874,15 @@ export function ChatAppSidebar({
                     </div>
                   </DropdownMenuItem>
                 </Link>
-                <Link href="/credits">
+                <Link href="/usage">
                   <DropdownMenuItem className="mx-1 mb-1 gap-2.5 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-2.5 text-sidebar-foreground focus:bg-white/[0.06]">
                     <div className="flex size-7 items-center justify-center rounded-md bg-white/10 text-white">
                       <IconCreditCard className="size-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-semibold">Credits</div>
+                      <div className="text-sm font-semibold">Usage</div>
                       <div className="text-[10px] font-normal text-current opacity-65">
-                        Provider spend and balances
+                        Tokens, limits, and activity
                       </div>
                     </div>
                   </DropdownMenuItem>

@@ -853,3 +853,6 @@ backend/services/retrieval_scoring.py — Add temporal, entity signals
 ## Phase 10.2 disposition
 
 The competitive audit supersedes feature-copying assumptions in this roadmap. Existing governed capture, temporal/versioned retrieval, telemetry, REST/MCP and SDK surfaces are treated as implemented evidence. The next high-confidence work is the generic agent integration contract, portable export/import, a deterministic internal benchmark, and a reusable source-aware envelope. Automatic recall remains an opt-in research/design item; L5 adaptive learning remains deferred.
+## Phase 11 boundary
+
+Future agentic-brain work must reuse existing MemoryCore, Governor, conflict resolution, temporal semantics, provenance and telemetry. Working/episodic/semantic/consolidated/shared layers are conceptual metadata and orchestration boundaries, not permission to create duplicate stores or silently implement L5.

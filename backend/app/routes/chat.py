@@ -106,6 +106,7 @@ from services.tool_calling_loop import (
 )
 from services.memory_tool_registry import get_memory_tool_definitions
 from services.llm_provider import LLMProvider, Message, ToolDefinition
+from services.token_usage import record_chat_usage
 from services.providers import create_openrouter_provider
 from services.context_retrieval import (
     CallableContextProvider,
@@ -2598,6 +2599,21 @@ async def _chat_event_stream(
         question=question,
         answer=answer_text,
     )
+
+    # Meter every completed chat turn once. Provider-reported usage can be
+    # swapped in later without changing subscription/dashboard contracts.
+    if resolved_user_id:
+        try:
+            record_chat_usage(
+                settings=settings,
+                user_id=resolved_user_id,
+                model=response_model,
+                provider="openrouter" if not requested_local_model else "ollama",
+                input_text="\n".join(str(message.get("content") or "") for message in messages if isinstance(message, dict)),
+                output_text=answer_text,
+            )
+        except Exception:
+            logger.exception("Could not record chat token usage")
 
     # Agent Memory Capture: Capture agent behavior as durable memory
     if resolved_user_id and workspace_id:

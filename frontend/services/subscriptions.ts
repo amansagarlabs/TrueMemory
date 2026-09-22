@@ -23,6 +23,30 @@ export interface UsageSummary {
   usage: Record<string, ResourceUsage>;
 }
 
+export interface ProviderUsage {
+  provider: string;
+  used: number;
+  tokens_input: number;
+  tokens_output: number;
+  tokens_total: number;
+  cost_cents: number;
+}
+
+export interface UsageBucket {
+  bucket: string;
+  tokens_input: number;
+  tokens_output: number;
+  tokens_total: number;
+  cost_cents: number;
+  requests: number;
+}
+
+export async function fetchUsageAnalytics(period: "hour" | "day" | "week" | "month" = "week"): Promise<{ period: string; buckets: UsageBucket[] }> {
+  const res = await fetch(`${API_URL}/api/subscriptions/usage/analytics?period=${period}`, { headers: authHeaders() });
+  if (!res.ok) throw new Error(`Failed to fetch analytics (${res.status})`);
+  return res.json();
+}
+
 export interface SubscriptionPlan {
   plan_key: string;
   plan_name: string;

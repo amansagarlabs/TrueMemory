@@ -186,3 +186,6 @@ The Phase 10.2 audit is documented in `TRUE_MEMORY_PHASE10_2_SUPERMEMORY_AUDIT.m
 ## Environment isolation
 
 The active backend configuration uses Supabase PostgreSQL through `DATABASE_URL` with Docker Postgres disabled. Disposable tests use the separate `docker-compose.test.yml` `postgres-test` target and require test-only credentials. Production Supabase is not a portability-test target.
+## Phase 11 foundation
+
+Phase 11 adds a deterministic, brain-inspired foundation only: bounded working-memory context, typed episodic evidence, semantic-layer metadata and lifecycle-event shape. It does not enable adaptive learning or change L4/L5 certification.

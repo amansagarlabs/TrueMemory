@@ -120,6 +120,8 @@ export interface MessageResource {
 
 export interface Model {
   id: string;
+  modelId?: string;
+  providerId?: string;
   name: string;
   color: string;
   provider: string;
@@ -128,6 +130,9 @@ export interface Model {
   disabled?: boolean;
   description?: string;
   dynamic?: boolean;
+  pricingType?: "free" | "paid" | "unknown" | "local";
+  contextLength?: number;
+  supports?: Record<string, boolean>;
 }
 
 const OPENROUTER_MODELS: Model[] = [

@@ -39,6 +39,7 @@ import {
   X,
 } from "lucide-react";
 import MessageList from "@/components/chat/MessageList";
+import TokenUsagePopover from "@/components/chat/TokenUsagePopover";
 import { DocumentPreviewDialog } from "@/components/chat/DocumentPreviewDialog";
 import {
   SourceExplorerOverview,
@@ -3696,6 +3697,7 @@ export default function ChatInterface() {
                 window.requestAnimationFrame(() => textareaRef.current?.focus());
               }}
             />
+            <div className="mb-1 flex items-center justify-end"><TokenUsagePopover /></div>
             {(visibleDocument && !artifactCommitted) || attachment || pastedTextDocument || ocrImages.length ? (
             <div className="mb-3 flex flex-wrap gap-3">
               {visibleDocument && !artifactCommitted ? (

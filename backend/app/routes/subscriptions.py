@@ -5,7 +5,7 @@ Handles plan listing, subscription management, usage tracking,
 and rate-limit enforcement.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, Query
 from pydantic import BaseModel, Field
 
 from app.auth_middleware import AuthContext, require_auth
@@ -186,6 +186,8 @@ async def api_usage_providers(auth: AuthContext = Depends(require_auth)):
                 """
                 SELECT COALESCE(provider, 'unknown') AS provider,
                        COALESCE(SUM(total_quantity), 0) AS used,
+                       COALESCE(SUM(total_tokens_input), 0) AS tokens_input,
+                       COALESCE(SUM(total_tokens_output), 0) AS tokens_output,
                        COALESCE(SUM(total_cost_cents), 0) AS cost_cents
                 FROM usage_records
                 WHERE user_id = %s
@@ -201,11 +203,46 @@ async def api_usage_providers(auth: AuthContext = Depends(require_auth)):
         {
             "provider": row["provider"],
             "used": row["used"],
+            "tokens_input": row["tokens_input"],
+            "tokens_output": row["tokens_output"],
+            "tokens_total": row["tokens_input"] + row["tokens_output"],
             "cost_cents": row["cost_cents"],
         }
         for row in rows
     ]
     return {"providers": providers}
+
+
+@router.get("/usage/analytics")
+async def api_usage_analytics(
+    period: str = Query(default="week", pattern="^(hour|day|week|month)$"),
+    auth: AuthContext = Depends(require_auth),
+):
+    """Return token/cost buckets for the authenticated usage dashboard."""
+    from app.config import get_settings
+    settings = get_settings()
+    bucket = {"hour": "hour", "day": "day", "week": "day", "month": "day"}[period]
+    lookback = {"hour": "1 day", "day": "7 days", "week": "7 days", "month": "31 days"}[period]
+    with _connect(settings) as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                f"""SELECT date_trunc('{bucket}', created_at) AS bucket,
+                           COALESCE(SUM(tokens_input), 0) AS tokens_input,
+                           COALESCE(SUM(tokens_output), 0) AS tokens_output,
+                           COALESCE(SUM(cost_cents), 0) AS cost_cents,
+                           COUNT(*) AS requests
+                    FROM usage_records
+                    WHERE user_id = %s AND resource_key = 'ai:tokens'
+                      AND created_at >= NOW() - INTERVAL '{lookback}'
+                    GROUP BY 1 ORDER BY 1 ASC""",
+                (auth.user_id,),
+            )
+            rows = cur.fetchall()
+    return {"period": period, "buckets": [{
+        "bucket": row["bucket"].isoformat(), "tokens_input": row["tokens_input"],
+        "tokens_output": row["tokens_output"], "tokens_total": row["tokens_input"] + row["tokens_output"],
+        "cost_cents": row["cost_cents"], "requests": row["requests"],
+    } for row in rows]}
 
 
 @router.post("/usage/record")

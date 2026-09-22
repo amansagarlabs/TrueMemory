@@ -22,18 +22,23 @@ export default function ModelPicker({ selected, onSelect }: Props) {
 
   useEffect(() => {
     let active = true;
-    credentialedFetch(`${API_URL}/api/models/openrouter/free`)
+    credentialedFetch(`${API_URL}/api/models`)
       .then((response) => (response.ok ? response.json() : null))
       .then((payload) => {
         if (!active || !Array.isArray(payload?.models)) return;
-        const models = payload.models.map((model: { id: string; name: string; description?: string; input_modalities?: string[] }) => ({
+        const models = payload.models.map((model: { id: string; name: string; provider?: string; provider_label?: string; pricing_type?: string; context_length?: number; supports?: Record<string, boolean>; description?: string }) => ({
           id: model.id,
+          modelId: model.id,
+          providerId: model.provider,
           name: model.name.replace(/\s*\(free\)\s*$/i, ""),
           color: "linear-gradient(135deg,#20a887,#146c5a)",
-          provider: "OpenRouter",
-          group: "OpenRouter Free",
-          caps: ["Free", "OpenRouter", ...(model.input_modalities?.includes("image") ? ["Vision"] : [])],
+          provider: model.provider_label || model.provider || "Unknown",
+          group: model.provider_label || model.provider || "Available",
+          caps: [model.pricing_type === "free" ? "Free" : model.pricing_type === "paid" ? "Paid" : "Price unavailable", ...(model.supports?.vision ? ["Vision"] : [])],
           description: model.description,
+          pricingType: (model.pricing_type as Model["pricingType"]) || "unknown",
+          contextLength: model.context_length,
+          supports: model.supports,
           dynamic: true,
         } satisfies Model));
         setLiveModels(models);
@@ -74,7 +79,7 @@ export default function ModelPicker({ selected, onSelect }: Props) {
     models.findIndex((candidate) => candidate.id === model.id) === index,
   );
   const filteredModels = availableModels.filter((m) =>
-    m.name.toLowerCase().includes(query.toLowerCase()),
+    `${m.name} ${m.id} ${m.provider} ${m.group} ${(m.caps ?? []).join(" ")}`.toLowerCase().includes(query.toLowerCase()),
   );
   const grouped = filteredModels.reduce<Record<string, Model[]>>((acc, m) => {
     const group = m.group ?? m.provider ?? "Available";
@@ -135,7 +140,7 @@ export default function ModelPicker({ selected, onSelect }: Props) {
             className="h-11 w-full rounded-xl border border-[var(--chat-border)] bg-[var(--chat-background)] pl-9 pr-3 text-sm text-[var(--chat-foreground)] outline-none placeholder:text-[var(--chat-subtle-foreground)] focus:border-[var(--chat-accent)] focus:ring-2 focus:ring-[var(--chat-focus)] sm:h-10"
           />
           </div>
-          <div role="listbox" aria-label="Available models">
+          <div role="listbox" aria-label="Available models" className="max-h-[min(26rem,60vh)] overflow-y-auto overscroll-contain pr-1 [scrollbar-width:thin]">
           {compactOrderedGroups.map((group) => {
             const models = compactGrouped[group] ?? [];
             return (
@@ -177,7 +182,7 @@ export default function ModelPicker({ selected, onSelect }: Props) {
                         <span className="rounded-full bg-emerald-500/12 px-1.5 py-0.5 text-[9px] font-medium text-emerald-500">
                           Free
                         </span>
-                      ) : null}
+                      ) : m.caps?.includes("Paid") ? <span className="rounded-full bg-amber-500/12 px-1.5 py-0.5 text-[9px] font-medium text-amber-500">Paid</span> : null}
                       {m.disabled ? (
                         <span className="rounded-full bg-[var(--chat-surface-muted)] px-1.5 py-0.5 text-[9px] font-medium text-[var(--chat-subtle-foreground)]">
                           Coming soon
@@ -215,6 +220,11 @@ export default function ModelPicker({ selected, onSelect }: Props) {
             >
               Show more models ({filteredModels.length - compactLimit})
             </button>
+          ) : null}
+          {!filteredModels.length ? (
+            <div className="px-3 py-8 text-center text-sm text-[var(--chat-subtle-foreground)]">
+              No models found
+            </div>
           ) : null}
           </div>
         </div>

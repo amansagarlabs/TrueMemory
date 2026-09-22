@@ -97,10 +97,12 @@ class OpenRouterProvider(LLMProvider):
         api_key: str,
         model: str = "openai/gpt-4o",
         on_usage: Callable[[dict[str, int]], None] | None = None,
+        base_url: str = "https://openrouter.ai/api/v1",
     ):
         self._api_key = api_key
         self._model = model
         self._on_usage = on_usage
+        self._base_url = base_url.rstrip("/")
 
     def name(self) -> str:
         return "openrouter"
@@ -133,7 +135,7 @@ class OpenRouterProvider(LLMProvider):
 
         async with httpx.AsyncClient(timeout=120.0) as client:
             for attempt in range(2):
-                response = await client.post(OPENROUTER_URL, headers=headers, json=payload)
+                response = await client.post(f"{self._base_url}/chat/completions", headers=headers, json=payload)
                 if response.status_code != 200:
                     message = _openrouter_error(response.content, response.status_code)
                     retry_tokens = _affordable_retry_tokens(message, int(payload["max_tokens"]))
@@ -174,7 +176,7 @@ class OpenRouterProvider(LLMProvider):
         async with httpx.AsyncClient(timeout=120.0) as client:
             for attempt in range(2):
                 async with client.stream(
-                    "POST", OPENROUTER_URL, headers=headers, json=payload
+                    "POST", f"{self._base_url}/chat/completions", headers=headers, json=payload
                 ) as response:
                     if response.status_code != 200:
                         body = await response.aread()
@@ -236,7 +238,7 @@ class OpenRouterProvider(LLMProvider):
         async with httpx.AsyncClient(timeout=120.0) as client:
             for attempt in range(2):
                 async with client.stream(
-                    "POST", OPENROUTER_URL, headers=headers, json=payload
+                    "POST", f"{self._base_url}/chat/completions", headers=headers, json=payload
                 ) as response:
                     if response.status_code != 200:
                         body = await response.aread()
@@ -325,7 +327,7 @@ class OpenRouterProvider(LLMProvider):
 
         async with httpx.AsyncClient(timeout=120.0) as client:
             for attempt in range(2):
-                response = await client.post(OPENROUTER_URL, headers=headers, json=payload)
+                response = await client.post(f"{self._base_url}/chat/completions", headers=headers, json=payload)
                 if response.status_code != 200:
                     message = _openrouter_error(response.content, response.status_code)
                     retry_tokens = _affordable_retry_tokens(message, int(payload["max_tokens"]))
@@ -352,6 +354,7 @@ def create_openrouter_provider(
     api_key: str,
     model: str = "openai/gpt-4o",
     on_usage: Callable[[dict[str, int]], None] | None = None,
+    base_url: str = "https://openrouter.ai/api/v1",
 ) -> OpenRouterProvider:
     """Factory function to create OpenRouterProvider."""
-    return OpenRouterProvider(api_key=api_key, model=model, on_usage=on_usage)
+    return OpenRouterProvider(api_key=api_key, model=model, on_usage=on_usage, base_url=base_url)

@@ -51,6 +51,13 @@ class Settings:
     openrouter_model: str = OPENROUTER_FREE_MODEL
     openrouter_vision_model: str = OPENROUTER_FREE_VISION_MODEL
     openrouter_max_tokens: int = 2048
+    llm_provider: str = "openrouter"
+    openai_api_key: str = ""
+    openai_base_url: str = "https://api.openai.com/v1"
+    openai_chat_model: str = "gpt-5.6-terra"
+    openai_fast_model: str = "gpt-5.6-luna"
+    openai_reasoning_model: str = "gpt-5.6-sol"
+    openai_embedding_model: str = "text-embedding-3-small"
     polar_access_token: str = ""
     polar_webhook_secret: str = ""
     polar_api_url: str = "https://api.polar.sh"
@@ -202,6 +209,13 @@ def get_settings() -> Settings:
         openrouter_model=os.getenv("OPENROUTER_MODEL", OPENROUTER_FREE_MODEL),
         openrouter_vision_model=os.getenv("OPENROUTER_VISION_MODEL", OPENROUTER_FREE_VISION_MODEL),
         openrouter_max_tokens=max(256, min(int(os.getenv("OPENROUTER_MAX_TOKENS", "2048")), 8192)),
+        llm_provider=os.getenv("LLM_PROVIDER", "openrouter").strip().lower(),
+        openai_api_key=os.getenv("OPENAI_API_KEY", ""),
+        openai_base_url=os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/"),
+        openai_chat_model=os.getenv("OPENAI_CHAT_MODEL", "gpt-5.6-terra"),
+        openai_fast_model=os.getenv("OPENAI_FAST_MODEL", "gpt-5.6-luna"),
+        openai_reasoning_model=os.getenv("OPENAI_REASONING_MODEL", "gpt-5.6-sol"),
+        openai_embedding_model=os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
         polar_access_token=os.getenv("POLAR_ACCESS_TOKEN", ""),
         polar_webhook_secret=os.getenv("POLAR_WEBHOOK_SECRET", ""),
         polar_api_url=os.getenv("POLAR_API_URL", "https://api.polar.sh").rstrip("/"),

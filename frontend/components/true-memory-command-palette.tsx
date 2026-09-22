@@ -13,7 +13,7 @@ const ITEMS = [
   { label: "Connections", detail: "Manage connected applications", href: "/connectors", icon: Users, keywords: "connectors integrations" },
   { label: "API & SDK", detail: "REST, SDK, and MCP", href: "/api-sdk", icon: Code2, keywords: "api mcp developer" },
   { label: "Activity", detail: "Review recent work", href: "/activity", icon: Activity, keywords: "history events" },
-  { label: "Usage", detail: "Review account usage", href: "/credits", icon: CreditCard, keywords: "credits limits" },
+  { label: "Usage", detail: "Review token and account usage", href: "/usage", icon: CreditCard, keywords: "tokens credits limits billing" },
   { label: "Profile", detail: "Account settings", href: "/profile", icon: Settings, keywords: "settings account" },
   { label: "Artifacts", detail: "Documents and files", href: "/artifacts", icon: FileText, keywords: "documents files" },
 ] as const;
