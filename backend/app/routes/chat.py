@@ -209,17 +209,34 @@ def _is_credit_error(error: BaseException) -> bool:
 logger = logging.getLogger(__name__)
 
 
-def _selected_provider_model(selected_model: str | None, settings) -> tuple[str, str]:
+def _selected_provider_model(
+    selected_model: str | None,
+    settings,
+    *,
+    has_images: bool = False,
+) -> tuple[str, str]:
     """Decode the frontend's provider:model request without trusting URLs."""
     raw = str(selected_model or "").strip()
     if "::" in raw:
         provider, model_id = raw.split("::", 1)
         provider = provider.casefold()
         if provider in {"openai", "openrouter", "ollama", "local"} and model_id:
+            if provider == "openrouter":
+                return provider, resolve_openrouter_model(
+                    model_id,
+                    has_images=has_images,
+                    default_model=getattr(settings, "openrouter_model", "openrouter/free"),
+                    vision_model=getattr(settings, "openrouter_vision_model", "openrouter/free"),
+                )
             return provider, model_id
     if is_local_model(raw) and getattr(settings, "local_model_enabled", False):
         return "ollama", resolve_local_model(raw, settings.ollama_model)
-    return "openrouter", resolve_openrouter_model(raw, default_model=settings.openrouter_model)
+    return "openrouter", resolve_openrouter_model(
+        raw,
+        has_images=has_images,
+        default_model=getattr(settings, "openrouter_model", "openrouter/free"),
+        vision_model=getattr(settings, "openrouter_vision_model", "openrouter/free"),
+    )
 
 
 def _normalized_conversation_id(conversation_id: str, user_id: str) -> str:
@@ -1105,7 +1122,11 @@ async def _chat_event_stream(
             yield sse("error", {"message": str(exc)})
             return
 
-    requested_provider, requested_model_id = _selected_provider_model(selected_model, settings)
+    requested_provider, requested_model_id = _selected_provider_model(
+        selected_model,
+        settings,
+        has_images=bool(image_attachments),
+    )
     response_model = requested_model_id
     # Ollama is a developer-only provider unless explicitly provisioned as a
     # separate production service. Render's web service must use OpenRouter;

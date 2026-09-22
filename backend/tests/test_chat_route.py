@@ -5,6 +5,23 @@ from app.auth_middleware import AuthContext
 from app.routes import chat
 
 
+def test_selected_openrouter_alias_resolves_to_provider_model() -> None:
+    settings = type(
+        "Settings",
+        (),
+        {
+            "openrouter_model": "openrouter/free",
+            "openrouter_vision_model": "openrouter/free",
+            "local_model_enabled": False,
+        },
+    )()
+
+    assert chat._selected_provider_model("openrouter::openrouter-free", settings) == (
+        "openrouter",
+        "openrouter/free",
+    )
+
+
 def test_conversation_messages_normalize_legacy_ids(monkeypatch) -> None:
     captured: dict[str, str] = {}
 
