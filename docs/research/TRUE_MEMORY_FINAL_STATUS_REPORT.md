@@ -189,3 +189,6 @@ The active backend configuration uses Supabase PostgreSQL through `DATABASE_URL`
 ## Phase 11 foundation
 
 Phase 11 adds a deterministic, brain-inspired foundation only: bounded working-memory context, typed episodic evidence, semantic-layer metadata and lifecycle-event shape. It does not enable adaptive learning or change L4/L5 certification.
+## Phase 11.5 runtime validation
+
+Phase 11.5 adds the runtime-validation evidence pack for provider selection, streaming, tool calling, model switching, usage accounting, contextual memory and cross-provider continuity. Deterministic local checks remain the certification baseline. Live OpenAI chat, authenticated browser E2E, measured performance, and cross-provider continuity remain **NOT VERIFIED** because the local OpenAI configuration is a placeholder and no isolated test identity was available. The deployed OpenAI health endpoint proves availability/model discovery only; it does not prove successful chat generation. L4 remains **HARDENED — LIVE EVIDENCE PARTIAL** and L5 remains **NOT IMPLEMENTED**.

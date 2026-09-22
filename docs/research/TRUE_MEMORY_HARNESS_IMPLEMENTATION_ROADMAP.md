@@ -856,3 +856,6 @@ The competitive audit supersedes feature-copying assumptions in this roadmap. Ex
 ## Phase 11 boundary
 
 Future agentic-brain work must reuse existing MemoryCore, Governor, conflict resolution, temporal semantics, provenance and telemetry. Working/episodic/semantic/consolidated/shared layers are conceptual metadata and orchestration boundaries, not permission to create duplicate stores or silently implement L5.
+## Phase 11.5 validation boundary
+
+Phase 11.5 is an evidence and runtime-validation phase, not a new memory architecture. Provider routing, streaming, tool calling, usage/pricing, model switching, contextual memory and cross-provider test scenarios are documented. Live provider generation, authenticated browser E2E, performance measurements and cross-provider continuity require an isolated test identity and funded/valid provider credentials before they can be certified. No result may be promoted to L4 PROVEN or L5 implementation from documentation alone.
