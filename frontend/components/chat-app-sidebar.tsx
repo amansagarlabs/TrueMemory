@@ -204,6 +204,7 @@ export function ChatAppSidebar({
       setLoading(false);
       return;
     }
+    recentLimitRef.current = RECENT_CHAT_BATCH_SIZE;
     setLoading(true);
     try {
       const items = await fetchRecentConversations(
@@ -225,7 +226,7 @@ export function ChatAppSidebar({
     const nextLimit = recentLimitRef.current + RECENT_CHAT_BATCH_SIZE;
     setLoadingMoreRecents(true);
     try {
-      const items = await fetchRecentConversations(nextLimit);
+      const items = await fetchRecentConversations(nextLimit, activeWorkspaceId);
       recentLimitRef.current = nextLimit;
       setRecentChats(items);
       setHasMoreRecents(items.length >= nextLimit);
@@ -236,7 +237,7 @@ export function ChatAppSidebar({
     } finally {
       setLoadingMoreRecents(false);
     }
-  }, [hasMoreRecents, loadingMoreRecents]);
+  }, [activeWorkspaceId, hasMoreRecents, loadingMoreRecents]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadRecents(), 0);
@@ -344,6 +345,11 @@ export function ChatAppSidebar({
   const isChatRoute = pathname === "/chat";
   const pinnedChats = recentChats.filter((chat) => chat.is_pinned);
   const regularChats = recentChats.filter((chat) => !chat.is_pinned);
+
+  useEffect(() => {
+    if (pinnedChats.length > 0) setPinnedHistoryOpen(true);
+    if (regularChats.length > 0) setRecentHistoryOpen(true);
+  }, [pinnedChats.length, regularChats.length]);
 
   function toggleSection(section: string) {
     setOpenSections((current) => ({ ...current, [section]: !current[section] }));

@@ -107,7 +107,8 @@ from services.tool_calling_loop import (
 from services.memory_tool_registry import get_memory_tool_definitions
 from services.llm_provider import LLMProvider, Message, ToolDefinition
 from services.token_usage import record_chat_usage
-from services.providers import create_openrouter_provider
+from services.providers import create_openrouter_provider, create_openai_provider
+from services.model_catalog import get_model_catalog
 from services.context_retrieval import (
     CallableContextProvider,
     ContextProviderRegistry,
@@ -205,6 +206,19 @@ def _is_credit_error(error: BaseException) -> bool:
         or "purchase credits" in message
     )
 logger = logging.getLogger(__name__)
+
+
+def _selected_provider_model(selected_model: str | None, settings) -> tuple[str, str]:
+    """Decode the frontend's provider:model request without trusting URLs."""
+    raw = str(selected_model or "").strip()
+    if "::" in raw:
+        provider, model_id = raw.split("::", 1)
+        provider = provider.casefold()
+        if provider in {"openai", "openrouter", "ollama", "local"} and model_id:
+            return provider, model_id
+    if is_local_model(raw) and getattr(settings, "local_model_enabled", False):
+        return "ollama", resolve_local_model(raw, settings.ollama_model)
+    return "openrouter", resolve_openrouter_model(raw, default_model=settings.openrouter_model)
 
 
 def _normalized_conversation_id(conversation_id: str, user_id: str) -> str:
@@ -1085,19 +1099,15 @@ async def _chat_event_stream(
             yield sse("error", {"message": str(exc)})
             return
 
-    response_model = resolve_openrouter_model(
-        selected_model,
-        has_images=bool(image_content),
-        default_model=settings.openrouter_model,
-        vision_model=settings.openrouter_vision_model,
-    )
+    requested_provider, requested_model_id = _selected_provider_model(selected_model, settings)
+    response_model = requested_model_id
     # Ollama is a developer-only provider unless explicitly provisioned as a
     # separate production service. Render's web service must use OpenRouter;
     # otherwise a stale UI selection can hang until the instance is restarted.
-    requested_local_model = is_local_model(selected_model) and bool(
+    requested_local_model = requested_provider in {"ollama", "local"} and bool(
         getattr(settings, "local_model_enabled", False)
     )
-    local_model = resolve_local_model(selected_model, settings.ollama_model)
+    local_model = requested_model_id if requested_provider == "ollama" else resolve_local_model(selected_model, settings.ollama_model)
 
     yield sse(
         "status",
@@ -2138,10 +2148,19 @@ async def _chat_event_stream(
                 else:
                     # Create provider using provider interface
                     # OpenRouter is one implementation; swap provider here for other LLMs
-                    provider = create_openrouter_provider(
-                        api_key=settings.openrouter_api_key,
-                        model=response_model,
-                    )
+                    if requested_provider == "openai":
+                        if not settings.openai_api_key:
+                            raise RuntimeError("OpenAI is not configured on the backend.")
+                        provider = create_openai_provider(
+                            api_key=settings.openai_api_key,
+                            model=response_model,
+                            base_url=settings.openai_base_url,
+                        )
+                    else:
+                        provider = create_openrouter_provider(
+                            api_key=settings.openrouter_api_key,
+                            model=response_model,
+                        )
 
                     # Run the tool calling loop with provider interface
                     tool_loop_result = None
@@ -2608,7 +2627,7 @@ async def _chat_event_stream(
                 settings=settings,
                 user_id=resolved_user_id,
                 model=response_model,
-                provider="openrouter" if not requested_local_model else "ollama",
+                provider=requested_provider,
                 input_text="\n".join(str(message.get("content") or "") for message in messages if isinstance(message, dict)),
                 output_text=answer_text,
             )

@@ -39,5 +39,8 @@ export function saveActiveWorkspaceId(userId: string, workspaceId: string) {
   if (workspaceId) url.searchParams.set("workspace", workspaceId);
   else url.searchParams.delete("workspace");
   window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+  window.dispatchEvent(new CustomEvent("kontext-workspace-changed", {
+    detail: { userId, workspaceId },
+  }));
   window.dispatchEvent(new Event("kontext-workspaces-changed"));
 }

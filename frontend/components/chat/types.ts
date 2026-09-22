@@ -211,14 +211,28 @@ const OPENROUTER_MODELS: Model[] = [
 
 const CONNECTED_PROVIDER_MODELS: Model[] = [
   {
-    id: "openai-gpt-5-mini",
-    name: "GPT-5 Mini",
+    id: "openai-gpt-5.4-mini",
+    modelId: "gpt-5.4-mini",
+    providerId: "openai",
+    name: "GPT-5.4 Mini",
     color: "linear-gradient(135deg,#8b5cf6,#3b82f6)",
     provider: "OpenAI",
     group: "OpenAI",
     caps: ["Requires OpenAI", "Paid"],
     disabled: true,
-    description: "Enable the OpenAI provider to route chat requests to GPT models.",
+    description: "Efficient OpenAI model for everyday chat and tools.",
+  },
+  {
+    id: "openai-gpt-5.4-nano",
+    modelId: "gpt-5.4-nano",
+    providerId: "openai",
+    name: "GPT-5.4 Nano",
+    color: "linear-gradient(135deg,#14b8a6,#2563eb)",
+    provider: "OpenAI",
+    group: "OpenAI",
+    caps: ["Requires OpenAI", "Paid", "Tools"],
+    disabled: true,
+    description: "Fast, low-cost OpenAI model for extraction and simple tasks.",
   },
   {
     id: "google-gemini-2.5-flash",

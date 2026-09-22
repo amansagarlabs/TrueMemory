@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode, type RefObject } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import {
@@ -782,6 +783,8 @@ function activityFromStatus(
 }
 
 export default function ChatInterface() {
+  const searchParams = useSearchParams();
+  const linkedConversationId = searchParams.get("id");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
@@ -945,6 +948,33 @@ export default function ChatInterface() {
       active = false;
     };
   }, [hydrated]);
+
+  useEffect(() => {
+    async function handleWorkspaceChanged(event: Event) {
+      const authUser = loadAuthUser();
+      const detail = (event as CustomEvent<{ userId?: string; workspaceId?: string }>).detail;
+      if (!authUser || detail?.userId !== authUser.id || !detail.workspaceId) return;
+      setActiveWorkspaceId(detail.workspaceId);
+      setProjectsLoading(true);
+      try {
+        const workspaces = await fetchWorkspaces();
+        const workspace = workspaces.find((item) => item.id === detail.workspaceId);
+        if (!workspace) return;
+        setActiveWorkspaceName(workspace.name);
+        const items = await fetchProjects(detail.workspaceId);
+        setProjects(items);
+        setActiveProjectId("");
+        saveActiveProjectId(authUser.id, detail.workspaceId, null);
+      } catch {
+        setProjects([]);
+        setActiveProjectId("");
+      } finally {
+        setProjectsLoading(false);
+      }
+    }
+    window.addEventListener("kontext-workspace-changed", handleWorkspaceChanged);
+    return () => window.removeEventListener("kontext-workspace-changed", handleWorkspaceChanged);
+  }, []);
 
   useEffect(() => {
     void fetchAgentSkills().then(setSkillMentionOptions).catch(() => setSkillMentionOptions([]));
@@ -2008,11 +2038,10 @@ export default function ChatInterface() {
   openConversationRef.current = openConversation;
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || !linkedConversationId) return;
 
     const openFromUrl = window.setTimeout(() => {
-      const conversationId = new URLSearchParams(window.location.search).get("id");
-      if (conversationId) void openConversationRef.current(conversationId);
+      void openConversationRef.current(linkedConversationId);
     }, 0);
 
     function handleNewChat() {
@@ -2046,7 +2075,7 @@ export default function ChatInterface() {
       window.removeEventListener(CHAT_NEW_EVENT, handleNewChat);
       window.removeEventListener(CHAT_OPEN_EVENT, handleOpenChat);
     };
-  }, [hydrated]);
+  }, [hydrated, linkedConversationId]);
 
   async function runPipeline(doc: UploadResponse, jobId: number) {
     setManualStatusMessage("Please wait. We are preparing your artifact for chat...");
@@ -2514,7 +2543,7 @@ export default function ChatInterface() {
         })),
         fastMode: requestFastMode,
         attachmentContext,
-        selectedModel: requestModel.id,
+        selectedModel: `${requestModel.provider.toLowerCase()}::${requestModel.modelId ?? requestModel.id}`,
         imageAttachments: requestImageAttachments.map((image) => ({
           artifact_id: image.artifactId,
           filename: image.filename,
