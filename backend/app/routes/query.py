@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 from typing import Literal
 from uuid import UUID, uuid4
@@ -24,6 +25,17 @@ from query.models import QueryMode
 
 router = APIRouter(prefix="/api/v1/query", tags=["query"])
 logger = logging.getLogger(__name__)
+
+
+def _sse_event_type(frame: str) -> str | None:
+    """Read the event type without making the stream wrapper own SSE parsing."""
+    if not frame.startswith("data: "):
+        return None
+    try:
+        payload = json.loads(frame[6:].strip())
+    except (TypeError, ValueError):
+        return None
+    return str(payload.get("type") or "") or None
 
 
 class QueryOptions(BaseModel):
@@ -149,6 +161,7 @@ async def query_stream(
     async def guarded_stream():
         iterator = stream.__aiter__()
         pending = asyncio.create_task(iterator.__anext__())
+        saw_done = False
         try:
             while True:
                 done, _ = await asyncio.wait({pending}, timeout=15.0)
@@ -162,7 +175,25 @@ async def query_stream(
                 try:
                     event = pending.result()
                 except StopAsyncIteration:
+                    if not saw_done:
+                        logger.error(
+                            "Query stream ended before completion",
+                            extra={
+                                "user_id": str(auth.user_id),
+                                "conversation_id": body.conversation_id,
+                                "selected_model": body.selected_model,
+                            },
+                        )
+                        yield sse(
+                            "error",
+                            {
+                                "code": "stream_ended",
+                                "message": "The answer stream ended before completion. Please retry the request.",
+                                "retryable": True,
+                            },
+                        )
                     break
+                saw_done = saw_done or _sse_event_type(event) == "done"
                 yield event
                 pending = asyncio.create_task(iterator.__anext__())
         except Exception as exc:

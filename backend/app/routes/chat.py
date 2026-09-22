@@ -1535,10 +1535,16 @@ async def _chat_event_stream(
                 recent_messages,
                 selected_memory_ids,
             )
-            knowledge_retrieval = await asyncio.to_thread(
-                _get_hybrid_retriever(settings).search,
-                knowledge_query,
-                session_key=f"{user_id}:{conversation_id}",
+            knowledge_retrieval = await asyncio.wait_for(
+                asyncio.to_thread(
+                    _get_hybrid_retriever(settings).search,
+                    knowledge_query,
+                    session_key=f"{user_id}:{conversation_id}",
+                ),
+                timeout=max(
+                    1.0,
+                    float(getattr(settings, "knowledge_retrieval_timeout_seconds", 8.0)),
+                ),
             )
             context_parts = []
             for index, chunk in enumerate(knowledge_retrieval["chunks"], start=1):
@@ -1580,7 +1586,25 @@ async def _chat_event_stream(
                     "count": len(knowledge_sources),
                 },
             )
+        except asyncio.TimeoutError:
+            logger.warning(
+                "knowledge_retrieval_timeout",
+                extra={
+                    "request_id": conversation_id,
+                    "user_id": user_id,
+                    "conversation_id": conversation_id,
+                },
+            )
+            yield sse("step.failed", {"step_id": "knowledge", "message": "Curated knowledge retrieval timed out; continuing with conversation context."})
         except Exception:
+            logger.exception(
+                "knowledge_retrieval_failed",
+                extra={
+                    "request_id": conversation_id,
+                    "user_id": user_id,
+                    "conversation_id": conversation_id,
+                },
+            )
             yield sse("step.failed", {"step_id": "knowledge", "message": "Curated knowledge retrieval failed; continuing with conversation context."})
         yield sse("step.completed", {"step_id": "knowledge", "count": len(knowledge_sources)})
     if decision.needs_web:

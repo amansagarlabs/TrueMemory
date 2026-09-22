@@ -84,6 +84,7 @@ class Settings:
     hybrid_bm25_weight: float = 0.45
     hybrid_candidate_k: int = 24
     hybrid_top_k: int = 6
+    knowledge_retrieval_timeout_seconds: float = 8.0
     cross_encoder_model: str = ""
     warm_retrieval_models: bool = False
 
@@ -256,6 +257,10 @@ def get_settings() -> Settings:
         hybrid_bm25_weight=float(os.getenv("HYBRID_BM25_WEIGHT", "0.45")),
         hybrid_candidate_k=int(os.getenv("HYBRID_CANDIDATE_K", "24")),
         hybrid_top_k=int(os.getenv("HYBRID_TOP_K", "6")),
+        knowledge_retrieval_timeout_seconds=max(
+            1.0,
+            min(float(os.getenv("KNOWLEDGE_RETRIEVAL_TIMEOUT_SECONDS", "8")), 30.0),
+        ),
         cross_encoder_model=os.getenv("CROSS_ENCODER_MODEL", ""),
         warm_retrieval_models=_env_bool("WARM_RETRIEVAL_MODELS", False),
         uploads_dir=os.getenv("UPLOADS_DIR", "uploads"),

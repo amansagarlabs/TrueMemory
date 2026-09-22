@@ -5,7 +5,7 @@ class AuthenticationError(TrueMemoryError): pass
 class AuthorizationError(TrueMemoryError): pass
 class ValidationError(TrueMemoryError): pass
 class RateLimitError(TrueMemoryError):
-    def __init__(self, message: str, status: int = 429, request_id: str | None = None, details: object = None, retry_after: int | None = None):
+    def __init__(self, message: str, status: int = 429, request_id: str | None = None, details: object = None, retry_after: float | None = None):
         super().__init__(message, status, request_id, details); self.retry_after = retry_after
 class NotFoundError(TrueMemoryError): pass
 class ConflictError(TrueMemoryError): pass

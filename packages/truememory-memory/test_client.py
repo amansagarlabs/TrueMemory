@@ -1,4 +1,5 @@
 import asyncio
+from datetime import UTC, datetime, timedelta
 import threading
 import unittest
 from unittest.mock import patch
@@ -7,6 +8,11 @@ from truememory_memory import AuthenticationError, ServerError, TrueMemory
 
 
 class ClientTests(unittest.TestCase):
+    def test_retry_after_supports_seconds_and_http_date(self):
+        self.assertEqual(TrueMemory._retry_after_seconds("2"), 2.0)
+        target = datetime.now(UTC) + timedelta(seconds=2)
+        self.assertGreater(TrueMemory._retry_after_seconds(target.strftime("%a, %d %b %Y %H:%M:%S GMT")), 0.0)
+
     def test_safe_requests_retry_server_errors(self):
         client = TrueMemory("token", max_retries=1)
         with patch.object(client, "_sync", side_effect=[ServerError("temporary"), {"status": "ok"}]) as sync:

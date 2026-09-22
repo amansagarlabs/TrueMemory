@@ -1,0 +1,69 @@
+{
+  "phase": "11.16",
+  "status": "PARTIAL",
+  "environment": "disposable-test",
+  "production_touched": false,
+  "checks": [
+    {
+      "name": "retry policy matrix",
+      "status": "PASS",
+      "detail": "408/429/502/503/504 retryable only for safe or idempotent operations; 4xx non-retryable",
+      "duration_ms": 0.06
+    },
+    {
+      "name": "postgres rollback/lease recovery",
+      "status": "SKIPPED",
+      "detail": "TRUEMEMORY_E2E_DATABASE_URL and TRUEMEMORY_E2E_USER_ID are required",
+      "duration_ms": 0.0
+    },
+    {
+      "name": "process crash after commit",
+      "status": "SKIPPED",
+      "detail": "requires disposable process supervisor injection",
+      "duration_ms": 0.0
+    },
+    {
+      "name": "duplicate delivery semantic idempotency",
+      "status": "SKIPPED",
+      "detail": "requires worker handler failure injection",
+      "duration_ms": 0.0
+    },
+    {
+      "name": "transient/permanent worker handler failure",
+      "status": "SKIPPED",
+      "detail": "requires handler fault injection",
+      "duration_ms": 0.0
+    },
+    {
+      "name": "Redis outage and restoration",
+      "status": "SKIPPED",
+      "detail": "Redis is not configured in the current disposable compose stack",
+      "duration_ms": 0.0
+    },
+    {
+      "name": "HTTP 408/429/502/503/504 live injection",
+      "status": "SKIPPED",
+      "detail": "requires disposable HTTP fault injector",
+      "duration_ms": 0.0
+    },
+    {
+      "name": "streaming before/after-token failure",
+      "status": "SKIPPED",
+      "detail": "requires controlled upstream stream termination",
+      "duration_ms": 0.0
+    },
+    {
+      "name": "FastAPI/PostgreSQL restart",
+      "status": "SKIPPED",
+      "detail": "requires process/database supervisor orchestration",
+      "duration_ms": 0.0
+    }
+  ],
+  "performance": {
+    "baseline_phase_11_15_ms": {
+      "p50": 30.76,
+      "p95": 43.28,
+      "p99": 55.56
+    }
+  }
+}

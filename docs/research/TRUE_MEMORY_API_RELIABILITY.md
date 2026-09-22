@@ -10,6 +10,13 @@ The actual source of observed 502/503/504 responses was not established from pro
 
 Errors do not expose secrets, tokens, credentials, private memory, or stack traces. Full endpoint contract and disposable failure-injection E2E remain pending.
 
+Phase 11.16 adds a guarded disposable recovery runner, real PostgreSQL
+rollback/commit and lease-reclaim checks when disposable credentials are
+provided, and SDK hardening for request correlation, idempotency headers,
+Retry-After HTTP dates, and jittered backoff. The failure matrix deliberately
+labels process crashes, Redis outage, streaming termination, live HTTP
+injection, and production root cause as unverified.
+
 ## Phase 11.15 runtime evidence
 
 The disposable PostgreSQL + FastAPI + existing worker stack now has a reproducible real-HTTP runner. Its first complete run passed 18 checks, including readiness, structured validation errors, memory isolation, concurrent durable-job idempotency, changed-payload 409 handling, worker completion, and performance latency. Failure injection for 408/429/502/503/504, SDK live retries, Redis outage, crash/lease recovery, and streaming failures remain separate unverified work. See `TRUE_MEMORY_PHASE11_15_RUNTIME_RELIABILITY_EVIDENCE.md`.

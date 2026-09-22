@@ -37,6 +37,20 @@ export class ServerError extends TrueMemoryError {
     name = "ServerError";
 }
 const safeMethods = new Set(["GET", "HEAD"]);
+const MAX_RETRY_AFTER_MS = 30_000;
+function retryAfterMs(value) {
+    if (!value)
+        return 0;
+    const seconds = Number(value.trim());
+    if (Number.isFinite(seconds))
+        return Math.min(MAX_RETRY_AFTER_MS, Math.max(0, seconds * 1000));
+    const timestamp = Date.parse(value);
+    return Number.isFinite(timestamp) ? Math.min(MAX_RETRY_AFTER_MS, Math.max(0, timestamp - Date.now())) : 0;
+}
+function backoffMs(attempt) {
+    const base = Math.min(8_000, 100 * 2 ** Math.max(0, attempt));
+    return Math.max(0, Math.round(base * (0.8 + Math.random() * 0.4)));
+}
 function joinUrl(base, path) { return `${base.replace(/\/$/, "")}${path}`; }
 export class TrueMemory {
     baseUrl;
@@ -52,6 +66,7 @@ export class TrueMemory {
         const method = (init.method ?? "GET").toUpperCase();
         const attempts = (safeMethods.has(method) || options.retrySafe || options.idempotencyKey) ? this.maxRetries + 1 : 1;
         let last;
+        const requestId = crypto.randomUUID();
         for (let attempt = 0; attempt < attempts; attempt++) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), this.timeoutMs);
@@ -61,25 +76,25 @@ export class TrueMemory {
                 const headers = new Headers(init.headers);
                 headers.set("Authorization", `Bearer ${this.token}`);
                 headers.set("Accept", "application/json");
-                headers.set("X-Request-ID", crypto.randomUUID());
+                headers.set("X-Request-ID", requestId);
                 if (options.idempotencyKey)
                     headers.set("Idempotency-Key", options.idempotencyKey);
                 if (init.body)
                     headers.set("Content-Type", "application/json");
                 Object.entries(this.extraHeaders).forEach(([k, v]) => headers.set(k, v));
                 const response = await this.transport(joinUrl(this.baseUrl, path), { ...init, headers, signal: controller.signal });
-                const requestId = response.headers.get("x-request-id") ?? undefined;
+                const responseRequestId = response.headers.get("x-request-id") ?? requestId;
                 const payload = await response.json().catch(() => undefined);
                 if (response.ok)
                     return payload;
-                throw this.error(response.status, payload, requestId, response.headers.get("retry-after"));
+                throw this.error(response.status, payload, responseRequestId, response.headers.get("retry-after"));
             }
             catch (error) {
                 if (error instanceof TrueMemoryError) {
                     const retryable = [408, 429, 502, 503, 504].includes(error.status);
                     if (retryable && attempt + 1 < attempts) {
                         const retryAfter = error instanceof RateLimitError ? (error.retryAfter ?? 0) * 1000 : 0;
-                        await new Promise(resolve => setTimeout(resolve, retryAfter || 100 * 2 ** attempt));
+                        await new Promise(resolve => setTimeout(resolve, retryAfter || backoffMs(attempt)));
                         last = error;
                         continue;
                     }
@@ -89,7 +104,7 @@ export class TrueMemory {
                     throw new NetworkError("Request cancelled", 0);
                 if (attempt + 1 < attempts) {
                     last = error;
-                    await new Promise(resolve => setTimeout(resolve, 100 * 2 ** attempt));
+                    await new Promise(resolve => setTimeout(resolve, backoffMs(attempt)));
                     continue;
                 }
                 throw new NetworkError("Network request failed", 0, undefined, error);
@@ -107,7 +122,7 @@ export class TrueMemory {
         return new NotFoundError(...args); if (status === 409)
         return new ConflictError(...args); if (status === 422)
         return new ValidationError(...args); if (status === 429)
-        return new RateLimitError(String(message), status, requestId, payload, retryAfter ? Number(retryAfter) : undefined); if (status >= 500)
+        return new RateLimitError(String(message), status, requestId, payload, retryAfter ? retryAfterMs(retryAfter) / 1000 : undefined); if (status >= 500)
         return new ServerError(...args); return new TrueMemoryError(...args); }
     remember(input, options) { return this.request("/v1/memories", { method: "POST", body: JSON.stringify(input) }, options); }
     store(input, options) { return this.request("/v1/memory/store", { method: "POST", body: JSON.stringify(input) }, options); }

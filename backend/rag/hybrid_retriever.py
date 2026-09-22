@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 import math
 import threading
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
@@ -165,6 +165,13 @@ class HybridKnowledgeRetriever:
 
     def _dense_scores(self, question: str) -> list[float]:
         chunks = self._chunks or []
+        # Dense retrieval is opt-in because loading sentence-transformers in a
+        # small web instance can exhaust the process before the answer stream
+        # has a chance to report an error. BM25 remains the deterministic
+        # production fallback unless the operator explicitly enables model
+        # warmup/semantic retrieval.
+        if not bool(getattr(self.settings, "warm_retrieval_models", False)):
+            return [0.0] * len(chunks)
         try:
             if self._vectors is None:
                 with self._lock:

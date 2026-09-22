@@ -117,6 +117,35 @@ def test_query_stream_http_emits_error_event_on_runtime_failure(monkeypatch):
     assert "Query stream failed: boom" in response.text
 
 
+def test_query_stream_http_reports_unexpected_clean_eof(monkeypatch):
+    app = FastAPI()
+    app.include_router(query.router)
+
+    async def fake_require_auth():
+        return AuthContext(authenticated=True, user={"id": "user-1"})
+
+    async def fake_stream(**_kwargs):
+        yield 'data: {"type":"status","message":"starting"}\n\n'
+
+    monkeypatch.setattr(
+        query,
+        "get_settings",
+        lambda: type("Settings", (), {"openrouter_api_key": "test-key"})(),
+    )
+    monkeypatch.setattr(query, "_chat_event_stream", fake_stream)
+    app.dependency_overrides[require_auth] = fake_require_auth
+
+    client = TestClient(app)
+    response = client.post(
+        "/api/v1/query/stream",
+        json={"question": "What is TrueMemory?"},
+    )
+
+    assert response.status_code == 200
+    assert '"type": "error"' in response.text or '"type":"error"' in response.text
+    assert "stream ended before completion" in response.text
+
+
 def test_query_stream_http_accepts_live_chat_payload(monkeypatch):
     app = FastAPI()
     app.include_router(query.router)

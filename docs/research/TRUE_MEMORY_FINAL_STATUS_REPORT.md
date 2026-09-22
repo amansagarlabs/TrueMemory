@@ -228,3 +228,16 @@ The memory write-path audit is documented. Existing source ingestion uses the ca
 ## Phase 11.15 runtime reliability evidence
 
 A disposable PostgreSQL + real FastAPI + existing ingestion-worker stack was built and exercised over HTTP. The run passed 18 checks covering liveness/readiness, structured 401/422 errors, memory CRUD/search, cross-user isolation, concurrent ingestion idempotency, changed-payload conflict handling, worker completion, and performance (`p50 30.76 ms`, `p95 43.28 ms`, `p99 55.56 ms`). SDK live retry, Redis outage, worker crash/lease recovery, streaming failure, process restart, rollback, and production 502/503/504 evidence remain **NOT VERIFIED**. No HA or zero-downtime claim is made.
+
+## Phase 11.16 failure recovery
+
+Phase 11.16 hardens the existing Python/TypeScript SDK retry boundaries,
+preserves request correlation across retries, handles Retry-After seconds and
+HTTP dates with a cap, and promotes mutation idempotency keys to headers. A
+guarded disposable recovery runner covers retry classification plus real
+PostgreSQL rollback/commit and lease recovery when disposable identity
+variables are supplied. The phase remains **PARTIAL**: process-crash-after-
+commit, duplicate worker delivery, handler fault injection, Redis outage
+comparison, live HTTP status injection, restart orchestration, and streaming
+termination tests remain **NOT VERIFIED**. No production data was touched and
+no HA/zero-downtime/production-readiness claim is made.

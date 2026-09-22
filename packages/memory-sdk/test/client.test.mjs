@@ -18,6 +18,42 @@ test("retries safe GET requests but not writes", async () => {
   assert.equal(calls, 3);
 });
 
+test("keeps one request correlation id across retries", async () => {
+  const requestIds = [];
+  let calls = 0;
+  const client = new TrueMemory({
+    baseUrl: "http://memory.test",
+    token: "token",
+    maxRetries: 1,
+    fetch: async (_url, init) => {
+      calls += 1;
+      requestIds.push(new Headers(init.headers).get("x-request-id"));
+      return calls === 1 ? response(503, { detail: "temporary" }) : response(200, { status: "ok" });
+    },
+  });
+  await client.health();
+  assert.equal(requestIds.length, 2);
+  assert.ok(requestIds[0]);
+  assert.equal(requestIds[0], requestIds[1]);
+});
+
+test("does not retry idempotency conflicts", async () => {
+  let calls = 0;
+  const client = new TrueMemory({
+    baseUrl: "http://memory.test",
+    token: "token",
+    maxRetries: 2,
+    fetch: async () => {
+      calls += 1;
+      return response(409, { detail: "idempotency conflict" });
+    },
+  });
+  await assert.rejects(
+    () => client.store({ key: "x", content: "y" }, { idempotencyKey: "same-operation" }),
+  );
+  assert.equal(calls, 1);
+});
+
 test("supports cancellation", async () => {
   const client = new TrueMemory({ baseUrl: "http://memory.test", token: "token", fetch: (_url, init) => new Promise((_resolve, reject) => init.signal.addEventListener("abort", () => reject(new Error("aborted")))) });
   const controller = new AbortController();
