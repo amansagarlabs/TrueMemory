@@ -143,7 +143,7 @@ export const AnimatedThemeToggler = ({
   onThemeChange,
   ...props
 }: AnimatedThemeTogglerProps) => {
-  const THEME_CHANGE_EVENT = "kontext-theme-change"
+  const THEME_CHANGE_EVENT = "TrueMemory-theme-change"
   const shape = variant ?? "circle"
   const isControlled = theme !== undefined
   const [internalIsDark, setInternalIsDark] = useState(false)

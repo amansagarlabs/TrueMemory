@@ -4,7 +4,7 @@ import { useState } from "react";
 import { PaperDither, type DitherShape } from "@/components/ui/paper-dither";
 import { IconCheck, IconX } from "@tabler/icons-react";
 
-const AVATAR_KEY = "kontext-dither-avatar";
+const AVATAR_KEY = "TrueMemory-dither-avatar";
 
 export const avatars: Array<{
   id: string;

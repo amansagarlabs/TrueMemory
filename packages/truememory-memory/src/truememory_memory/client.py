@@ -52,7 +52,7 @@ class TrueMemory:
             if exc.code == 422: raise ValidationError(message, exc.code, request_id, details)
             if exc.code == 429: raise RateLimitError(message, exc.code, request_id, details, int(exc.headers.get("retry-after", "0")))
             if exc.code >= 500: raise ServerError(message, exc.code, request_id, details)
-            raise KontextError(message, exc.code, request_id, details)
+            raise TrueMemoryError(message, exc.code, request_id, details)
 
     async def remember(self, key: str, content: str, *, signal=None, **kwargs): return await self._request("/v1/memories", method="POST", payload={"key": key, "content": content, **kwargs}, safe=False, signal=signal)
     async def store(self, key: str, content: str, *, signal=None, **kwargs): return await self._request("/v1/memory/store", method="POST", payload={"key": key, "content": content, **kwargs}, safe=False, signal=signal)

@@ -165,7 +165,7 @@ async def _check_slack(webhook_url: str) -> dict[str, Any]:
     start = time.time()
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
-            res = await client.post(webhook_url, json={"text": "Kontext integration test - you can ignore this."})
+            res = await client.post(webhook_url, json={"text": "TrueMemory integration test - you can ignore this."})
             latency = round((time.time() - start) * 1000)
             return {"connected": res.status_code == 200, "latency_ms": latency}
     except Exception as e:

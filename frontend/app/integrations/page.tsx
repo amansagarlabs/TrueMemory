@@ -102,7 +102,7 @@ const CONNECTORS: ConnectorDef[] = [
   { id: "webhook", name: "Custom Webhook", description: "Generic HTTP webhook endpoint", icon: <Webhook aria-hidden="true" className="size-5" />, category: "Development", needsKey: false, needsUrl: true, keyPlaceholder: "", urlPlaceholder: "https://your-webhook.com/endpoint" },
 ];
 
-const STORAGE_KEY = "kontext-integrations";
+const STORAGE_KEY = "TrueMemory-integrations";
 
 function loadSaved(): Record<string, { connected: boolean; apiKey?: string; url?: string; result?: ConnectorTestResult }> {
   if (typeof window === "undefined") return {};

@@ -1,1 +1,1 @@
-"""Deterministic, network-free evaluation harness for Kontext routing."""
+"""Deterministic, network-free evaluation harness for TrueMemory routing."""

@@ -8,7 +8,7 @@ Documentation architecture: [TrueMemory Documentation Architecture](./architectu
 
 The legacy files below are retained as historical repository sources. Product claims should be checked against the current implementation and the TrueMemory route audit before publication.
 
-Canonical source-of-truth files for Kontext:
+Canonical source-of-truth files for TrueMemory:
 
 - [Research](./research/MEMORY_RESEARCH.md)
 - [Vision](./vision/VISION.md)

@@ -89,9 +89,9 @@ import type {
 } from "@/lib/types";
 import { fetchRecentConversations, updateConversation, type ConversationAction } from "@/services/api";
 
-export const CHAT_NEW_EVENT = "kontext-chat-new";
-export const CHAT_OPEN_EVENT = "kontext-chat-open";
-export const CHAT_RECENTS_CHANGED_EVENT = "kontext-chat-recents-changed";
+export const CHAT_NEW_EVENT = "TrueMemory-chat-new";
+export const CHAT_OPEN_EVENT = "TrueMemory-chat-open";
+export const CHAT_RECENTS_CHANGED_EVENT = "TrueMemory-chat-recents-changed";
 const RECENT_CHAT_BATCH_SIZE = 25;
 
 type ConversationDialogState =

@@ -19,7 +19,7 @@ import logging
 import time
 from collections import defaultdict
 from dataclasses import dataclass, field
-from threading import Lock
+from threading import RLock
 from typing import Any
 
 
@@ -39,7 +39,9 @@ class MetricsCollector:
         self._counters: dict[str, int] = defaultdict(int)
         self._gauges: dict[str, float] = {}
         self._histograms: dict[str, list[float]] = defaultdict(list)
-        self._lock = Lock()
+        # get_all() snapshots histograms through get_histogram(), which also
+        # takes this lock. Reentrancy prevents a self-deadlock on that path.
+        self._lock = RLock()
         self._start_time = time.monotonic()
 
     def increment(self, name: str, value: int = 1, labels: dict[str, str] | None = None) -> None:

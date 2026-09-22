@@ -18,7 +18,7 @@ def _response(method: str, path: str, payload: dict, status: int = 200):
 def test_publish_target_rejects_unsafe_branches() -> None:
     with pytest.raises(ValueError):
         publisher._validate_publish_target(
-            "aman/kontext",
+            "aman/TrueMemory",
             "main",
             "../unsafe",
         )
@@ -56,7 +56,7 @@ def test_pull_request_uploads_reviewed_commit_without_runtime_network(
                 path,
                 {
                     "number": 42,
-                    "html_url": "https://github.com/aman/kontext/pull/42",
+                    "html_url": "https://github.com/aman/TrueMemory/pull/42",
                     "title": json["title"],
                 },
                 201,
@@ -70,9 +70,9 @@ def test_pull_request_uploads_reviewed_commit_without_runtime_network(
     result = asyncio.run(
         publisher.publish_pull_request(
             token="secret",
-            repository="aman/kontext",
+            repository="aman/TrueMemory",
             base="main",
-            branch="kontext/task-1",
+            branch="TrueMemory/task-1",
             title="Fix app",
             body="Reviewed change",
             commit={

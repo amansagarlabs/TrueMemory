@@ -1,4 +1,4 @@
-const ONBOARDING_KEY = "kontext-onboarding-complete";
+const ONBOARDING_KEY = "TrueMemory-onboarding-complete";
 
 export function hasCompletedOnboarding(userId: string) {
   if (typeof window === "undefined") return false;

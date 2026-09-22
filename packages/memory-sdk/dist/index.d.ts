@@ -54,36 +54,36 @@ export type ClientOptions = {
     fetch?: typeof fetch;
     headers?: Record<string, string>;
 };
-export declare class KontextError extends Error {
+export declare class TrueMemoryError extends Error {
     readonly status: number;
     readonly requestId?: string | undefined;
     readonly details?: unknown | undefined;
     constructor(message: string, status: number, requestId?: string | undefined, details?: unknown | undefined);
 }
-export declare class AuthenticationError extends KontextError {
+export declare class AuthenticationError extends TrueMemoryError {
     name: string;
 }
-export declare class AuthorizationError extends KontextError {
+export declare class AuthorizationError extends TrueMemoryError {
     name: string;
 }
-export declare class ValidationError extends KontextError {
+export declare class ValidationError extends TrueMemoryError {
     name: string;
 }
-export declare class RateLimitError extends KontextError {
+export declare class RateLimitError extends TrueMemoryError {
     name: string;
     readonly retryAfter?: number;
     constructor(message: string, status: number, requestId?: string, details?: unknown, retryAfter?: number);
 }
-export declare class NotFoundError extends KontextError {
+export declare class NotFoundError extends TrueMemoryError {
     name: string;
 }
-export declare class ConflictError extends KontextError {
+export declare class ConflictError extends TrueMemoryError {
     name: string;
 }
-export declare class NetworkError extends KontextError {
+export declare class NetworkError extends TrueMemoryError {
     name: string;
 }
-export declare class ServerError extends KontextError {
+export declare class ServerError extends TrueMemoryError {
     name: string;
 }
 export declare class TrueMemory {

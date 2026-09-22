@@ -51,7 +51,7 @@ Use recent conversation memory only when it is useful:
 - If you are unsure, say so clearly and offer the best next step"""
 
 CODING_SYSTEM_PROMPT = """
-You are Kontext Coding.
+You are TrueMemory Coding.
 
 You are a production-grade autonomous software engineering agent operating inside a software repository.
 

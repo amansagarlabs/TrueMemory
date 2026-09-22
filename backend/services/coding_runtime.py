@@ -73,7 +73,7 @@ class _UnifiedPatchFile:
 
 
 def _container_name(task_id: str) -> str:
-    return f"kontext-task-{UUID(task_id).hex}"
+    return f"TrueMemory-task-{UUID(task_id).hex}"
 
 
 def _workspace_path(settings: Any, task_id: str) -> Path:
@@ -815,7 +815,7 @@ async def _download_repository(
         "Accept": "application/vnd.github+json",
         "Authorization": f"Bearer {token}",
         "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "KONTEXT-Coding-Runtime",
+        "User-Agent": "TrueMemory-Coding-Runtime",
     }
     try:
         async with httpx.AsyncClient(
@@ -1030,11 +1030,11 @@ async def _initialize_git_repository(
     commands = [
         ("git", "check-ref-format", "--branch", branch),
         ("git", "init"),
-        ("git", "config", "user.name", "KONTEXT Coding Agent"),
-        ("git", "config", "user.email", "coding-agent@kontext.local"),
+        ("git", "config", "user.name", "TrueMemory Coding Agent"),
+        ("git", "config", "user.email", "coding-agent@TrueMemory.local"),
         ("git", "checkout", "-B", branch),
         ("git", "add", "--all"),
-        ("git", "commit", "--allow-empty", "-m", "KONTEXT runtime baseline"),
+        ("git", "commit", "--allow-empty", "-m", "TrueMemory runtime baseline"),
     ]
     for command in commands:
         result = await _run_process(
@@ -1099,7 +1099,7 @@ async def _commit_runtime_plan_baseline(*, task_id: str) -> None:
         "git",
         "commit",
         "-m",
-        "Update Kontext plan baseline",
+        "Update TrueMemory plan baseline",
         timeout=30.0,
     )
     if committed.exit_code != 0:
@@ -1192,7 +1192,7 @@ async def start_runtime(
         "--name",
         container,
         "--label",
-        f"kontext.task_id={task_id}",
+        f"TrueMemory.task_id={task_id}",
         "--network",
         "none",
         "--read-only",
@@ -1407,7 +1407,7 @@ async def export_runtime_working_tree(
             "sh",
             "-c",
             'cat -- "$1"',
-            "kontext-sync",
+            "TrueMemory-sync",
             record["path"],
             timeout=20.0,
         )
@@ -1777,12 +1777,12 @@ async def start_runtime_preview(
     if status["status"] != "running":
         raise RuntimeError("coding_runtime_not_running")
     launch_script = (
-        "if [ -f /tmp/kontext-preview.pid ]; then "
-        "kill \"$(cat /tmp/kontext-preview.pid)\" 2>/dev/null || true; "
+        "if [ -f /tmp/TrueMemory-preview.pid ]; then "
+        "kill \"$(cat /tmp/TrueMemory-preview.pid)\" 2>/dev/null || true; "
         "fi; "
         f"nohup sh -lc {shlex.quote(normalized)} "
-        "> /tmp/kontext-preview.log 2>&1 < /dev/null & "
-        "echo $! > /tmp/kontext-preview.pid"
+        "> /tmp/TrueMemory-preview.log 2>&1 < /dev/null & "
+        "echo $! > /tmp/TrueMemory-preview.pid"
     )
     result = await _run_process(
         "docker",

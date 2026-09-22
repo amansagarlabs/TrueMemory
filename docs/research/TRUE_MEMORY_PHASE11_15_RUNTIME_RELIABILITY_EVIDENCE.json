@@ -1,0 +1,160 @@
+{
+  "environment": "DISPOSABLE_TEST",
+  "base_url": "http://127.0.0.1:18000",
+  "checks": [
+    {
+      "name": "liveness",
+      "expected": "200",
+      "actual": 200,
+      "passed": true,
+      "duration_ms": 23.32,
+      "detail": "Backend process is running."
+    },
+    {
+      "name": "readiness",
+      "expected": "200",
+      "actual": 200,
+      "passed": true,
+      "duration_ms": 13.01,
+      "detail": ""
+    },
+    {
+      "name": "memory-health",
+      "expected": "200",
+      "actual": 200,
+      "passed": true,
+      "duration_ms": 4.06,
+      "detail": ""
+    },
+    {
+      "name": "auth-required",
+      "expected": "401",
+      "actual": 401,
+      "passed": true,
+      "duration_ms": 1.89,
+      "detail": "{'error': 'unauthenticated', 'message': 'Please sign in to continue.', 'action': 'redirect_to_login'}"
+    },
+    {
+      "name": "validation",
+      "expected": "422",
+      "actual": 422,
+      "passed": true,
+      "duration_ms": 17.59,
+      "detail": "Request validation failed."
+    },
+    {
+      "name": "error-contract",
+      "expected": "code+retryable+request_id",
+      "actual": 200,
+      "passed": true,
+      "duration_ms": 0.0,
+      "detail": ""
+    },
+    {
+      "name": "memory-write",
+      "expected": "200",
+      "actual": 200,
+      "passed": true,
+      "duration_ms": 30.76,
+      "detail": ""
+    },
+    {
+      "name": "memory-list",
+      "expected": "200",
+      "actual": 200,
+      "passed": true,
+      "duration_ms": 38.45,
+      "detail": ""
+    },
+    {
+      "name": "memory-search",
+      "expected": "200",
+      "actual": 200,
+      "passed": true,
+      "duration_ms": 37.72,
+      "detail": ""
+    },
+    {
+      "name": "memory-get",
+      "expected": "200",
+      "actual": 200,
+      "passed": true,
+      "duration_ms": 39.31,
+      "detail": ""
+    },
+    {
+      "name": "memory-isolation",
+      "expected": "404",
+      "actual": 404,
+      "passed": true,
+      "duration_ms": 43.28,
+      "detail": "Memory not found"
+    },
+    {
+      "name": "job-create",
+      "expected": "200",
+      "actual": 200,
+      "passed": true,
+      "duration_ms": 35.91,
+      "detail": ""
+    },
+    {
+      "name": "concurrent-job-idempotency",
+      "expected": "one-job",
+      "actual": 200,
+      "passed": true,
+      "duration_ms": 0.0,
+      "detail": ""
+    },
+    {
+      "name": "idempotency-conflict",
+      "expected": "409",
+      "actual": 409,
+      "passed": true,
+      "duration_ms": 25.59,
+      "detail": "{'error': 'idempotency_key_conflict', 'message': 'The idempotency key is already bound to a different ingestion request.'}"
+    },
+    {
+      "name": "job-poll",
+      "expected": "200",
+      "actual": 200,
+      "passed": true,
+      "duration_ms": 25.57,
+      "detail": ""
+    },
+    {
+      "name": "job-poll",
+      "expected": "200",
+      "actual": 200,
+      "passed": true,
+      "duration_ms": 55.56,
+      "detail": ""
+    },
+    {
+      "name": "worker-job-completion",
+      "expected": "completed|candidate_ready",
+      "actual": "candidate_ready",
+      "passed": true,
+      "duration_ms": 0.0,
+      "detail": ""
+    },
+    {
+      "name": "performance",
+      "expected": "200",
+      "actual": 200,
+      "passed": true,
+      "duration_ms": 41.8,
+      "detail": ""
+    }
+  ],
+  "summary": {
+    "passed": 18,
+    "failed": 0,
+    "http_latency_ms": {
+      "p50": 30.76,
+      "p95": 43.28,
+      "p99": 55.56
+    },
+    "sample_count": 15
+  }
+}

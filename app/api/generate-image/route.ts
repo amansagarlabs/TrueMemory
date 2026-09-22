@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": process.env.OPENROUTER_SITE_URL ?? "http://localhost:3000",
+        "HTTP-Referer": process.env.OPENROUTER_SITE_URL ?? "https://true-memory.vercel.app",
         "X-Title": "TrueMemory",
       },
       body: JSON.stringify({

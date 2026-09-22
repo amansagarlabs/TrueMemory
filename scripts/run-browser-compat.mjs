@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 import net from "node:net";
 
 const root = process.cwd();
-const authEnv = { ...process.env, KONTEXT_ENABLE_TEST_AUTH: "1" };
+const authEnv = { ...process.env, TrueMemory_ENABLE_TEST_AUTH: "1" };
 const network = "truememory_default";
 const suffix = `${Date.now()}_${process.pid}`;
 const database = `truememory_browser_e2e_${suffix}`.toLowerCase();
@@ -51,14 +51,14 @@ try {
   const frontendBase = `http://127.0.0.1:${frontendPort}`;
   docker(["compose", "exec", "-T", "postgres", "psql", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1", "-c", `CREATE DATABASE ${database}`]);
   docker(["run", "--rm", "--network", network, "-e", `DATABASE_URL=${postgresUrl}`, "truememory-backend:local", "python", "-c", "import os,psycopg; from pathlib import Path; c=psycopg.connect(os.environ['DATABASE_URL']); cur=c.cursor(); [cur.execute(Path(p).read_text(encoding='utf-8')) for p in sorted(Path('/app/db/init').glob('*.sql')) if not p.name.startswith(('015_', '016_'))]; c.commit(); c.close()"]);
-  docker(["run", "-d", "--name", backendName, "--network", network, "-p", "127.0.0.1::8000", "-e", `DATABASE_URL=${postgresUrl}`, "-e", `DATABASE_URL_LOCAL=${postgresUrl}`, "-e", `DATABASE_URL_DOCKER=${postgresUrl}`, "-e", "USE_DOCKER_POSTGRES=false", "-e", "POSTGRES_LOCAL_HOST=postgres", "-e", "POSTGRES_DOCKER_HOST=postgres", "-e", "POSTGRES_PORT=5432", "-e", `POSTGRES_DB=${database}`, "-e", "POSTGRES_USER=postgres", "-e", `POSTGRES_PASSWORD=${postgresPassword}`, "-e", `OPENROUTER_API_KEY=${openrouterApiKey}`, "-e", `CORS_ORIGINS=${frontendBase}`, "-e", "KONTEXT_ENABLE_TEST_AUTH=1", "-e", "AMAN_JWT_SECRET=browser-e2e-test-secret", "truememory-backend:local", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]);
+  docker(["run", "-d", "--name", backendName, "--network", network, "-p", "127.0.0.1::8000", "-e", `DATABASE_URL=${postgresUrl}`, "-e", `DATABASE_URL_LOCAL=${postgresUrl}`, "-e", `DATABASE_URL_DOCKER=${postgresUrl}`, "-e", "USE_DOCKER_POSTGRES=false", "-e", "POSTGRES_LOCAL_HOST=postgres", "-e", "POSTGRES_DOCKER_HOST=postgres", "-e", "POSTGRES_PORT=5432", "-e", `POSTGRES_DB=${database}`, "-e", "POSTGRES_USER=postgres", "-e", `POSTGRES_PASSWORD=${postgresPassword}`, "-e", `OPENROUTER_API_KEY=${openrouterApiKey}`, "-e", `CORS_ORIGINS=${frontendBase}`, "-e", "TrueMemory_ENABLE_TEST_AUTH=1", "-e", "AMAN_JWT_SECRET=browser-e2e-test-secret", "truememory-backend:local", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]);
   const backendPort = docker(["port", backendName, "8000/tcp"]).split(":").pop();
   const apiBase = `http://127.0.0.1:${backendPort}`;
   const health = JSON.parse(await waitFor(`${apiBase}/health`, (status, body) => status === 200 && body.includes(database), "test backend health"));
   if (health.postgres_database !== database) throw new Error(`test backend used database ${health.postgres_database}, expected ${database}`);
   await waitFor(`${apiBase}/readiness`, (status, body) => status === 200 && body.includes('"ready"'), "test backend readiness");
   await waitFor(`${apiBase}/mcp`, status => status === 401, "test MCP endpoint", 120_000, { method: "POST" });
-  credential = JSON.parse(docker(["exec", backendName, "sh", "-lc", "KONTEXT_ENABLE_TEST_AUTH=1 python scripts/bootstrap_browser_test_identity.py"]));
+  credential = JSON.parse(docker(["exec", backendName, "sh", "-lc", "TrueMemory_ENABLE_TEST_AUTH=1 python scripts/bootstrap_browser_test_identity.py"]));
   const result = spawnSync(process.execPath, ["node_modules/@playwright/test/cli.js", "test", "--config", "playwright.browser-compat.config.ts"], { cwd: root, env: { ...authEnv, TM_BASE_URL: apiBase, TEST_BASE_URL: frontendBase, TM_TOKEN: credential.token, TM_WS: "00000000-0000-4000-8000-000000000002", TM_AGENT: "00000000-0000-4000-8000-000000000003" }, stdio: "inherit" });
   if (result.error) throw result.error;
   process.exitCode = result.status ?? 1;

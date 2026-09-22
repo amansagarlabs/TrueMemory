@@ -22,8 +22,8 @@ from services.postgres_store import _connect
 
 
 def main() -> int:
-    if os.getenv("KONTEXT_ENABLE_TEST_AUTH") != "1":
-        print("KONTEXT_ENABLE_TEST_AUTH=1 is required", file=sys.stderr)
+    if os.getenv("TrueMemory_ENABLE_TEST_AUTH") != "1":
+        print("TrueMemory_ENABLE_TEST_AUTH=1 is required", file=sys.stderr)
         return 2
     settings = get_settings()
     if not postgres_enabled(settings):
@@ -43,7 +43,7 @@ def main() -> int:
             cur.execute(
                 """
                 INSERT INTO workspaces (id, owner_user_id, name, platform)
-                VALUES (%s, %s, %s, 'Kontext Memory')
+                VALUES (%s, %s, %s, 'TrueMemory Memory')
                 """,
                 (bindings["workspace_id"], user["id"], "MCP validation workspace"),
             )

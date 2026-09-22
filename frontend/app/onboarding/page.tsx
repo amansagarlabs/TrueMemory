@@ -169,7 +169,7 @@ function OnboardingContent() {
         workspace = {
           id: crypto.randomUUID(),
           name: workspaceName.trim() || "my-workspace",
-          platform: "Kontext Memory",
+          platform: "TrueMemory Memory",
           last_active: new Date().toISOString(),
         } satisfies AuthWorkspace;
         workspace = await persistWorkspace(workspace);

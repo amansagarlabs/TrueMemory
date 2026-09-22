@@ -1,4 +1,4 @@
-"""Hosted Streamable HTTP MCP boundary for the KONTEXT Memory provider.
+"""Hosted Streamable HTTP MCP boundary for the TrueMemory Memory provider.
 
 This module owns protocol translation only. Memory semantics remain in
 ``MemoryClient`` and ``MemoryCore`` and are shared with the REST API.
@@ -19,7 +19,7 @@ from app.config import get_settings
 from services.memory_core import MemoryClient
 from services.rate_limiter import get_rate_limiter
 
-logger = logging.getLogger("kontext.memory.mcp")
+logger = logging.getLogger("TrueMemory.memory.mcp")
 router = APIRouter(tags=["memory-mcp"])
 
 TOOLS: list[dict[str, Any]] = [

@@ -369,7 +369,7 @@ async def post_task(
             workspace_id=str(body.workspace_id),
             user_id=user_id,
             name=body.workspace_name or "My workspace",
-            platform="Kontext Coding",
+            platform="TrueMemory Coding",
         )
         item = create_coding_task(
             settings,

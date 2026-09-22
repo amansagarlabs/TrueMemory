@@ -119,8 +119,8 @@ export async function middleware(req: NextRequest) {
   const platform =
     req.headers.get("x-aman-platform") ??
     (pathname.toLowerCase().startsWith("/amancrawl")
-      ? "Kontext Crawl"
-      : "Kontext Memory");
+      ? "TrueMemory Crawl"
+      : "TrueMemory Memory");
 
   // ── Verify session if token exists ────────────────────────────────────
   let session: { user: Record<string, unknown>; scopes: string[] } | null =

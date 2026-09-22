@@ -1,4 +1,4 @@
-"""Text extraction for supported Kontext artifact formats."""
+"""Text extraction for supported TrueMemory artifact formats."""
 
 from __future__ import annotations
 

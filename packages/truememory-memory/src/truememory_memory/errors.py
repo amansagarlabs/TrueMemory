@@ -12,4 +12,4 @@ class ConflictError(TrueMemoryError): pass
 class NetworkError(TrueMemoryError): pass
 class ServerError(TrueMemoryError): pass
 
-KontextError = TrueMemoryError
+TrueMemoryError = TrueMemoryError

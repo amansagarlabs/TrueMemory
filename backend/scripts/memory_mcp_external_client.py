@@ -1,7 +1,7 @@
 """Dependency-free external MCP smoke client.
 
 It intentionally knows only the provider URL, bearer credential, and MCP tool
-protocol. It does not import any KONTEXT application module.
+protocol. It does not import any TrueMemory application module.
 """
 
 from __future__ import annotations
@@ -30,16 +30,16 @@ def call(endpoint: str, token: str, request_id: int, method: str, params: dict |
 
 
 def main() -> int:
-    endpoint = os.environ.get("KONTEXT_MEMORY_MCP_URL", "http://localhost:8010/mcp")
-    token = os.environ.get("KONTEXT_MEMORY_TOKEN", "")
+    endpoint = os.environ.get("TrueMemory_MEMORY_MCP_URL", "http://localhost:8010/mcp")
+    token = os.environ.get("TrueMemory_MEMORY_TOKEN", "")
     if not token:
-        print("KONTEXT_MEMORY_TOKEN is required", file=sys.stderr)
+        print("TrueMemory_MEMORY_TOKEN is required", file=sys.stderr)
         return 2
     bindings = {}
-    if os.environ.get("KONTEXT_MEMORY_WORKSPACE_ID"):
-        bindings["workspace_id"] = os.environ["KONTEXT_MEMORY_WORKSPACE_ID"]
-    if os.environ.get("KONTEXT_MEMORY_AGENT_ID"):
-        bindings["agent_id"] = os.environ["KONTEXT_MEMORY_AGENT_ID"]
+    if os.environ.get("TrueMemory_MEMORY_WORKSPACE_ID"):
+        bindings["workspace_id"] = os.environ["TrueMemory_MEMORY_WORKSPACE_ID"]
+    if os.environ.get("TrueMemory_MEMORY_AGENT_ID"):
+        bindings["agent_id"] = os.environ["TrueMemory_MEMORY_AGENT_ID"]
     call(endpoint, token, 1, "initialize", {"protocolVersion": "2025-03-26", "capabilities": {}, "clientInfo": {"name": "external-smoke", "version": "1.0"}})
     tools = call(endpoint, token, 2, "tools/list")["tools"]
     expected = {"memory_search", "memory_retrieve", "memory_store", "memory_update", "memory_forget", "memory_current_state", "memory_timeline", "memory_related"}

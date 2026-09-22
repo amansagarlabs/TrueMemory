@@ -8,7 +8,7 @@ The Evaluation Engine is a first-class platform subsystem for measuring an agent
 
 **Verified practice.** Production evaluation systems separate datasets, a task under test, and scores; preserve immutable experiment snapshots; compare experiments; and combine offline tests with online trace scoring. This pattern is documented by [LangSmith evaluation concepts](https://docs.langchain.com/langsmith/evaluation-concepts) and [Braintrust evaluation documentation](https://www.braintrust.dev/docs/evaluate).
 
-**Recommended architecture.** Kontext should implement one Evaluation API over a versioned runner, dataset registry, scorer registry, trace store, and release gate. The runner must evaluate the whole agent system—not only the final text.
+**Recommended architecture.** TrueMemory should implement one Evaluation API over a versioned runner, dataset registry, scorer registry, trace store, and release gate. The runner must evaluate the whole agent system—not only the final text.
 
 **Experimental.** Learned trajectory judges, automatic counterfactual tool replay, and adaptive benchmark generation should remain opt-in until their agreement with human reviewers is measured.
 

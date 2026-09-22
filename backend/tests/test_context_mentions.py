@@ -58,7 +58,7 @@ def test_profile_summary_is_grounded_without_external_links() -> None:
             {"key": "web:old", "content": "Google profile links", "source": "web_search"},
         ],
     )
-    assert answer == "Here’s your saved KONTEXT profile:\n\n- **Username:** aman"
+    assert answer == "Here’s your saved TrueMemory profile:\n\n- **Username:** aman"
     assert "Google" not in answer
 
 
@@ -83,16 +83,16 @@ def test_profile_company_question_returns_only_saved_company() -> None:
     answer = _profile_memory_answer(
         "Where do I work?",
         {"profile-memory"},
-        [{"key": "account_company", "content": "KONTEXT Labs", "source": "account-profile"}],
+        [{"key": "account_company", "content": "TrueMemory Labs", "source": "account-profile"}],
     )
-    assert answer == "Your saved company is **KONTEXT Labs**."
+    assert answer == "Your saved company is **TrueMemory Labs**."
 
     declared_answer = _profile_memory_answer(
         "What is my company's name?",
         {"profile-memory"},
-        [{"key": "company", "content": "My company is KONTEXT Labs.", "source": "user-declared"}],
+        [{"key": "company", "content": "My company is TrueMemory Labs.", "source": "user-declared"}],
     )
-    assert declared_answer == "Your saved company is **KONTEXT Labs**."
+    assert declared_answer == "Your saved company is **TrueMemory Labs**."
 
 
 def test_auto_professional_question_resolves_role_without_explicit_memory_mention() -> None:
@@ -159,7 +159,7 @@ def test_internal_web_cache_never_appears_as_profile_memory() -> None:
 
 def test_ambiguous_workspace_followup_uses_prior_user_topic() -> None:
     messages = [
-        {"role": "user", "content": "Explain the Kontext retrieval architecture."},
+        {"role": "user", "content": "Explain the TrueMemory retrieval architecture."},
         {"role": "assistant", "content": "It combines dense and BM25 retrieval."},
     ]
 
@@ -169,7 +169,7 @@ def test_ambiguous_workspace_followup_uses_prior_user_topic() -> None:
         {"workspace-memory"},
     )
 
-    assert query.startswith("Explain the Kontext retrieval architecture.")
+    assert query.startswith("Explain the TrueMemory retrieval architecture.")
     assert query.endswith("Follow-up question: what is this")
 
 

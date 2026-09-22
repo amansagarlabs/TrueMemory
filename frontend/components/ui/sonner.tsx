@@ -12,10 +12,10 @@ export function Toaster(props: ToasterProps) {
       toastOptions={{
         duration: 2500,
         classNames: {
-          toast: "kontext-toast font-sans",
-          title: "kontext-toast__title",
-          description: "kontext-toast__description",
-          icon: "kontext-toast__icon",
+          toast: "TrueMemory-toast font-sans",
+          title: "TrueMemory-toast__title",
+          description: "TrueMemory-toast__description",
+          icon: "TrueMemory-toast__icon",
         },
       }}
       {...props}

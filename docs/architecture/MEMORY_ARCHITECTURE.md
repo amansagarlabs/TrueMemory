@@ -1,6 +1,6 @@
 # Memory Architecture
 
-This document is the source of truth for the Kontext memory stack.
+This document is the source of truth for the TrueMemory memory stack.
 
 ## Layers
 

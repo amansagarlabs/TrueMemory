@@ -25,7 +25,7 @@ def _archive() -> bytes:
     buffer = BytesIO()
     with tarfile.open(fileobj=buffer, mode="w:gz") as archive:
         content = b'{"scripts":{"test":"node --test"}}'
-        member = tarfile.TarInfo("aman-kontext/package.json")
+        member = tarfile.TarInfo("aman-TrueMemory/package.json")
         member.size = len(content)
         archive.addfile(member, BytesIO(content))
     return buffer.getvalue()
@@ -95,7 +95,7 @@ def test_repository_index_reuses_fresh_user_scoped_cache(monkeypatch, tmp_path) 
         runtime.prepare_code_index(
             settings,
             task_id=first_task,
-            repository="aman/kontext",
+            repository="aman/TrueMemory",
             ref="main",
             github_token="secret",
             cache_scope="user-1",
@@ -105,7 +105,7 @@ def test_repository_index_reuses_fresh_user_scoped_cache(monkeypatch, tmp_path) 
         runtime.prepare_code_index(
             settings,
             task_id=second_task,
-            repository="aman/kontext",
+            repository="aman/TrueMemory",
             ref="main",
             github_token="secret",
             cache_scope="user-1",
@@ -213,10 +213,10 @@ def test_runtime_starts_with_locked_down_docker_controls(monkeypatch, tmp_path) 
         runtime.start_runtime(
             _settings(tmp_path),
             task_id=task_id,
-            repository="aman/kontext",
+            repository="aman/TrueMemory",
             ref="main",
             github_token="secret",
-            plan_artifact="# Current Kontext Goal\n\nBuild the approved task.",
+            plan_artifact="# Current TrueMemory Goal\n\nBuild the approved task.",
         )
     )
 
@@ -236,7 +236,7 @@ def test_runtime_starts_with_locked_down_docker_controls(monkeypatch, tmp_path) 
     ).read_text(encoding="utf-8").startswith('{"scripts"')
     assert (
         tmp_path / UUID(task_id).hex / "plans-goals" / "task.md"
-    ).read_text(encoding="utf-8").startswith("# Current Kontext Goal")
+    ).read_text(encoding="utf-8").startswith("# Current TrueMemory Goal")
     assert any(args[1:4] == ("exec", runtime._container_name(task_id), "git") for args, _ in calls)
 
 
@@ -285,14 +285,14 @@ def test_runtime_can_mount_a_shared_deployment_volume(monkeypatch, tmp_path) -> 
     monkeypatch.setattr(runtime, "_run_process", run)
     monkeypatch.setattr(runtime, "_download_repository", download)
     settings = _settings(tmp_path)
-    settings.coding_runtime_volume = "kontext-coding-workspaces"
+    settings.coding_runtime_volume = "TrueMemory-coding-workspaces"
     task_id = str(uuid4())
 
     asyncio.run(
         runtime.start_runtime(
             settings,
             task_id=task_id,
-            repository="aman/kontext",
+            repository="aman/TrueMemory",
             ref="main",
             github_token="secret",
         )
@@ -301,7 +301,7 @@ def test_runtime_can_mount_a_shared_deployment_volume(monkeypatch, tmp_path) -> 
     docker_run = next(args for args in calls if args[1] == "run")
     mount = docker_run[docker_run.index("--mount") + 1]
     assert mount == (
-        "type=volume,src=kontext-coding-workspaces,dst=/workspace,"
+        "type=volume,src=TrueMemory-coding-workspaces,dst=/workspace,"
         f"volume-subpath={UUID(task_id).hex}"
     )
 

@@ -1,4 +1,4 @@
-# KONTEXT Source Intelligence
+# TrueMemory Source Intelligence
 
 ## Product thesis
 
@@ -25,23 +25,23 @@ specific answer or claim. Both expose their components and unknowns.
   surface. The useful lesson is progressive disclosure, not its citation-pill
   styling. [OpenAI Search help](https://help.openai.com/en/articles/10093903-chatgpt-search-for-enterprise-and-edu)
 - Claude's API returns exact cited passages and source locations as structured
-  data. KONTEXT should retain the supporting excerpt rather than reconstruct it
+  data. TrueMemory should retain the supporting excerpt rather than reconstruct it
   from Markdown. [Claude citations](https://platform.claude.com/docs/en/build-with-claude/citations)
 - NotebookLM lets users hover to read the quoted passage and navigate to its
-  location. KONTEXT should do the same for pages, chunks, and documents.
+  location. TrueMemory should do the same for pages, chunks, and documents.
   [NotebookLM chat citations](https://support.google.com/notebooklm/answer/16179559)
 - Google AI Search places links beside the supported point and previews the
-  destination before navigation. KONTEXT should keep claim and evidence
+  destination before navigation. TrueMemory should keep claim and evidence
   spatially close. [Google AI Search link previews](https://blog.google/products-and-platforms/products/search/explore-web-generative-ai-search/)
-- Glean supports deep links to the exact enterprise passage. KONTEXT should
+- Glean supports deep links to the exact enterprise passage. TrueMemory should
   preserve page/chunk anchors when providers supply them.
   [Glean citations](https://docs.glean.com/user-guide/assistant/glean-chat/glean-chat-citations/glean-citations)
 - Research on generative search has repeatedly found that a visible citation
-  does not guarantee that the source supports the claim. KONTEXT must measure
+  does not guarantee that the source supports the claim. TrueMemory must measure
   coverage and entailment separately.
   [Evaluating Verifiability in Generative Search Engines](https://aclanthology.org/2023.findings-emnlp.467.pdf)
 
-## KONTEXT vocabulary
+## TrueMemory vocabulary
 
 | Object | Meaning |
 | --- | --- |

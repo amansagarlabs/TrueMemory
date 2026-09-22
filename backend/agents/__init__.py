@@ -1,5 +1,5 @@
 """
-Kontext Crawl CrewAI agents — multi-agent orchestration for web intelligence.
+TrueMemory Crawl CrewAI agents — multi-agent orchestration for web intelligence.
 """
 
 from agents.crawl_agents import WebIntelligenceCrew

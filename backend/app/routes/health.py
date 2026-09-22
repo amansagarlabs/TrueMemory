@@ -82,9 +82,9 @@ async def system_status():
         "description": f"PostgreSQL ({postgres['mode']})" if postgres["connected"] else "Cannot connect to database",
     })
 
-    # 3. Kontext Crawl Service
+    # 3. TrueMemory Crawl Service
     services.append({
-        "name": "Kontext Crawl",
+        "name": "TrueMemory Crawl",
         "status": "operational",
         "latency_ms": 0,
         "description": "Web intelligence (scrape, crawl, search, map)",

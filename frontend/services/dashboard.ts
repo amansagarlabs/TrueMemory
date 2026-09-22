@@ -76,7 +76,7 @@ export interface ArtifactItem {
 function authHeaders(): Record<string, string> {
   return {
     "Content-Type": "application/json",
-    ...buildAuthHeaders("Kontext Memory"),
+    ...buildAuthHeaders("TrueMemory Memory"),
   };
 }
 

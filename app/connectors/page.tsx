@@ -97,7 +97,7 @@ type ConnectorSection = {
   connectors: ConnectorDefinition[];
 };
 
-const STORAGE_KEY = "kontext-integrations";
+const STORAGE_KEY = "TrueMemory-integrations";
 const CATEGORIES: Array<"All categories" | ConnectorCategory> = [
   "All categories",
   "AI providers",

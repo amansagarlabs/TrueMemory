@@ -54,14 +54,14 @@ def test_explicit_company_declaration_uses_company_key(tmp_path) -> None:
         settings,
         user_id="user-1",
         doc_id="general",
-        question="My company is KONTEXT Labs.",
+        question="My company is TrueMemory Labs.",
         answer="Saved.",
     )
     memories = get_profile_memories(
         settings, user_id="user-1", doc_id="general", limit=10
     )
     assert memories[0]["key"] == "company"
-    assert memories[0]["content"] == "My company is KONTEXT Labs."
+    assert memories[0]["content"] == "My company is TrueMemory Labs."
 
 
 def test_role_declaration_without_is_uses_role_key(tmp_path) -> None:
@@ -92,7 +92,7 @@ def test_account_profile_fields_sync_into_general_memory(tmp_path) -> None:
         profile={
             "full_name": "Aman Sagar",
             "username": "aman",
-            "company": "KONTEXT Labs",
+            "company": "TrueMemory Labs",
             "bio": "",
         },
     )
@@ -102,7 +102,7 @@ def test_account_profile_fields_sync_into_general_memory(tmp_path) -> None:
     )
     by_key = {item["key"]: item for item in memories}
     assert by_key["account_full_name"]["content"] == "Aman Sagar"
-    assert by_key["account_company"]["content"] == "KONTEXT Labs"
+    assert by_key["account_company"]["content"] == "TrueMemory Labs"
     assert by_key["account_company"]["source"] == "account-profile"
     assert by_key["account_username"]["content"] == "aman"
 

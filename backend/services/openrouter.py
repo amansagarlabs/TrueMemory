@@ -8,12 +8,14 @@ LEARNING: The LLM never sees your whole PDF — only the retrieved chunks we inj
 from __future__ import annotations
 
 import json
+import os
 import re
 from collections.abc import AsyncGenerator, Callable
 
 import httpx
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_SITE_URL = os.getenv("OPENROUTER_SITE_URL", "https://true-memory.vercel.app")
 _AFFORDABLE_TOKENS_RE = re.compile(r"can only afford\s+([\d,]+)", re.IGNORECASE)
 
 
@@ -90,8 +92,8 @@ async def stream_chat_completion(
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
-        "X-Title": "Kontext",
+        "HTTP-Referer": OPENROUTER_SITE_URL,
+        "X-Title": "TrueMemory",
     }
     payload = {
         "model": model,
@@ -154,8 +156,8 @@ async def complete_chat_completion(
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
-        "X-Title": "Kontext",
+        "HTTP-Referer": OPENROUTER_SITE_URL,
+        "X-Title": "TrueMemory",
     }
     payload = {
         "model": model,
@@ -195,8 +197,8 @@ async def stream_chat_completion_with_tools(
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
-        "X-Title": "Kontext",
+        "HTTP-Referer": OPENROUTER_SITE_URL,
+        "X-Title": "TrueMemory",
     }
     payload: dict = {
         "model": model,
@@ -284,8 +286,8 @@ async def complete_chat_completion_with_tools(
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "http://localhost:3000",
-        "X-Title": "Kontext",
+        "HTTP-Referer": OPENROUTER_SITE_URL,
+        "X-Title": "TrueMemory",
     }
     payload: dict = {
         "model": model,

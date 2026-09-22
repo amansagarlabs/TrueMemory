@@ -1,10 +1,10 @@
-# Kontext Vision
+# TrueMemory Vision
 
 This document is the source of truth for the long-term product vision.
 
 ## North Star
 
-Kontext remembers what users know, understands what they are doing, and helps complete work over time.
+TrueMemory remembers what users know, understands what they are doing, and helps complete work over time.
 
 Memory is foundation.
 

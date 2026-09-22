@@ -11,7 +11,7 @@ import type {
   ResearchSEOMetadata,
 } from "@/lib/research-types";
 
-// Real Kontext research data derived from docs/research/MEMORY_RESEARCH.md
+// Real TrueMemory research data derived from docs/research/MEMORY_RESEARCH.md
 // and other existing documentation. Values that come from real benchmark data
 // are marked. Placeholders are clearly labeled.
 
@@ -24,10 +24,10 @@ export const researchItems: ResearchItem[] = [
     description:
       "Evaluation of persistent memory systems for AI agents across long-horizon tasks.",
     abstract:
-      "We study how structured memory influences agent performance on tasks spanning days and weeks of continuous operation. Results show significant improvements in task continuity when using Kontext's memory engine versus baseline approaches.",
+      "We study how structured memory influences agent performance on tasks spanning days and weeks of continuous operation. Results show significant improvements in task continuity when using TrueMemory's memory engine versus baseline approaches.",
     authors: [
       { name: "Aman Sagar" },
-      { name: "Kontext Research Team" },
+      { name: "TrueMemory Research Team" },
     ],
     publishedAt: "2026-08-15",
     status: "experimental",
@@ -43,7 +43,7 @@ export const researchItems: ResearchItem[] = [
       {
         label: "Context Reduction",
         value: "98.7%",
-        // This is derived from real Kontext architecture analysis
+        // This is derived from real TrueMemory architecture analysis
       },
       {
         label: "Temporal Accuracy",
@@ -72,7 +72,7 @@ export const researchItems: ResearchItem[] = [
       "Experimental metrics not yet validated against production workloads",
       "Long-term continuity beyond 30 days not evaluated",
     ],
-    githubUrl: "https://github.com/kontext-ai/kontext",
+    githubUrl: "https://github.com/TrueMemory-ai/TrueMemory",
     paperUrl: null,
     pdfUrl: null,
     references: [
@@ -91,7 +91,7 @@ export const researchItems: ResearchItem[] = [
     abstract:
       "We compare pure semantic retrieval, pure keyword retrieval, and hybrid approaches across multiple datasets. Hybrid approaches show consistent improvements in precision at top ranks.",
     authors: [
-      { name: "Kontext Research Team" },
+      { name: "TrueMemory Research Team" },
     ],
     publishedAt: "2026-07-22",
     status: "published",
@@ -138,7 +138,7 @@ export const researchItems: ResearchItem[] = [
       "Results may vary with different embedding models",
       "Keyword retrieval effectiveness depends on query wording",
     ],
-    githubUrl: "https://github.com/kontext-ai/kontext",
+    githubUrl: "https://github.com/TrueMemory-ai/TrueMemory",
     paperUrl: null,
     pdfUrl: null,
   },
@@ -152,7 +152,7 @@ export const researchItems: ResearchItem[] = [
     abstract:
       "We investigate context selection strategies for token-constrained settings. Ranking by relevance score and dependency scoring show the best token efficiency.",
     authors: [
-      { name: "Kontext Research Team" },
+      { name: "TrueMemory Research Team" },
     ],
     publishedAt: "2026-07-01",
     status: "experimental",
@@ -172,12 +172,12 @@ export const researchItems: ResearchItem[] = [
     ],
     datasets: [
       {
-        name: "Internal Kontext corpus",
+        name: "Internal TrueMemory corpus",
         size: 10000,
       },
     ],
     methodology: {
-      dataset: "Internal Kontext corpus",
+      dataset: "Internal TrueMemory corpus",
       questions: 200,
       categories: 4,
       model: "Claude 3.5 Sonnet",
@@ -190,7 +190,7 @@ export const researchItems: ResearchItem[] = [
       "Internal dataset only - results may not generalize",
       "Model-dependent relevance judgments",
     ],
-    githubUrl: "https://github.com/kontext-ai/kontext",
+    githubUrl: "https://github.com/TrueMemory-ai/TrueMemory",
     experimentalNotes: "Values marked experimental - real production data pending",
   },
   {
@@ -204,7 +204,7 @@ export const researchItems: ResearchItem[] = [
       "We evaluate how agent memory affects performance on repeated tasks. Agents with persistent memory show significantly better success rates on horizon-10+ tasks.",
     authors: [
       { name: "Aman Sagar" },
-      { name: "Kontext Research Team" },
+      { name: "TrueMemory Research Team" },
     ],
     publishedAt: "2026-06-15",
     status: "published",
@@ -233,7 +233,7 @@ export const researchItems: ResearchItem[] = [
       questions: 200,
       categories: 3,
       model: "GPT-4o",
-      retrieval: "Kontext memory engine",
+      retrieval: "TrueMemory memory engine",
       evaluation: "Task completion judge",
       run: "2026-06-15",
       commit: "d4e1f3a",
@@ -242,7 +242,7 @@ export const researchItems: ResearchItem[] = [
       "Small sample size (200 trajectories)",
       "Single-model evaluation",
     ],
-    githubUrl: "https://github.com/kontext-ai/kontext",
+    githubUrl: "https://github.com/TrueMemory-ai/TrueMemory",
   },
   {
     slug: "knowledge-graphs",
@@ -254,7 +254,7 @@ export const researchItems: ResearchItem[] = [
     abstract:
       "We evaluate automated knowledge graph construction from user documents. Entity extraction and relationship mapping show high fidelity for technical documentation.",
     authors: [
-      { name: "Kontext Research Team" },
+      { name: "TrueMemory Research Team" },
     ],
     publishedAt: "2026-06-01",
     status: "published",
@@ -293,7 +293,7 @@ export const researchItems: ResearchItem[] = [
       "Domain-specific - may not generalize to creative text",
       "Human judgment subjectivity",
     ],
-    githubUrl: "https://github.com/kontext-ai/kontext",
+    githubUrl: "https://github.com/TrueMemory-ai/TrueMemory",
   },
   {
     slug: "benchmarks-overview",
@@ -301,11 +301,11 @@ export const researchItems: ResearchItem[] = [
     category: "benchmarks",
     title: "Benchmark Suite Overview",
     description:
-      "Summary of Kontext's reproducible benchmark infrastructure.",
+      "Summary of TrueMemory's reproducible benchmark infrastructure.",
     abstract:
       "Description of our benchmark framework, datasets, and evaluation protocols for memory, retrieval, and agent evaluation.",
     authors: [
-      { name: "Kontext Research Team" },
+      { name: "TrueMemory Research Team" },
     ],
     publishedAt: "2026-05-20",
     status: "published",
@@ -338,7 +338,7 @@ export const researchItems: ResearchItem[] = [
       "Benchmark suites may not capture all real-world scenarios",
       "Dataset-specific optimizations possible",
     ],
-    githubUrl: "https://github.com/kontext-ai/kontext",
+    githubUrl: "https://github.com/TrueMemory-ai/TrueMemory",
   },
   {
     slug: "retrieval-context",
@@ -350,7 +350,7 @@ export const researchItems: ResearchItem[] = [
     abstract:
       "We study query rewriting and contextual retrieval strategies. Agents with state-aware retrieval show improved performance on multi-step tasks.",
     authors: [
-      { name: "Kontext Research Team" },
+      { name: "TrueMemory Research Team" },
     ],
     publishedAt: "2026-05-10",
     status: "experimental",
@@ -387,7 +387,7 @@ export const researchItems: ResearchItem[] = [
       "Internal dataset only",
       "State-aware retrieval model-dependent",
     ],
-    githubUrl: "https://github.com/kontext-ai/kontext",
+    githubUrl: "https://github.com/TrueMemory-ai/TrueMemory",
     experimentalNotes: "Experimental metrics - real benchmark data pending",
   },
   {
@@ -429,7 +429,7 @@ export const researchItems: ResearchItem[] = [
       questions: 150,
       categories: 4,
       model: "GPT-4o",
-      retrieval: "Kontext state engine",
+      retrieval: "TrueMemory state engine",
       evaluation: "Task continuation judge",
       run: "2026-04-28",
       commit: "b5c6d7e",
@@ -438,7 +438,7 @@ export const researchItems: ResearchItem[] = [
       "Limited to 150 sessions",
       "Specific task types only",
     ],
-    githubUrl: "https://github.com/kontext-ai/kontext",
+    githubUrl: "https://github.com/TrueMemory-ai/TrueMemory",
   },
   {
     slug: "memory-extraction",
@@ -450,7 +450,7 @@ export const researchItems: ResearchItem[] = [
     abstract:
       "We study the process of extracting salient information from agent interactions and consolidating it into long-term memory. Extraction quality directly impacts retrieval effectiveness.",
     authors: [
-      { name: "Kontext Research Team" },
+      { name: "TrueMemory Research Team" },
     ],
     publishedAt: "2026-04-15",
     status: "experimental",
@@ -488,7 +488,7 @@ export const researchItems: ResearchItem[] = [
       "Human judgment variability",
       "Model-dependent extraction quality",
     ],
-    githubUrl: "https://github.com/kontext-ai/kontext",
+    githubUrl: "https://github.com/TrueMemory-ai/TrueMemory",
     experimentalNotes: "Experimental values - real production metrics pending",
   },
   {
@@ -501,7 +501,7 @@ export const researchItems: ResearchItem[] = [
     abstract:
       "We study models for temporal knowledge updates, contradiction handling, and knowledge versioning. Temporal-aware systems show better long-term coherence.",
     authors: [
-      { name: "Kontext Research Team" },
+      { name: "TrueMemory Research Team" },
     ],
     publishedAt: "2026-04-01",
     status: "published",
@@ -540,6 +540,6 @@ export const researchItems: ResearchItem[] = [
       "Small dataset (200 entries)",
       "Human judgment on temporal changes",
     ],
-    githubUrl: "https://github.com/kontext-ai/kontext",
+    githubUrl: "https://github.com/TrueMemory-ai/TrueMemory",
   },
 ];

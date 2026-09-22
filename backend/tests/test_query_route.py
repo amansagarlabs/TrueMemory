@@ -86,7 +86,7 @@ def test_unified_query_forwards_fast_mode(monkeypatch) -> None:
 
 def test_unified_query_rejects_missing_openrouter_key(monkeypatch) -> None:
     monkeypatch.setattr(query, "get_settings", lambda: type("Settings", (), {"openrouter_api_key": ""})())
-    body = query.QueryRequest(question="What is Kontext?")
+    body = query.QueryRequest(question="What is TrueMemory?")
 
     with pytest.raises(query.HTTPException) as exc_info:
         asyncio.run(query.query_stream(

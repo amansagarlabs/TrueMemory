@@ -1,4 +1,4 @@
-export const ACTIVE_PROJECT_CHANGED_EVENT = "kontext-active-project-changed";
+export const ACTIVE_PROJECT_CHANGED_EVENT = "TrueMemory-active-project-changed";
 
 export function loadActiveProjectId(_userId: string, _workspaceId: string): string {
   if (typeof window === "undefined") return "";

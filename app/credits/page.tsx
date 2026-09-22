@@ -10,7 +10,7 @@ import { buildAuthHeaders, loadAuthUser } from "@/lib/auth";
 import type { AuthUser } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://truememory.onrender.com";
 
 type UsageBucket = {
   used: number;

@@ -8,6 +8,7 @@ not on this specific implementation.
 from __future__ import annotations
 
 import json
+import os
 import re
 from collections.abc import AsyncGenerator, Callable
 from dataclasses import dataclass
@@ -26,6 +27,7 @@ from services.llm_provider import (
 )
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+OPENROUTER_SITE_URL = os.getenv("OPENROUTER_SITE_URL", "https://true-memory.vercel.app")
 _AFFORDABLE_TOKENS_RE = re.compile(r"can only afford\s+([\d,]+)", re.IGNORECASE)
 
 
@@ -121,8 +123,8 @@ class OpenRouterProvider(LLMProvider):
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "http://localhost:3000",
-            "X-Title": "Kontext",
+            "HTTP-Referer": OPENROUTER_SITE_URL,
+            "X-Title": "TrueMemory",
         }
         payload = {
             "model": request.model or self._model,
@@ -162,8 +164,8 @@ class OpenRouterProvider(LLMProvider):
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "http://localhost:3000",
-            "X-Title": "Kontext",
+            "HTTP-Referer": OPENROUTER_SITE_URL,
+            "X-Title": "TrueMemory",
         }
         payload = {
             "model": request.model or self._model,
@@ -219,8 +221,8 @@ class OpenRouterProvider(LLMProvider):
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "http://localhost:3000",
-            "X-Title": "Kontext",
+            "HTTP-Referer": OPENROUTER_SITE_URL,
+            "X-Title": "TrueMemory",
         }
         payload: dict[str, Any] = {
             "model": request.model or self._model,
@@ -312,8 +314,8 @@ class OpenRouterProvider(LLMProvider):
         headers = {
             "Authorization": f"Bearer {self._api_key}",
             "Content-Type": "application/json",
-            "HTTP-Referer": "http://localhost:3000",
-            "X-Title": "Kontext",
+            "HTTP-Referer": OPENROUTER_SITE_URL,
+            "X-Title": "TrueMemory",
         }
         payload: dict[str, Any] = {
             "model": request.model or self._model,

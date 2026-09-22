@@ -402,9 +402,9 @@ export type AuthUser = {
   plan: "free" | "pro" | "team" | "enterprise";
   created_at?: string;
   platforms?: (
-    | "Kontext Memory"
-    | "Kontext Crawl"
-    | "Kontext Web"
+    | "TrueMemory Memory"
+    | "TrueMemory Crawl"
+    | "TrueMemory Web"
     | "AmanAgentLab"
     | "AmanCrawl"
   )[];
@@ -415,9 +415,9 @@ export type AuthWorkspace = {
   id: string;
   name: string;
   platform:
-    | "Kontext Memory"
-    | "Kontext Crawl"
-    | "Kontext Web"
+    | "TrueMemory Memory"
+    | "TrueMemory Crawl"
+    | "TrueMemory Web"
     | "AmanAgentLab"
     | "AmanCrawl";
   last_active: string;

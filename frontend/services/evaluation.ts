@@ -51,7 +51,7 @@ export type EvaluationReport = {
 export async function runEvaluation(signal?: AbortSignal): Promise<EvaluationReport> {
   const response = await fetch(`${API_URL}/api/evaluation/run`, {
     method: "POST",
-    headers: buildAuthHeaders("Kontext Evaluation"),
+    headers: buildAuthHeaders("TrueMemory Evaluation"),
     cache: "no-store",
     signal,
   });
@@ -71,7 +71,7 @@ export async function runEvaluation(signal?: AbortSignal): Promise<EvaluationRep
 export async function runAdminEvaluation(signal?: AbortSignal): Promise<EvaluationReport> {
   const response = await fetch(`${API_URL}/api/evaluation/run`, {
     method: "POST",
-    headers: buildAuthHeaders("Kontext Admin Evaluation"),
+    headers: buildAuthHeaders("TrueMemory Admin Evaluation"),
     cache: "no-store",
     signal,
   });

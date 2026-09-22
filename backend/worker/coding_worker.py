@@ -88,7 +88,7 @@ def user_facing_coding_error(reason: str) -> str:
         ),
         "github_not_configured": "Connect GitHub once before using this repository.",
         "workspace_snapshot_not_uploaded": (
-            "Reconnect the local Git folder so Kontext can refresh its source snapshot."
+            "Reconnect the local Git folder so TrueMemory can refresh its source snapshot."
         ),
         "The coding model returned an empty response.": (
             "The model returned no text after two attempts. Your task and plan are saved; retry to continue."
@@ -1347,7 +1347,7 @@ async def _execute_claimed_run(
                 continue
             candidates.append(
                 ContextCandidate(
-                    kind="kontext_graph",
+                    kind="TrueMemory_graph",
                     label=f"{context_item.get('kind')}: {context_item.get('label')}",
                     content=(
                         str(context_item.get("content") or "")

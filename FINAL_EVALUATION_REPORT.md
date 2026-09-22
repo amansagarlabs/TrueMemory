@@ -1,4 +1,4 @@
-# Final Kontext Agent Evaluation Report
+# Final TrueMemory Agent Evaluation Report
 
 ## Executive conclusion
 
@@ -9,7 +9,7 @@ The report set is structurally complete and internally consistent. It provides a
 - 11 requested Markdown deliverables exist.
 - Each document has one top-level heading and substantive sections.
 - Required coverage is present for runner, datasets, benchmarks, metrics, regression, CI/CD, human review, observability, UI, and implementation sequencing.
-- Cross-document terminology was checked; the target is consistently Kontext.
+- Cross-document terminology was checked; the target is consistently TrueMemory.
 - 13 external reference links were extracted and syntax-checked; representative official references opened successfully, including OpenAI Evals, LangSmith, and Braintrust.
 - `git diff --check` reported no whitespace errors.
 - A deterministic 14-case routing benchmark now runs with `npm run test:evaluation`.

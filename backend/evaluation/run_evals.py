@@ -82,7 +82,7 @@ def run(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
     )
     report = {
         "schema_version": "1.0",
-        "suite": "kontext-routing-core",
+        "suite": "TrueMemory-routing-core",
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "dataset": str(dataset_path.relative_to(ROOT)),
         "cases": len(results),
@@ -100,7 +100,7 @@ def run(dataset_path: Path = DATASET_PATH) -> dict[str, Any]:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Run Kontext's deterministic routing evaluation")
+    parser = argparse.ArgumentParser(description="Run TrueMemory's deterministic routing evaluation")
     parser.add_argument("--dataset", type=Path, default=DATASET_PATH)
     parser.add_argument("--json-out", type=Path)
     args = parser.parse_args()

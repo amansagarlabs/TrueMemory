@@ -6,7 +6,7 @@ import { cacheKeys } from "../lib/cache/keys";
 import { TTL, classifyFreshness } from "../lib/cache/ttl";
 
 test("cache service stores and returns values in memory fallback", async () => {
-  const key = cacheKeys.search("Kontext search", 3);
+  const key = cacheKeys.search("TrueMemory search", 3);
   await cacheService.invalidate(key);
 
   const first = await cacheService.get<{ ok: boolean }>(key);

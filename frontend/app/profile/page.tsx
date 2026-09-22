@@ -41,8 +41,8 @@ import { AuthenticatedAppShell } from "@/components/authenticated-app-shell";
 import { useToast } from "@/hooks/use-toast";
 import { updateProfile } from "@/services/auth";
 
-const AVATAR_KEY = "kontext-dither-avatar";
-const AVATAR_DISPLAY_KEY = "kontext-avatar-display";
+const AVATAR_KEY = "TrueMemory-dither-avatar";
+const AVATAR_DISPLAY_KEY = "TrueMemory-avatar-display";
 
 const avatars: Array<{
   id: string;

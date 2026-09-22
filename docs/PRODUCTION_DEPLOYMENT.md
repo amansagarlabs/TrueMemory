@@ -149,7 +149,7 @@ Logs are JSON-formatted in production:
 {
   "timestamp": "2026-09-14T12:00:00Z",
   "level": "INFO",
-  "logger": "kontext.request",
+  "logger": "TrueMemory.request",
   "message": "request_complete",
   "request_id": "abc-123",
   "method": "POST",
@@ -164,7 +164,7 @@ Logs are JSON-formatted in production:
 - [ ] AUTH_COOKIE_SECURE=true
 - [ ] AMAN_JWT_SECRET is cryptographically random
 - [ ] CORS_ORIGINS contains only production domains
-- [ ] KONTEXT_ENABLE_TEST_AUTH is NOT set
+- [ ] TrueMemory_ENABLE_TEST_AUTH is NOT set
 - [ ] Database credentials are not in code
 - [ ] API keys are stored in environment variables
 - [ ] HTTPS is enforced (via load balancer/proxy)

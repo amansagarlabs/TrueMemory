@@ -1,4 +1,4 @@
-"""Deterministic capability ranking for the unified KONTEXT request pipeline."""
+"""Deterministic capability ranking for the unified TrueMemory request pipeline."""
 
 from __future__ import annotations
 

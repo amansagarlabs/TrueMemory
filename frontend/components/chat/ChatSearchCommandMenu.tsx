@@ -111,16 +111,16 @@ export function ChatSearchCommandMenu({
 
   useEffect(() => {
     const openHistory = () => setOpen(true);
-    window.addEventListener("kontext:open-chat-history", openHistory);
+    window.addEventListener("TrueMemory:open-chat-history", openHistory);
     return () =>
-      window.removeEventListener("kontext:open-chat-history", openHistory);
+      window.removeEventListener("TrueMemory:open-chat-history", openHistory);
   }, []);
 
   useEffect(() => {
     const openSearch = () => setOpen(true);
-    window.addEventListener("kontext:open-chat-search", openSearch);
+    window.addEventListener("TrueMemory:open-chat-search", openSearch);
     return () =>
-      window.removeEventListener("kontext:open-chat-search", openSearch);
+      window.removeEventListener("TrueMemory:open-chat-search", openSearch);
   }, []);
 
   function closeMenu() {

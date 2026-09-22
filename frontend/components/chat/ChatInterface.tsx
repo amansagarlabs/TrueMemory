@@ -81,6 +81,7 @@ import {
   clearPipelineSteps,
   getOrCreateConversationId,
   loadDocument,
+  loadConversationId,
   loadPipelineSteps,
   resetConversationId,
   saveDocument,
@@ -972,8 +973,8 @@ export default function ChatInterface() {
         setProjectsLoading(false);
       }
     }
-    window.addEventListener("kontext-workspace-changed", handleWorkspaceChanged);
-    return () => window.removeEventListener("kontext-workspace-changed", handleWorkspaceChanged);
+    window.addEventListener("TrueMemory-workspace-changed", handleWorkspaceChanged);
+    return () => window.removeEventListener("TrueMemory-workspace-changed", handleWorkspaceChanged);
   }, []);
 
   useEffect(() => {
@@ -1821,12 +1822,12 @@ export default function ChatInterface() {
 
   function showImageGenerationError(message: string, prompt: string) {
     toast.error(message, {
-      id: "kontext-image-generation-error",
+      id: "TrueMemory-image-generation-error",
       duration: 9000,
       action: {
         label: "Retry",
         onClick: () => {
-          toast.dismiss("kontext-image-generation-error");
+          toast.dismiss("TrueMemory-image-generation-error");
           void generateImageForPrompt(prompt);
         },
       },
@@ -2038,10 +2039,16 @@ export default function ChatInterface() {
   openConversationRef.current = openConversation;
 
   useEffect(() => {
-    if (!hydrated || !linkedConversationId) return;
+    if (!hydrated) return;
+
+    // The URL is authoritative for deep links. For a normal refresh, restore
+    // the conversation saved for this browser session instead of showing a
+    // blank composer.
+    const conversationToRestore = linkedConversationId || loadConversationId();
+    if (!conversationToRestore) return;
 
     const openFromUrl = window.setTimeout(() => {
-      void openConversationRef.current(linkedConversationId);
+      void openConversationRef.current(conversationToRestore);
     }, 0);
 
     function handleNewChat() {
@@ -2411,6 +2418,12 @@ export default function ChatInterface() {
         ? { id: loadActiveWorkspaceId(authUser.id), name: activeWorkspaceName }
         : undefined;
       setCurrentConversationId(conversationId);
+      setConversationId(conversationId);
+      if (!linkedConversationId) {
+        const url = new URL(window.location.href);
+        url.searchParams.set("id", conversationId);
+        window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+      }
       const controller = new AbortController();
       queryAbortRef.current = controller;
       await streamChat(uploadedDocument?.doc_id ?? null, requestQuestion, conversationId, (event) => {
@@ -2661,12 +2674,12 @@ export default function ChatInterface() {
       const hasImageRequest = requestImageAttachments.length > 0;
       if (hasImageRequest) {
         toast.error(message, {
-          id: "kontext-image-analysis-error",
+          id: "TrueMemory-image-analysis-error",
           duration: 9000,
           action: {
             label: "Retry",
             onClick: () => {
-              toast.dismiss("kontext-image-analysis-error");
+              toast.dismiss("TrueMemory-image-analysis-error");
               setMessages((current) => current.filter((item) => item.id !== assistantMessageId));
               setRetryRequest(null);
               void sendMessage(requestQuestion, {
@@ -2699,7 +2712,7 @@ export default function ChatInterface() {
         toast.error(
           shouldShowOpenRouterConfigBanner ? message : fallbackMessage,
           {
-          id: "kontext-chat-error",
+          id: "TrueMemory-chat-error",
           duration: 9000,
           },
         );

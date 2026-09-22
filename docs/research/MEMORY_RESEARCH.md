@@ -1,4 +1,4 @@
-# Kontext Memory Research
+# TrueMemory Memory Research
 
 ## Memory Layer for AI Agents
 
@@ -22,7 +22,7 @@ Even when context windows are large, they do not create durable understanding of
 Recent memory systems such as Mem0, MemPalace, Exabase, True Memory, Honcho, and Zep
 focus mainly on retrieval.
 
-Kontext takes a broader position.
+TrueMemory takes a broader position.
 The goal is not only to remember facts.
 The goal is to build a Persistent Intelligence Layer that can grow into a Personal AI Operating System.
 
@@ -69,7 +69,7 @@ Weaknesses:
 
 ### Generation 4: Persistent Intelligence
 
-Kontext vision:
+TrueMemory vision:
 
 - Memory
 - Artifacts
@@ -120,9 +120,9 @@ Intelligence emerges from:
 - Actions
 
 Most memory systems stop at retrieval.
-Kontext continues beyond retrieval.
+TrueMemory continues beyond retrieval.
 
-## Kontext Architecture
+## TrueMemory Architecture
 
 User
 -> Memory Engine
@@ -134,7 +134,7 @@ User
 -> Action Layer
 -> Personal AI OS
 
-## Kontext Memory Model
+## TrueMemory Memory Model
 
 ### Layer 1: Facts
 
@@ -192,7 +192,7 @@ Examples:
 - Background agents
 - Self-updating knowledge
 
-## Kontext Competitive Position
+## TrueMemory Competitive Position
 
 ### Mem0
 
@@ -218,12 +218,12 @@ Examples:
 - Strength: Project context
 - Weakness: Limited retrieval control
 
-### Kontext
+### TrueMemory
 
 - Category: Persistent Intelligence Layer
 - Strengths: Memory, artifacts, knowledge, agents, workflows, MCP, context engine
 
-## Kontext Strategy
+## TrueMemory Strategy
 
 ### AmanCrawl
 
@@ -273,7 +273,7 @@ Measures:
 
 - Large-scale memory retrieval
 
-### Kontext Future Benchmarks
+### TrueMemory Future Benchmarks
 
 #### Benchmark 1: Memory Recall
 
@@ -365,7 +365,7 @@ Research concerns include:
 - Dataset-specific optimizations
 - Benchmark overfitting
 
-Future Kontext evaluations should prioritize:
+Future TrueMemory evaluations should prioritize:
 
 - Real user data
 - Production workloads
@@ -398,7 +398,7 @@ Benchmark optimization alone is not the goal.
 
 ## North Star
 
-Kontext remembers what users know, understands what they are doing, and helps complete work over time.
+TrueMemory remembers what users know, understands what they are doing, and helps complete work over time.
 
 Memory is foundation.
 
@@ -418,4 +418,4 @@ After:
 - Creating the persistent intelligence category
 
 Mem0 becomes a feature reference.
-Kontext becomes the platform.
+TrueMemory becomes the platform.

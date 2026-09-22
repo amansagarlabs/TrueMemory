@@ -1,18 +1,18 @@
-# Kontext Engineering Audit Report
+# TrueMemory Engineering Audit Report
 
 Date: 2026-08-20
-Repository: `D:\aman\Kontext`
+Repository: `D:\aman\TrueMemory`
 Scope: Product health, runtime failures, AmanCrawl, provider fallback, authentication, SSRF protection, Docker configuration, and verification.
 
 ## Executive Summary
 
-Kontext now has a working local Ollama fallback for OpenRouter failures, corrected AmanCrawl client routes, running SearXNG configuration, protected Next web API routes, and public-network validation for web scraping.
+TrueMemory now has a working local Ollama fallback for OpenRouter failures, corrected AmanCrawl client routes, running SearXNG configuration, protected Next web API routes, and public-network validation for web scraping.
 
 The production build and TypeScript checks pass. Targeted security and route tests pass. The repository still has operational and architectural follow-up work, especially distributed Redis, authenticated cross-user isolation tests, Docker verification on Windows, and migration from Next.js middleware to the newer proxy convention.
 
 ## Product Truth
 
-Kontext is organized around two related products:
+TrueMemory is organized around two related products:
 
 - AmanAgentLab: memory, artifacts, RAG, documents, agent workflows, MCP, and long-term context.
 - AmanCrawl: search, scrape, crawl, map, browser interaction, extraction, and source-grounded web intelligence.

@@ -39,9 +39,9 @@ export type LocalDirectorySnapshot = {
   directoryHandles: Map<string, LocalDirectoryHandle>;
 };
 
-const LOCAL_WORKSPACE_DB = "kontext-coding-workspaces";
+const LOCAL_WORKSPACE_DB = "TrueMemory-coding-workspaces";
 const LOCAL_WORKSPACE_STORE = "folders";
-const LOCAL_WORKSPACE_LAST_KEY = "kontext-last-local-workspace";
+const LOCAL_WORKSPACE_LAST_KEY = "TrueMemory-last-local-workspace";
 
 export type PersistedLocalWorkspace = {
   key: string;

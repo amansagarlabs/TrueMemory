@@ -3,7 +3,7 @@
 import { useEffect } from "react"
 
 const THEME_STORAGE_KEY = "theme"
-const THEME_CHANGE_EVENT = "kontext-theme-change"
+const THEME_CHANGE_EVENT = "TrueMemory-theme-change"
 
 function applyThemeFromStorage() {
   const root = document.documentElement

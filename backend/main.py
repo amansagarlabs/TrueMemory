@@ -1,5 +1,5 @@
 """
-FastAPI entrypoint — Kontext backend.
+FastAPI entrypoint — TrueMemory backend.
 
 WHY this file exists:
   Single place to wire routes, CORS, and lifespan hooks.
@@ -33,7 +33,7 @@ from services.rate_limiter import ensure_rate_limit_schema
 from services.memory_ingestion import ensure_memory_ingestion_schema
 from services.postgres_store import postgres_enabled
 
-request_logger = logging.getLogger("kontext.request")
+request_logger = logging.getLogger("TrueMemory.request")
 
 
 def _validate_runtime_configuration(settings) -> None:
@@ -49,8 +49,8 @@ def _validate_runtime_configuration(settings) -> None:
         raise RuntimeError("production CORS_ORIGINS must contain only explicit public origins")
     if not settings.auth_cookie_secure:
         raise RuntimeError("AUTH_COOKIE_SECURE must be enabled outside development")
-    if os.getenv("KONTEXT_ENABLE_TEST_AUTH") == "1":
-        raise RuntimeError("KONTEXT_ENABLE_TEST_AUTH is forbidden outside development")
+    if os.getenv("TrueMemory_ENABLE_TEST_AUTH") == "1":
+        raise RuntimeError("TrueMemory_ENABLE_TEST_AUTH is forbidden outside development")
     if missing:
         raise RuntimeError(f"missing required production settings: {', '.join(missing)}")
 
@@ -101,8 +101,8 @@ async def lifespan(app: FastAPI):
 
 
 api = FastAPI(
-    title="Kontext API",
-    description="Kontext backend for memory, context, and web intelligence.",
+    title="TrueMemory API",
+    description="TrueMemory backend for memory, context, and web intelligence.",
     version="0.1.0",
     lifespan=lifespan,
 )

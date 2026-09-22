@@ -18,7 +18,7 @@ function withStableId(
 
   return {
     ...options,
-    id: `kontext:${type}:${message}`,
+    id: `TrueMemory:${type}:${message}`,
   };
 }
 

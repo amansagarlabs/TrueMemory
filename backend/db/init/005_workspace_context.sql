@@ -2,7 +2,7 @@ CREATE TABLE IF NOT EXISTS workspaces (
     id UUID PRIMARY KEY,
     owner_user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name TEXT NOT NULL,
-    platform TEXT NOT NULL DEFAULT 'Kontext Memory',
+    platform TEXT NOT NULL DEFAULT 'TrueMemory Memory',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     last_active_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

@@ -1,7 +1,7 @@
 import { buildAuthHeaders, credentialedFetch as fetch } from "@/lib/auth";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://truememory.onrender.com";
-const ENABLED_SKILLS_KEY = "kontext-enabled-agent-skills";
+const ENABLED_SKILLS_KEY = "TrueMemory-enabled-agent-skills";
 
 export type AgentSkill = {
   name: string;
@@ -30,7 +30,7 @@ export type SkillDiscoveryResult = AgentSkill & {
 export async function fetchAgentSkills(): Promise<AgentSkill[]> {
   const response = await fetch(`${API_URL}/api/skills`, {
     cache: "no-store",
-    headers: buildAuthHeaders("Kontext Skills"),
+    headers: buildAuthHeaders("TrueMemory Skills"),
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -46,7 +46,7 @@ export async function fetchAgentSkills(): Promise<AgentSkill[]> {
 export async function discoverAgentSkills(query: string): Promise<SkillDiscoveryResult[]> {
   const response = await fetch(`${API_URL}/api/skills/discover?q=${encodeURIComponent(query)}`, {
     cache: "no-store",
-    headers: buildAuthHeaders("Kontext Skill Discovery"),
+    headers: buildAuthHeaders("TrueMemory Skill Discovery"),
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Skill discovery failed");
@@ -62,7 +62,7 @@ export async function createAgentSkill(input: {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...buildAuthHeaders("Kontext Skills"),
+      ...buildAuthHeaders("TrueMemory Skills"),
     },
     body: JSON.stringify(input),
   });

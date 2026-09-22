@@ -34,7 +34,7 @@ For model or prompt matrices, record a complete configuration hash. Never compar
 - Re-score a sample with two human reviewers when an automated judge changes materially.
 - Calibrate LLM judges against human labels and monitor judge drift.
 
-## Recommended initial suite for Kontext
+## Recommended initial suite for TrueMemory
 
 1. Utility: current date/time must use runtime and make zero model/web calls.
 2. Routing: stable explanation → direct; current recommendation → search; URL → scrape; multi-page comparison → agent.

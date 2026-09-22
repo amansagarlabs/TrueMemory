@@ -1,5 +1,5 @@
 """
-Dashboard API routes — real-time stats for the Kontext dashboard.
+Dashboard API routes — real-time stats for the TrueMemory dashboard.
 """
 
 from __future__ import annotations

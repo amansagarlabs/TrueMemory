@@ -2,7 +2,7 @@
 
 This repository now follows a platform-first idea:
 
-- **Kontext** is the parent platform
+- **TrueMemory** is the parent platform
 - **AmanAgentLab** is the memory, knowledge, and agent workspace
 - **AmanCrawl** is the web intelligence and crawling infrastructure
 

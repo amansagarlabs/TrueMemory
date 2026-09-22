@@ -56,7 +56,7 @@ async def publish_pull_request(
         "Accept": "application/vnd.github+json",
         "Authorization": f"Bearer {token}",
         "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "KONTEXT-Coding-Agent",
+        "User-Agent": "TrueMemory-Coding-Agent",
     }
     repository_path = quote(repository, safe="/")
     try:

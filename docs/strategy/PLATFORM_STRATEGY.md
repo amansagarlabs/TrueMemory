@@ -1,6 +1,6 @@
 # Platform Strategy
 
-This document is the source of truth for Kontext positioning.
+This document is the source of truth for TrueMemory positioning.
 
 ## Product Line
 
@@ -20,7 +20,7 @@ This document is the source of truth for Kontext positioning.
 
 - AmanCrawlshould be framed as infrastructure.
 - AmanAgentLab should be framed as the personal AI OS.
-- Kontext should be the persistent intelligence layer behind both.
+- TrueMemory should be the persistent intelligence layer behind both.
 
 ## Messaging Shift
 

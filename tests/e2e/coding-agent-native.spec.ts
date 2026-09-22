@@ -9,7 +9,7 @@ const user = {
     {
       id: "workspace-1",
       name: "Product workspace",
-      platform: "Kontext Memory",
+      platform: "TrueMemory Memory",
       last_active: "2026-08-03T00:00:00Z",
     },
   ],
@@ -63,10 +63,10 @@ async function seedCodingSession(page: Page, activeRepository = false) {
   await page.addInitScript(
     ({ authUser, useRepository }) => {
       localStorage.setItem("app-agent-auth-user", JSON.stringify(authUser));
-      localStorage.setItem("kontext-active-workspace:user-1", "workspace-1");
+      localStorage.setItem("TrueMemory-active-workspace:user-1", "workspace-1");
       if (useRepository) {
         localStorage.setItem(
-          "kontext-active-github-repository:user-1:workspace-1",
+          "TrueMemory-active-github-repository:user-1:workspace-1",
           "context/product",
         );
       }
@@ -265,7 +265,7 @@ test("first coding visit requires a Git repository before completion", async ({ 
   await mockCodingApi(page, { onboardingVersion: 0 });
   await page.goto("/coding");
 
-  await expect(page.getByText("Kontext Coding")).toBeVisible();
+  await expect(page.getByText("TrueMemory Coding")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Start with the outcome" })).toBeVisible();
   await page.getByRole("button", { name: "Skip feature tour" }).click();
   await expect(page.getByRole("heading", { name: "How should the agent begin?" })).toBeVisible();
@@ -294,7 +294,7 @@ test("first coding visit requires a Git repository before completion", async ({ 
   });
   await page.reload();
   await expect(page.getByRole("heading", { name: "What should the agent ship?" })).toBeVisible();
-  await expect(page.getByText("Kontext Coding")).toHaveCount(0);
+  await expect(page.getByText("TrueMemory Coding")).toHaveCount(0);
 });
 
 test("coding home restores recent tasks in Agent without opening Monaco", async ({ page }) => {

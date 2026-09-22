@@ -21,7 +21,7 @@ router = APIRouter(prefix="/api/workspaces", tags=["workspaces"])
 class WorkspaceUpsertRequest(BaseModel):
     id: UUID
     name: str = Field(..., min_length=1, max_length=120)
-    platform: str = Field(default="Kontext Memory", min_length=1, max_length=80)
+    platform: str = Field(default="TrueMemory Memory", min_length=1, max_length=80)
 
 
 @router.get("")

@@ -4,7 +4,7 @@ import sys
 import os
 import json
 sys.path.insert(0, "/app")
-os.environ["KONTEXT_ENABLE_TEST_AUTH"] = "1"
+os.environ["TrueMemory_ENABLE_TEST_AUTH"] = "1"
 
 from services.memory_core import MemoryClient, MemoryCore, SQLiteMemoryRepository, MemoryAuthorization
 from app.config import get_settings

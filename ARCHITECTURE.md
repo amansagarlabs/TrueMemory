@@ -1,13 +1,13 @@
 Exit code: 0
 Wall time: 0.3 seconds
 Output:
-# Kontext — Architecture Reference
+# TrueMemory — Architecture Reference
 
 ## System Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
-│                           Kontext                                     │
+│                           TrueMemory                                     │
 ├─────────────────────────────────┬───────────────────────────────────────────┤
 │         AmanAgentLab            │              AmanCrawl                   │
 │    Personal AI Operating System │       Web Intelligence Infrastructure    │

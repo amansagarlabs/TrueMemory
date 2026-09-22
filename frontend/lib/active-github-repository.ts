@@ -1,7 +1,7 @@
-const ACTIVE_GITHUB_REPOSITORY_KEY = "kontext-active-github-repository";
+const ACTIVE_GITHUB_REPOSITORY_KEY = "TrueMemory-active-github-repository";
 
 export const ACTIVE_GITHUB_REPOSITORY_CHANGED_EVENT =
-  "kontext-active-github-repository-changed";
+  "TrueMemory-active-github-repository-changed";
 
 export type ActiveGithubRepositoryChange = {
   userId: string;

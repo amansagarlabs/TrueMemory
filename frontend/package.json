@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "bin": {
-    "kontext-mcp": "./mcp-server/index.ts",
+    "TrueMemory-mcp": "./mcp-server/index.ts",
     "truememory-memory-mcp": "./mcp-server/memory.ts"
   },
   "scripts": {

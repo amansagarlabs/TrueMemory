@@ -1,4 +1,4 @@
-"""Standalone entrypoint for Kontext Memory infrastructure service."""
+"""Standalone entrypoint for TrueMemory Memory infrastructure service."""
 
 from contextlib import asynccontextmanager
 
@@ -23,8 +23,8 @@ async def lifespan(app: FastAPI):
 
 
 api = FastAPI(
-    title="Kontext Memory",
-    description="Memory infrastructure API for AI agents and Kontext Assistant.",
+    title="TrueMemory Memory",
+    description="Memory infrastructure API for AI agents and TrueMemory Assistant.",
     version="0.1.0",
     lifespan=lifespan,
 )

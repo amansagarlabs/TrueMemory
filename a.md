@@ -1,8 +1,8 @@
-# KONTEXT Founder-Level Product and Engineering Audit
+# TrueMemory Founder-Level Product and Engineering Audit
 
 ## Executive assessment
 
-KONTEXT is a functional AI workspace MVP, not yet an AI operating system or
+TrueMemory is a functional AI workspace MVP, not yet an AI operating system or
 production agent platform. Its strongest implemented loop combines persistent
 chat, artifacts, web retrieval, source intelligence, early workspace memory,
 and a structured context-preview system.
@@ -23,7 +23,7 @@ Estimated completion of the long-term platform vision: **35%**
 
 ## Vision and positioning
 
-The right problem is not building another general chatbot. KONTEXT should make
+The right problem is not building another general chatbot. TrueMemory should make
 AI reliably resume real work with the correct private context, provenance, and
 permissions.
 
@@ -39,7 +39,7 @@ The differentiated opportunity is:
 The current product is not differentiated enough as a general assistant.
 Memory, projects, files, connectors, search, and agents are already mature
 features in ChatGPT, Claude, Perplexity, Cursor, Gemini, Manus, Cline, and
-OpenHands. KONTEXT should become the open context substrate beneath those kinds
+OpenHands. TrueMemory should become the open context substrate beneath those kinds
 of experiences rather than reproduce every surface itself.
 
 ## Product scores

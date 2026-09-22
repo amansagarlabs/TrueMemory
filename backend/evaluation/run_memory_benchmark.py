@@ -1,4 +1,4 @@
-"""Benchmark structured KONTEXT Memory retrieval.
+"""Benchmark structured TrueMemory Memory retrieval.
 
 Example:
     python backend/evaluation/run_memory_benchmark.py --sizes 1000 10000
@@ -101,7 +101,7 @@ def _measure(function, samples: int) -> tuple[float, list[float]]:
 
 
 def run(size: int, samples: int) -> dict:
-    with tempfile.TemporaryDirectory(prefix="kontext-memory-benchmark-", ignore_cleanup_errors=True) as directory:
+    with tempfile.TemporaryDirectory(prefix="TrueMemory-memory-benchmark-", ignore_cleanup_errors=True) as directory:
         settings = SimpleNamespace(memory_db_path=str(Path(directory) / "memory.db"))
         settings.embedding_model = "all-MiniLM-L6-v2"
         settings.memory_l2_candidate_limit = size + 2
@@ -234,7 +234,7 @@ def main() -> None:
     parser.add_argument("--sizes", nargs="+", type=int, default=[1000])
     parser.add_argument("--samples", type=int, default=25)
     args = parser.parse_args()
-    print(json.dumps({"benchmark": "KONTEXT Memory", "results": [run(size, args.samples) for size in args.sizes]}, indent=2))
+    print(json.dumps({"benchmark": "TrueMemory Memory", "results": [run(size, args.samples) for size in args.sizes]}, indent=2))
 
 
 if __name__ == "__main__":

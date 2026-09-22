@@ -76,9 +76,9 @@ def test_hidden_reasoning_is_not_returned_as_answer() -> None:
 
 def test_final_answer_is_preserved_after_reasoning_marker() -> None:
     result = sanitize_assistant_answer(
-        "Thinking process:\n1. Analyze.\n\nFinal answer: Kontext memory is scoped."
+        "Thinking process:\n1. Analyze.\n\nFinal answer: TrueMemory memory is scoped."
     )
-    assert result == "Kontext memory is scoped."
+    assert result == "TrueMemory memory is scoped."
 
 
 def test_custom_tool_policy_requires_scope_and_confirmation() -> None:

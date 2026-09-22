@@ -63,7 +63,7 @@ export default function WorkspacesPage() {
     const workspace: AuthWorkspace = {
         id: crypto.randomUUID(),
         name: trimmedName,
-        platform: "Kontext Memory",
+        platform: "TrueMemory Memory",
         last_active: new Date().toISOString(),
     };
     try {

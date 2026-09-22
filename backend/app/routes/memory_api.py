@@ -1,4 +1,4 @@
-"""Universal Kontext Memory provider API."""
+"""Universal TrueMemory Memory provider API."""
 
 from __future__ import annotations
 
@@ -277,6 +277,8 @@ def _scope_workspace_id(auth: AuthContext, requested_workspace_id: str | None) -
     """Return workspace_id to pass to MemoryClient based on token bindings."""
     bound_ws = auth.token_bindings.get("workspace_id")
     if bound_ws:
+        if requested_workspace_id and requested_workspace_id != bound_ws:
+            raise HTTPException(status_code=403, detail="memory_workspace_forbidden")
         return bound_ws  # use the bound workspace_id
     return requested_workspace_id
 
@@ -338,14 +340,21 @@ async def memory_performance(auth: AuthContext = Depends(require_scope("memory")
     """Authenticated aggregate performance snapshot without memory content."""
     _user(auth)
     from app.metrics import get_metrics
-    from services.postgres_pool import get_pool
+    from services import postgres_pool
     settings = get_settings()
     client = _client()
     return {
         "request_metrics": get_metrics().get_all(),
         "cache": client.cache_metrics(),
         "hybrid": client.hybrid.metrics(),
-        "postgres_pool": get_pool(settings).metrics.to_dict(),
+        # Do not initialize a connection pool from a request handler. Startup
+        # owns pool creation; the performance endpoint reports its current
+        # metrics or a safe not-initialized state.
+        "postgres_pool": (
+            postgres_pool._pool.metrics.to_dict()
+            if postgres_pool._pool is not None
+            else {"status": "not_initialized"}
+        ),
         "scope": {"user_id": str(auth.user_id), "workspace_id": auth.token_bindings.get("workspace_id")},
     }
 

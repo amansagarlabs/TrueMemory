@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -102,6 +103,24 @@ def _job_response(job: dict[str, Any] | None) -> dict[str, Any]:
     }
 
 
+def _request_payload(payload: IngestionRequest) -> dict[str, Any]:
+    """Return the durable, comparable portion of an ingestion request."""
+    return {
+        "key": str(payload.key or "").strip()[:120],
+        "content": str(payload.content or "")[:200_000],
+        "metadata": payload.metadata,
+        "target": payload.target,
+        "discover": bool(payload.discover),
+        "max_pages": max(1, min(int(payload.max_pages), 20)),
+    }
+
+
+def _same_request_payload(existing: Any, requested: dict[str, Any]) -> bool:
+    if not isinstance(existing, dict):
+        return False
+    return json.dumps(existing, sort_keys=True, default=str) == json.dumps(requested, sort_keys=True, default=str)
+
+
 @router.post("")
 async def create_ingestion(payload: IngestionRequest, auth: AuthContext = Depends(require_scope("memory"))):
     user_id = _owner(auth)
@@ -148,6 +167,14 @@ async def create_ingestion(payload: IngestionRequest, auth: AuthContext = Depend
         if str(exc) == "ingestion_queue_limit_reached":
             raise HTTPException(status_code=429, detail=str(exc), headers={"Retry-After": "30"}) from exc
         raise HTTPException(status_code=503, detail=str(exc)) from exc
+    if not created and payload.idempotency_key and not _same_request_payload(job.get("request_payload"), _request_payload(payload)):
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "error": "idempotency_key_conflict",
+                "message": "The idempotency key is already bound to a different ingestion request.",
+            },
+        )
     return {**_job_response(job), "created": created}
 
 

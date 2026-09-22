@@ -1,4 +1,4 @@
-export const CHAT_PROMPT_NAV_UPDATE_EVENT = "kontext-chat-prompt-nav-update";
+export const CHAT_PROMPT_NAV_UPDATE_EVENT = "TrueMemory-chat-prompt-nav-update";
 
 export type ChatPromptNavItem = {
   id: number;

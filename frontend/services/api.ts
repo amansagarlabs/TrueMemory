@@ -154,7 +154,7 @@ export async function fetchContextPreview(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...buildAuthHeaders("Kontext Memory"),
+      ...buildAuthHeaders("TrueMemory Memory"),
     },
     body: JSON.stringify({
       question: question.slice(0, 20_000),
@@ -186,7 +186,7 @@ export async function uploadPdf(
 
   const res = await fetch(`${API_URL}/api/upload`, {
     method: "POST",
-    headers: buildAuthHeaders("Kontext Memory"),
+    headers: buildAuthHeaders("TrueMemory Memory"),
     body: form,
   });
 
@@ -207,7 +207,7 @@ export async function readImageWithOcr(file: File): Promise<ImageOcrResponse> {
 
   const res = await fetch(`${API_URL}/api/ocr/image`, {
     method: "POST",
-    headers: buildAuthHeaders("Kontext Memory"),
+    headers: buildAuthHeaders("TrueMemory Memory"),
     body: form,
   });
   const data = await res.json().catch(() => ({}));
@@ -239,7 +239,7 @@ export type ArtifactPreviewResponse = {
 
 export async function fetchArtifactPreview(docId: string): Promise<ArtifactPreviewResponse> {
   const res = await fetch(`${API_URL}/api/artifacts/${encodeURIComponent(docId)}/preview`, {
-    headers: buildAuthHeaders("Kontext Memory"),
+    headers: buildAuthHeaders("TrueMemory Memory"),
     cache: "no-store",
   });
   const data = await res.json().catch(() => ({}));
@@ -253,7 +253,7 @@ export async function fetchArtifactPreview(docId: string): Promise<ArtifactPrevi
 
 export async function fetchArtifactContent(docId: string): Promise<Blob> {
   const res = await fetch(`${API_URL}/api/artifacts/${encodeURIComponent(docId)}/content`, {
-    headers: buildAuthHeaders("Kontext Memory"),
+    headers: buildAuthHeaders("TrueMemory Memory"),
     cache: "no-store",
   });
   if (!res.ok) {
@@ -442,7 +442,7 @@ export async function streamChat(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...buildAuthHeaders("Kontext Memory"),
+      ...buildAuthHeaders("TrueMemory Memory"),
     },
     body: JSON.stringify(payload),
     signal: options.signal,
@@ -551,7 +551,7 @@ export async function submitMessageFeedback(
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        ...buildAuthHeaders("Kontext Memory"),
+        ...buildAuthHeaders("TrueMemory Memory"),
       },
       body: JSON.stringify(payload),
     },
@@ -588,7 +588,7 @@ export async function fetchRecentConversations(
     params.set("conversation_type", conversationType);
     return fetch(
       `${API_URL}/api/chat/conversations?${params.toString()}`,
-      { cache: "no-store", headers: buildAuthHeaders("Kontext Memory") },
+      { cache: "no-store", headers: buildAuthHeaders("TrueMemory Memory") },
     );
   };
 
@@ -612,7 +612,7 @@ export async function fetchArchivedConversations(
   });
   const res = await fetch(
     `${API_URL}/api/chat/conversations?${params.toString()}`,
-    { cache: "no-store", headers: buildAuthHeaders("Kontext Archive") },
+    { cache: "no-store", headers: buildAuthHeaders("TrueMemory Archive") },
   );
   if (!res.ok) throw new Error(`Archived chats failed (${res.status})`);
   const data = await res.json();
@@ -637,7 +637,7 @@ export async function updateConversation(
     {
       method: "PATCH",
       headers: {
-        ...buildAuthHeaders("Kontext Conversation"),
+        ...buildAuthHeaders("TrueMemory Conversation"),
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ action, title }),
@@ -659,7 +659,7 @@ export async function fetchConversationMessages(
 ): Promise<StoredConversationMessage[]> {
   const res = await fetch(
     `${API_URL}/api/chat/conversations/${encodeURIComponent(conversationId)}/messages`,
-    { cache: "no-store", headers: buildAuthHeaders("Kontext Memory") },
+    { cache: "no-store", headers: buildAuthHeaders("TrueMemory Memory") },
   );
   if (!res.ok) throw new Error(`Conversation history failed (${res.status})`);
   const data = await res.json();

@@ -23,7 +23,7 @@ docker image inspect "$TRUEMEMORY_IMAGE" >/dev/null 2>&1 || fail "deployment ima
 
 [[ "$STAGING_DOMAIN" != *example.com ]] || fail "STAGING_DOMAIN must be a real hostname"
 [[ "$STAGING_DOMAIN" != localhost && "$STAGING_DOMAIN" != 127.0.0.1 ]] || fail "STAGING_DOMAIN must be public"
-[[ "${KONTEXT_ENABLE_TEST_AUTH:-0}" != 1 ]] || fail "test auth must be disabled"
+[[ "${TrueMemory_ENABLE_TEST_AUTH:-0}" != 1 ]] || fail "test auth must be disabled"
 [[ "${AUTH_COOKIE_SECURE:-true}" == true ]] || fail "AUTH_COOKIE_SECURE=true is required"
 
 command -v ss >/dev/null || fail "ss is required for port validation"

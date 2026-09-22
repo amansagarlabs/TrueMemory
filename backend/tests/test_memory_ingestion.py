@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 
 from services import memory_ingestion
+from app.routes.ingestion import IngestionRequest, _request_payload, _same_request_payload
 
 
 def test_canonicalize_url_removes_fragment_and_default_port() -> None:
@@ -93,3 +94,22 @@ def test_unknown_source_fails_closed() -> None:
         assert str(exc) == "source_adapter_not_registered:unknown-platform"
     else:  # pragma: no cover - assertion branch
         raise AssertionError("unknown source adapter must fail closed")
+
+
+def test_ingestion_idempotency_conflicts_when_payload_changes() -> None:
+    original = IngestionRequest(
+        provider="manual",
+        source_type="text",
+        key="architecture",
+        content="PostgreSQL is the durable source of truth.",
+        idempotency_key="same-operation",
+    )
+    changed = IngestionRequest(
+        provider="manual",
+        source_type="text",
+        key="architecture",
+        content="Redis is the durable source of truth.",
+        idempotency_key="same-operation",
+    )
+    assert _same_request_payload(_request_payload(original), _request_payload(original))
+    assert not _same_request_payload(_request_payload(original), _request_payload(changed))

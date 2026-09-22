@@ -3,7 +3,7 @@ import type { AuthSession, AuthUser } from "@/lib/types";
 const AUTH_TOKEN_KEY = "app-agent-auth-token";
 const AUTH_USER_KEY = "app-agent-auth-user";
 const PLATFORM_KEY = "app-agent-platform";
-export const AUTH_USER_CHANGED_EVENT = "kontext-auth-user-changed";
+export const AUTH_USER_CHANGED_EVENT = "TrueMemory-auth-user-changed";
 
 // ── Client-side helpers (localStorage) ─────────────────────────────────────
 
@@ -56,8 +56,8 @@ export function setPlatform(platform: string) {
 }
 
 export function getPlatform(): string {
-  if (typeof window === "undefined") return "Kontext Memory";
-  return localStorage.getItem(PLATFORM_KEY) || "Kontext Memory";
+  if (typeof window === "undefined") return "TrueMemory Memory";
+  return localStorage.getItem(PLATFORM_KEY) || "TrueMemory Memory";
 }
 
 export function isAuthenticated(): boolean {

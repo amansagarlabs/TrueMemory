@@ -1,4 +1,4 @@
-export class KontextError extends Error {
+export class TrueMemoryError extends Error {
     status;
     requestId;
     details;
@@ -7,33 +7,33 @@ export class KontextError extends Error {
         this.status = status;
         this.requestId = requestId;
         this.details = details;
-        this.name = "KontextError";
+        this.name = "TrueMemoryError";
     }
 }
-export class AuthenticationError extends KontextError {
+export class AuthenticationError extends TrueMemoryError {
     name = "AuthenticationError";
 }
-export class AuthorizationError extends KontextError {
+export class AuthorizationError extends TrueMemoryError {
     name = "AuthorizationError";
 }
-export class ValidationError extends KontextError {
+export class ValidationError extends TrueMemoryError {
     name = "ValidationError";
 }
-export class RateLimitError extends KontextError {
+export class RateLimitError extends TrueMemoryError {
     name = "RateLimitError";
     retryAfter;
     constructor(message, status, requestId, details, retryAfter) { super(message, status, requestId, details); this.retryAfter = retryAfter; }
 }
-export class NotFoundError extends KontextError {
+export class NotFoundError extends TrueMemoryError {
     name = "NotFoundError";
 }
-export class ConflictError extends KontextError {
+export class ConflictError extends TrueMemoryError {
     name = "ConflictError";
 }
-export class NetworkError extends KontextError {
+export class NetworkError extends TrueMemoryError {
     name = "NetworkError";
 }
-export class ServerError extends KontextError {
+export class ServerError extends TrueMemoryError {
     name = "ServerError";
 }
 const safeMethods = new Set(["GET", "HEAD"]);
@@ -75,7 +75,7 @@ export class TrueMemory {
                 throw this.error(response.status, payload, requestId, response.headers.get("retry-after"));
             }
             catch (error) {
-                if (error instanceof KontextError) {
+                if (error instanceof TrueMemoryError) {
                     const retryable = [408, 429, 502, 503, 504].includes(error.status);
                     if (retryable && attempt + 1 < attempts) {
                         const retryAfter = error instanceof RateLimitError ? (error.retryAfter ?? 0) * 1000 : 0;
@@ -108,7 +108,7 @@ export class TrueMemory {
         return new ConflictError(...args); if (status === 422)
         return new ValidationError(...args); if (status === 429)
         return new RateLimitError(String(message), status, requestId, payload, retryAfter ? Number(retryAfter) : undefined); if (status >= 500)
-        return new ServerError(...args); return new KontextError(...args); }
+        return new ServerError(...args); return new TrueMemoryError(...args); }
     remember(input, options) { return this.request("/v1/memories", { method: "POST", body: JSON.stringify(input) }, options); }
     store(input, options) { return this.request("/v1/memory/store", { method: "POST", body: JSON.stringify(input) }, options); }
     search(input = {}, options) { return this.request("/v1/memories/search", { method: "POST", body: JSON.stringify(input) }, { ...options, retrySafe: true }); }

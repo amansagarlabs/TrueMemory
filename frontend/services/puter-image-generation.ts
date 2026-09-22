@@ -18,7 +18,7 @@ type PuterGlobal = {
 declare global {
   interface Window {
     puter?: PuterGlobal;
-    __kontextPuterLoader?: Promise<PuterGlobal>;
+    __TrueMemoryPuterLoader?: Promise<PuterGlobal>;
   }
 }
 
@@ -27,9 +27,9 @@ const DEFAULT_PUTER_IMAGE_MODEL = "black-forest-labs/flux-2-klein-4b";
 
 function loadPuter(): Promise<PuterGlobal> {
   if (window.puter?.ai) return Promise.resolve(window.puter);
-  if (window.__kontextPuterLoader) return window.__kontextPuterLoader;
+  if (window.__TrueMemoryPuterLoader) return window.__TrueMemoryPuterLoader;
 
-  window.__kontextPuterLoader = new Promise<PuterGlobal>((resolve, reject) => {
+  window.__TrueMemoryPuterLoader = new Promise<PuterGlobal>((resolve, reject) => {
     const existing = document.querySelector<HTMLScriptElement>(
       `script[src="${PUTER_SCRIPT_URL}"]`,
     );
@@ -56,11 +56,11 @@ function loadPuter(): Promise<PuterGlobal> {
       document.head.appendChild(script);
     }
   }).catch((error) => {
-    window.__kontextPuterLoader = undefined;
+    window.__TrueMemoryPuterLoader = undefined;
     throw error;
   });
 
-  return window.__kontextPuterLoader;
+  return window.__TrueMemoryPuterLoader;
 }
 
 /**

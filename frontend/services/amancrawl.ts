@@ -79,7 +79,7 @@ export interface SearchResult {
 function authHeaders(): Record<string, string> {
   return {
     "Content-Type": "application/json",
-    ...buildAuthHeaders("Kontext Crawl"),
+    ...buildAuthHeaders("TrueMemory Crawl"),
   };
 }
 

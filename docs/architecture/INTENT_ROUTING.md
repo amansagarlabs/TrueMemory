@@ -1,6 +1,6 @@
 # Intent and source routing
 
-Kontext routes chat requests through `backend/query/router.py` before retrieval or tool execution.
+TrueMemory routes chat requests through `backend/query/router.py` before retrieval or tool execution.
 
 Flow:
 

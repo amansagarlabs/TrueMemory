@@ -1,8 +1,8 @@
-# Kontext Agent Evaluation Report
+# TrueMemory Agent Evaluation Report
 
 ## Scope
 
-This report applies the attached Principal AI Evaluation Researcher brief to the current Kontext chat, routing, retrieval, crawl, memory, and streaming system. It evaluates the architecture direction; it is not a claim that every production metric is already instrumented.
+This report applies the attached Principal AI Evaluation Researcher brief to the current TrueMemory chat, routing, retrieval, crawl, memory, and streaming system. It evaluates the architecture direction; it is not a claim that every production metric is already instrumented.
 
 ## Current strengths
 
@@ -30,7 +30,7 @@ Adopt the Evaluation Engine as a separate control-plane subsystem over the exist
 
 ## Release readiness
 
-Kontext should not claim production-ready agent quality until the initial benchmark passes critical routing, grounding, SSRF, permission, confirmation, cancellation, and event-termination checks. Quality improvements should be accepted only when paired experiments show no safety, reliability, cost, or latency regression.
+TrueMemory should not claim production-ready agent quality until the initial benchmark passes critical routing, grounding, SSRF, permission, confirmation, cancellation, and event-termination checks. Quality improvements should be accepted only when paired experiments show no safety, reliability, cost, or latency regression.
 
 ## Research basis
 

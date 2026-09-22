@@ -3,7 +3,7 @@
 ## Direction
 
 Dark-first, compact, and operational. The UI borrows the density and restraint
-of Linear, Cursor, GitHub, and Vercel, while keeping KONTEXT's orange evidence
+of Linear, Cursor, GitHub, and Vercel, while keeping TrueMemory's orange evidence
 accent. It does not use a horizontal carousel of generic source cards.
 
 ## Intelligent inline reference

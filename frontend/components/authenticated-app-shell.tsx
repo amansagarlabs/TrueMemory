@@ -74,7 +74,7 @@ function MobileAwareHeader({
           {/* Mobile: New chat + Search */}
           <button
             type="button"
-            onClick={() => window.dispatchEvent(new Event("kontext-chat-new"))}
+            onClick={() => window.dispatchEvent(new Event("TrueMemory-chat-new"))}
             aria-label="New chat"
             className="inline-flex size-9 items-center justify-center rounded-full border border-[var(--chat-border)] text-[var(--chat-muted-foreground)] transition-colors hover:bg-[var(--chat-highlight)] hover:text-[var(--chat-foreground)] md:hidden"
           >
@@ -203,14 +203,14 @@ export function AuthenticatedAppShell({
         const created = await persistWorkspace({
           id: crypto.randomUUID(),
           name: "My workspace",
-          platform: "Kontext Memory",
+          platform: "TrueMemory Memory",
           last_active: new Date().toISOString(),
         });
         setWorkspaces([created]);
         setActiveWorkspaceId(created.id);
         saveActiveWorkspaceId(currentUser.id, created.id);
       }
-      window.dispatchEvent(new Event("kontext-chat-recents-changed"));
+      window.dispatchEvent(new Event("TrueMemory-chat-recents-changed"));
     } finally {
       setWorkspacesLoading(false);
     }
@@ -232,13 +232,13 @@ export function AuthenticatedAppShell({
       void fetchDashboardStats("both").then(setStats).catch(() => setStats(undefined));
     });
 
-    window.addEventListener("kontext-workspaces-changed", refreshWorkspaces);
-    window.addEventListener("kontext-auth-user-changed", refreshWorkspaces);
+    window.addEventListener("TrueMemory-workspaces-changed", refreshWorkspaces);
+    window.addEventListener("TrueMemory-auth-user-changed", refreshWorkspaces);
 
     return () => {
       window.cancelAnimationFrame(frame);
-      window.removeEventListener("kontext-workspaces-changed", refreshWorkspaces);
-      window.removeEventListener("kontext-auth-user-changed", refreshWorkspaces);
+      window.removeEventListener("TrueMemory-workspaces-changed", refreshWorkspaces);
+      window.removeEventListener("TrueMemory-auth-user-changed", refreshWorkspaces);
     };
   }, [refreshWorkspaces]);
 
@@ -247,7 +247,7 @@ export function AuthenticatedAppShell({
     const newWorkspace: AuthWorkspace = {
       id: crypto.randomUUID(),
       name,
-      platform: "Kontext Memory",
+      platform: "TrueMemory Memory",
       last_active: new Date().toISOString(),
     };
     const next = [
@@ -259,7 +259,7 @@ export function AuthenticatedAppShell({
     saveActiveWorkspaceId(user.id, newWorkspace.id);
     void persistWorkspace(newWorkspace)
       .then(() => {
-        window.dispatchEvent(new Event("kontext-workspaces-changed"));
+        window.dispatchEvent(new Event("TrueMemory-workspaces-changed"));
       })
       .catch(() => setWorkspaces((current) => current.filter((item) => item.id !== newWorkspace.id)));
   }
@@ -271,10 +271,10 @@ export function AuthenticatedAppShell({
     saveActiveWorkspaceId(user.id, workspaceId);
     const workspace = workspaces.find((item) => item.id === workspaceId);
     if (workspace) void persistWorkspace(workspace).catch(() => undefined);
-    window.dispatchEvent(new Event("kontext-chat-recents-changed"));
+    window.dispatchEvent(new Event("TrueMemory-chat-recents-changed"));
     if (pathname === "/chat") {
       router.replace("/chat");
-      window.dispatchEvent(new Event("kontext-chat-new"));
+      window.dispatchEvent(new Event("TrueMemory-chat-new"));
     }
   }
 

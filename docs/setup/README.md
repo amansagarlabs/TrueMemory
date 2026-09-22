@@ -1,6 +1,6 @@
-# Kontext Package Install Guide
+# TrueMemory Package Install Guide
 
-This checkout keeps current app intact and ports Kontext branding plus docs.
+This checkout keeps current app intact and ports TrueMemory branding plus docs.
 Use this file when you want to install or reason about packages without converting repo into full monorepo.
 
 ## Current Local Packages
@@ -52,7 +52,7 @@ python -m venv .venv
 
 Backend stack includes FastAPI, async PostgreSQL drivers, HTTP clients, vector helpers, and local service code.
 
-## Remote Kontext Package Map
+## Remote TrueMemory Package Map
 
 Remote repo source of truth says target structure is:
 

@@ -30,7 +30,7 @@ def test_conversation_messages_normalize_legacy_ids(monkeypatch) -> None:
     assert result == {"items": [{"id": "message-1"}]}
     assert captured["user_id"] == "resolved-user"
     assert captured["conversation_id"] == str(
-        uuid5(NAMESPACE_URL, "kontext:resolved-user:chat-1")
+        uuid5(NAMESPACE_URL, "TrueMemory:resolved-user:chat-1")
     )
 
 
@@ -63,10 +63,10 @@ def test_conversation_update_normalizes_legacy_ids(monkeypatch) -> None:
     )
 
     assert result == {
-        "item": {"id": str(uuid5(NAMESPACE_URL, "kontext:resolved-user:chat-1")), "title": "Untitled"}
+        "item": {"id": str(uuid5(NAMESPACE_URL, "TrueMemory:resolved-user:chat-1")), "title": "Untitled"}
     }
     assert captured["user_id"] == "resolved-user"
     assert captured["action"] == "archive"
     assert captured["conversation_id"] == str(
-        uuid5(NAMESPACE_URL, "kontext:resolved-user:chat-1")
+        uuid5(NAMESPACE_URL, "TrueMemory:resolved-user:chat-1")
     )

@@ -5,7 +5,7 @@ import { API_URL } from "@/services/api";
 export async function fetchProjects(workspaceId: string): Promise<AuthProject[]> {
   const response = await fetch(
     `${API_URL}/api/projects?workspace_id=${encodeURIComponent(workspaceId)}`,
-    { headers: buildAuthHeaders("Kontext Memory"), cache: "no-store" },
+    { headers: buildAuthHeaders("TrueMemory Memory"), cache: "no-store" },
   );
   if (!response.ok) throw new Error(`Projects could not be loaded (${response.status}).`);
   const data = await response.json();
@@ -15,7 +15,7 @@ export async function fetchProjects(workspaceId: string): Promise<AuthProject[]>
 export async function persistProject(project: AuthProject): Promise<AuthProject> {
   const response = await fetch(`${API_URL}/api/projects/${encodeURIComponent(project.id)}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json", ...buildAuthHeaders("Kontext Memory") },
+    headers: { "Content-Type": "application/json", ...buildAuthHeaders("TrueMemory Memory") },
     body: JSON.stringify(project),
   });
   if (!response.ok) throw new Error(`Project could not be saved (${response.status}).`);
@@ -42,7 +42,7 @@ export async function createProject(input: {
 export async function archiveProject(projectId: string): Promise<void> {
   const response = await fetch(`${API_URL}/api/projects/${encodeURIComponent(projectId)}`, {
     method: "DELETE",
-    headers: buildAuthHeaders("Kontext Memory"),
+    headers: buildAuthHeaders("TrueMemory Memory"),
   });
   if (!response.ok) throw new Error(`Project could not be archived (${response.status}).`);
 }

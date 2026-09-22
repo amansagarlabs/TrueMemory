@@ -50,7 +50,7 @@ export async function fetchGithubRepositories(
   const response = await fetch(
     `${API_URL}/api/chat/context/github/repositories?${params.toString()}`,
     {
-      headers: { ...buildAuthHeaders("Kontext GitHub context") },
+      headers: { ...buildAuthHeaders("TrueMemory GitHub context") },
       cache: "no-store",
       signal,
     },
@@ -85,7 +85,7 @@ export async function fetchGithubRepositoryTree(
   const response = await fetch(
     `${API_URL}/api/chat/context/github/repositories/${repositoryEndpoint(fullName)}/tree${query}`,
     {
-      headers: { ...buildAuthHeaders("Kontext GitHub repository tree") },
+      headers: { ...buildAuthHeaders("TrueMemory GitHub repository tree") },
       cache: "no-store",
       signal,
     },
@@ -119,7 +119,7 @@ export async function fetchGithubRepositoryFile(
   const response = await fetch(
     `${API_URL}/api/chat/context/github/repositories/${repositoryEndpoint(fullName)}/file?${params.toString()}`,
     {
-      headers: { ...buildAuthHeaders("Kontext GitHub repository file") },
+      headers: { ...buildAuthHeaders("TrueMemory GitHub repository file") },
       cache: "no-store",
       signal,
     },

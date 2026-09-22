@@ -1,4 +1,4 @@
-# KONTEXT execution status — 2026-07-29
+# TrueMemory execution status — 2026-07-29
 
 ## Executed
 

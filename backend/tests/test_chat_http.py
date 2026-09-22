@@ -27,7 +27,7 @@ def test_chat_stream_http_shape(monkeypatch):
     response = client.post(
         "/api/chat/stream",
         json={
-            "question": "What is Kontext?",
+            "question": "What is TrueMemory?",
             "conversation_id": "conv-1",
         },
     )
@@ -56,7 +56,7 @@ def test_chat_stream_rejects_missing_openrouter_key(monkeypatch):
     response = client.post(
         "/api/chat/stream",
         json={
-            "question": "What is Kontext?",
+            "question": "What is TrueMemory?",
             "conversation_id": "conv-1",
         },
     )

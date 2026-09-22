@@ -1,5 +1,5 @@
 """
-Kontext Crawl API routes — web intelligence for AI agents.
+TrueMemory Crawl API routes — web intelligence for AI agents.
 
 All endpoints require authentication via x-auth-context header (set by Next.js middleware)
 or bearer token. Scope checks enforced per operation.

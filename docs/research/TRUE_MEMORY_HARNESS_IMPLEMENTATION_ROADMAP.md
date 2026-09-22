@@ -868,3 +868,6 @@ Controlled commit is available only in experimental mode and recomputes candidat
 ## Phase 11.8 validation boundary
 
 Local component measurements are distinct from production latency. Cloudflare edge/queue work is deferred until storage-backed and browser baselines exist; no infrastructure migration is implied by the current async classification.
+## Phase 11.15 validation boundary
+
+The disposable compose stack is now executable and has real HTTP evidence for PostgreSQL, FastAPI, the existing worker, authentication boundaries, ingestion idempotency, and performance. The result is still PARTIAL: failure injection, SDK live E2E, Redis failure, crash/lease recovery, streaming failure, and production diagnostics are not certified by this run.

@@ -126,7 +126,7 @@ def normalize_coding_plan(plan: dict[str, Any]) -> dict[str, Any]:
 def render_coding_plan_markdown(plan: dict[str, Any]) -> str:
     normalized = normalize_coding_plan(plan)
     lines = [
-        "# Current Kontext Goal",
+        "# Current TrueMemory Goal",
         "",
         "> This file is generated from the user-approved Plan. Agents must read it before making changes.",
         "",

@@ -73,8 +73,8 @@ function AuthFormInner({ mode: initialMode }: { mode: Mode }) {
   const isSignup = mode === "signup";
   const existingUser = useSyncExternalStore(
     (onChange) => {
-      window.addEventListener("kontext-auth-user-changed", onChange);
-      return () => window.removeEventListener("kontext-auth-user-changed", onChange);
+      window.addEventListener("TrueMemory-auth-user-changed", onChange);
+      return () => window.removeEventListener("TrueMemory-auth-user-changed", onChange);
     },
     readAuthUserSnapshot,
     () => null,

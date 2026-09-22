@@ -12,7 +12,7 @@ email = f'e2e-user-b-{uuid.uuid4().hex[:8]}@invalid.test'
 user = create_user_with_password(settings, email=email, password='test-pass', username=f'e2e_user_b_{uuid.uuid4().hex[:8]}', full_name='E2E User B')
 with _connect(settings) as conn:
     with conn.cursor() as cur:
-        cur.execute('INSERT INTO workspaces (id, owner_user_id, name, platform) VALUES (%s, %s, %s, %s)', (workspace_b, user['id'], 'E2E User B Workspace', 'Kontext Memory'))
+        cur.execute('INSERT INTO workspaces (id, owner_user_id, name, platform) VALUES (%s, %s, %s, %s)', (workspace_b, user['id'], 'E2E User B Workspace', 'TrueMemory Memory'))
     conn.commit()
 token = create_api_token(settings, user_id=str(user['id']), token_name='e2e-user-b', scopes=['memory'], expires_days=1, workspace_id=workspace_b)
 print(json.dumps({'token': token['token'], 'user_id': str(user['id']), 'workspace_id': workspace_b}))

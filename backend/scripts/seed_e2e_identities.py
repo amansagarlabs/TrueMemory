@@ -27,7 +27,7 @@ from services.postgres_store import postgres_enabled, _connect
 def create_workspace(conn, workspace_id: str, owner_user_id: str, name: str) -> None:
     conn.execute(
         """INSERT INTO workspaces (id, owner_user_id, name, platform)
-           VALUES (%s, %s, %s, 'Kontext Memory')
+           VALUES (%s, %s, %s, 'TrueMemory Memory')
            ON CONFLICT (id) DO NOTHING""",
         (workspace_id, owner_user_id, name),
     )
@@ -43,8 +43,8 @@ def create_project(conn, project_id: str, workspace_id: str, owner_user_id: str,
 
 
 def main() -> int:
-    if os.getenv("KONTEXT_ENABLE_TEST_AUTH") != "1":
-        print("KONTEXT_ENABLE_TEST_AUTH=1 is required", file=sys.stderr)
+    if os.getenv("TrueMemory_ENABLE_TEST_AUTH") != "1":
+        print("TrueMemory_ENABLE_TEST_AUTH=1 is required", file=sys.stderr)
         return 2
     settings = get_settings()
     if not postgres_enabled(settings):

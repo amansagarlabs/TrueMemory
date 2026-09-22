@@ -5,7 +5,7 @@ const hasAuthenticatedState = Boolean(process.env.PLAYWRIGHT_STORAGE_STATE);
 test.describe("chat composer keyboard and focus", () => {
   test.skip(
     !hasAuthenticatedState,
-    "Set PLAYWRIGHT_STORAGE_STATE to an authenticated Kontext browser state.",
+    "Set PLAYWRIGHT_STORAGE_STATE to an authenticated TrueMemory browser state.",
   );
 
   test.beforeEach(async ({ page }) => {
@@ -28,7 +28,7 @@ test.describe("chat composer keyboard and focus", () => {
   });
 
   test("focuses the composer and preserves Shift+Enter as a newline", async ({ page }) => {
-    const composer = page.getByLabel("Message Kontext");
+    const composer = page.getByLabel("Message TrueMemory");
     const sendButton = page.getByRole("button", { name: "Send message" });
 
     await expect(composer).toBeFocused();
@@ -53,7 +53,7 @@ test.describe("chat composer keyboard and focus", () => {
   });
 
   test("shows the selected response mode beside the model without changing the prompt", async ({ page }) => {
-    const composer = page.getByLabel("Message Kontext");
+    const composer = page.getByLabel("Message TrueMemory");
     await composer.fill("Compare the latest releases");
 
     await page.getByRole("button", { name: "Open composer actions" }).click();
@@ -114,7 +114,7 @@ test.describe("chat composer keyboard and focus", () => {
       });
     });
 
-    const composer = page.getByLabel("Message Kontext");
+    const composer = page.getByLabel("Message TrueMemory");
     await composer.fill("Give me a detailed answer");
     await page.getByRole("button", { name: "Send message" }).click();
     await expect(page.getByText("Streaming answer line 90")).toBeVisible();
@@ -150,7 +150,7 @@ test.describe("chat composer keyboard and focus", () => {
     });
     await page.route("**/api/**/stream", async (route) => {
       const events = [
-        { type: "token", content: "A practical answer from Kontext." },
+        { type: "token", content: "A practical answer from TrueMemory." },
         {
           type: "done",
           message_id: "550e8400-e29b-41d4-a716-446655440000",
@@ -169,9 +169,9 @@ test.describe("chat composer keyboard and focus", () => {
       });
     });
 
-    await page.getByLabel("Message Kontext").fill("Give me a practical answer");
+    await page.getByLabel("Message TrueMemory").fill("Give me a practical answer");
     await page.getByRole("button", { name: "Send message" }).click();
-    const answer = page.getByText("A practical answer from Kontext.");
+    const answer = page.getByText("A practical answer from TrueMemory.");
     await expect(answer).toBeVisible();
     await answer.hover();
 
@@ -204,7 +204,7 @@ test.describe("chat composer keyboard and focus", () => {
 test.describe("mobile chat composer", () => {
   test.skip(
     !hasAuthenticatedState,
-    "Set PLAYWRIGHT_STORAGE_STATE to an authenticated Kontext browser state.",
+    "Set PLAYWRIGHT_STORAGE_STATE to an authenticated TrueMemory browser state.",
   );
   test.use({ viewport: { width: 390, height: 844 }, hasTouch: true });
 

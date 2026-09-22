@@ -180,7 +180,7 @@ def test_read_only_synthesis_explicitly_forbids_diffs() -> None:
     ask = synthesis_messages(
         task_type="analyze",
         goal="Explain the page",
-        repository="aman/kontext",
+        repository="aman/TrueMemory",
         branch="main",
         compiled_context=context,
         interaction_mode="ask",
@@ -188,7 +188,7 @@ def test_read_only_synthesis_explicitly_forbids_diffs() -> None:
     plan = synthesis_messages(
         task_type="implement",
         goal="Plan a change",
-        repository="aman/kontext",
+        repository="aman/TrueMemory",
         branch="main",
         compiled_context=context,
         interaction_mode="plan",

@@ -210,7 +210,7 @@ def upsert_workspace(
     workspace_id: str,
     user_id: str,
     name: str,
-    platform: str = "Kontext Memory",
+    platform: str = "TrueMemory Memory",
 ) -> dict[str, Any]:
     normalized_name = name.strip()[:120] or "My workspace"
     with _connect(settings) as conn:

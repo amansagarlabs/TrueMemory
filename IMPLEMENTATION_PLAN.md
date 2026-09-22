@@ -4,7 +4,7 @@
 
 Define trace, dataset, case, scorer, run, experiment, review, and gate schemas. Add privacy classifications, redaction rules, tool sandbox policy, and a minimum critical safety suite.
 
-**Exit:** schemas reviewed; no real side effects in eval mode; current Kontext route cases captured as golden tests.
+**Exit:** schemas reviewed; no real side effects in eval mode; current TrueMemory route cases captured as golden tests.
 
 ## Phase 1 — deterministic runner (initial slice implemented)
 
@@ -42,7 +42,7 @@ Build Runs, Comparison, Trace Explorer, Failure Explorer, Review Queue, Cost/Lat
 
 Add drift detection, judge calibration, benchmark coverage reports, canary comparison, and scheduled production replay. Keep experimental adaptive benchmarks behind feature flags.
 
-## Initial Kontext benchmark
+## Initial TrueMemory benchmark
 
 Start with 40–60 cases: runtime facts, stable explanations, current recommendations, URL scrape, document grounding, memory recall, provider fallback, confirmation, cancellation, prompt injection, SSRF, partial crawl failure, and SSE completion/error behavior.
 

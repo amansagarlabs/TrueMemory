@@ -60,6 +60,12 @@ export function getOrCreateConversationId(): string {
   return next;
 }
 
+/** Return the active browser conversation without creating a new one. */
+export function loadConversationId(): string | null {
+  if (typeof window === "undefined") return null;
+  return sessionStorage.getItem(CONVERSATION_KEY);
+}
+
 export function resetConversationId() {
   if (typeof window === "undefined") return;
   sessionStorage.removeItem(CONVERSATION_KEY);

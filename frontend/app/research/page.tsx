@@ -133,7 +133,7 @@ export default function ResearchPage() {
               primaryText="Explore research"
               primaryHref="/research"
               secondaryText="View on GitHub"
-              secondaryHref="https://github.com/kontext-ai/kontext"
+              secondaryHref="https://github.com/TrueMemory-ai/TrueMemory"
             />
           </div>
         </header>

@@ -1,6 +1,6 @@
-# Kontext
+# TrueMemory
 
-This document tracks the local direction for the `AmanSagar0607/Kontext` repo.
+This document tracks the local direction for the `AmanSagar0607/TrueMemory` repo.
 When this checkout drifts, prefer the remote GitHub repo as source of truth.
 
 ## Source of Truth
@@ -45,13 +45,13 @@ Very few products combine:
 
 into a single ecosystem.
 
-Kontext exists to unify these capabilities.
+TrueMemory exists to unify these capabilities.
 
 ---
 
 ## Platform Architecture
 
-Kontext consists of two products.
+TrueMemory consists of two products.
 
 ### AmanAgentLab
 
@@ -360,7 +360,7 @@ This gives one company, one platform, two products, and a clear path from today'
 
 ## North Star
 
-Kontext becomes the infrastructure layer that helps users:
+TrueMemory becomes the infrastructure layer that helps users:
 
 - Remember everything
 - Understand context

@@ -11,7 +11,7 @@ export function normalizeWorkspaceNames(workspaces: AuthWorkspace[]) {
     seen.add(workspace.id);
     return [
       workspace.platform === "AmanCrawl"
-        ? { ...workspace, platform: "Kontext Web" as const }
+        ? { ...workspace, platform: "TrueMemory Web" as const }
         : workspace,
     ];
   });
@@ -21,7 +21,7 @@ export function saveWorkspaces(userId: string, workspaces: AuthWorkspace[]) {
   void userId;
   void workspaces;
   if (typeof window === "undefined") return;
-  window.dispatchEvent(new Event("kontext-workspaces-changed"));
+  window.dispatchEvent(new Event("TrueMemory-workspaces-changed"));
 }
 
 export function loadActiveWorkspaceId(userId: string) {
@@ -39,8 +39,8 @@ export function saveActiveWorkspaceId(userId: string, workspaceId: string) {
   if (workspaceId) url.searchParams.set("workspace", workspaceId);
   else url.searchParams.delete("workspace");
   window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
-  window.dispatchEvent(new CustomEvent("kontext-workspace-changed", {
+  window.dispatchEvent(new CustomEvent("TrueMemory-workspace-changed", {
     detail: { userId, workspaceId },
   }));
-  window.dispatchEvent(new Event("kontext-workspaces-changed"));
+  window.dispatchEvent(new Event("TrueMemory-workspaces-changed"));
 }

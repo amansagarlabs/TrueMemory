@@ -225,3 +225,6 @@ Python and TypeScript SDK retry behavior was audited and hardened for retry-safe
 ## Phase 11.13 transactional outbox audit
 
 The memory write-path audit is documented. Existing source ingestion uses the canonical PostgreSQL durable job system; general profile/workspace/notes/consolidation memory writes do not yet share an atomic memory-plus-job transaction because they do not currently require a follow-up job. Disposable rollback/concurrency/crash and outbox-overhead tests remain **NOT VERIFIED**.
+## Phase 11.15 runtime reliability evidence
+
+A disposable PostgreSQL + real FastAPI + existing ingestion-worker stack was built and exercised over HTTP. The run passed 18 checks covering liveness/readiness, structured 401/422 errors, memory CRUD/search, cross-user isolation, concurrent ingestion idempotency, changed-payload conflict handling, worker completion, and performance (`p50 30.76 ms`, `p95 43.28 ms`, `p99 55.56 ms`). SDK live retry, Redis outage, worker crash/lease recovery, streaming failure, process restart, rollback, and production 502/503/504 evidence remain **NOT VERIFIED**. No HA or zero-downtime claim is made.

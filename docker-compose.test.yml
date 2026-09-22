@@ -4,7 +4,7 @@ services:
     environment:
       POSTGRES_DB: truememory_test
       POSTGRES_USER: truememory_test
-      POSTGRES_PASSWORD: ${TRUEMEMORY_TEST_DB_PASSWORD:?set test-only password}
+      POSTGRES_PASSWORD: ${TRUEMEMORY_TEST_DB_PASSWORD:-truememory-test-only}
     ports:
       - "${TRUEMEMORY_TEST_DB_PORT:-55432}:5432"
     volumes:
@@ -22,24 +22,59 @@ services:
     depends_on:
       postgres-test:
         condition: service_healthy
-    env_file: [.env]
     environment:
+      APP_ENV: development
       TEST_ENV: "true"
-      DATABASE_URL: postgresql://truememory_test:${TRUEMEMORY_TEST_DB_PASSWORD}@postgres-test:5432/truememory_test
-      DATABASE_URL_DOCKER: postgresql://truememory_test:${TRUEMEMORY_TEST_DB_PASSWORD}@postgres-test:5432/truememory_test
+      TRUEMEMORY_RUNTIME_ENV: disposable-test
+      DATABASE_URL: postgresql://truememory_test:${TRUEMEMORY_TEST_DB_PASSWORD:-truememory-test-only}@postgres-test:5432/truememory_test
+      DATABASE_URL_DOCKER: postgresql://truememory_test:${TRUEMORY_TEST_DB_PASSWORD:-truememory-test-only}@postgres-test:5432/truememory_test
       POSTGRES_DOCKER_HOST: postgres-test
       POSTGRES_USER: truememory_test
-      POSTGRES_PASSWORD: ${TRUEMEMORY_TEST_DB_PASSWORD}
+      POSTGRES_PASSWORD: ${TRUEMEMORY_TEST_DB_PASSWORD:-truememory-test-only}
       POSTGRES_DB: truememory_test
+      TrueMemory_ENABLE_TEST_AUTH: "1"
       KONTEXT_ENABLE_TEST_AUTH: "1"
-      MEMORY_DB_PATH: /tmp/truememory-test.db
+      MEMORY_DB_PATH: /app/data/truememory-test.db
+      AUTH_COOKIE_SECURE: "false"
+      AMAN_JWT_SECRET: disposable-test-only-secret
+      CORS_ORIGINS: http://localhost:3000
+      OPENROUTER_API_KEY: ""
+      OPENAI_API_KEY: ""
+      UPSTASH_REDIS_URL: ""
+      UPSTASH_REDIS_TOKEN: ""
     ports:
       - "${TRUEMEMORY_TEST_API_PORT:-18000}:8000"
+    volumes:
+      - truememory_test_data:/app/data
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/v1/memory/health', timeout=3)"]
       interval: 5s
       timeout: 3s
       retries: 20
+
+  memory-ingestion-worker-test:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    depends_on:
+      api-test:
+        condition: service_healthy
+    command: ["python", "-m", "worker.memory_ingestion_worker"]
+    environment:
+      APP_ENV: development
+      TEST_ENV: "true"
+      TRUEMEMORY_RUNTIME_ENV: disposable-test
+      DATABASE_URL: postgresql://truememory_test:${TRUEMEMORY_TEST_DB_PASSWORD:-truememory-test-only}@postgres-test:5432/truememory_test
+      DATABASE_URL_DOCKER: postgresql://truememory_test:${TRUEMEMORY_TEST_DB_PASSWORD:-truememory-test-only}@postgres-test:5432/truememory_test
+      POSTGRES_DOCKER_HOST: postgres-test
+      POSTGRES_USER: truememory_test
+      POSTGRES_PASSWORD: ${TRUEMEMORY_TEST_DB_PASSWORD:-truememory-test-only}
+      POSTGRES_DB: truememory_test
+      MEMORY_DB_PATH: /app/data/truememory-test.db
+      UPSTASH_REDIS_URL: ""
+      UPSTASH_REDIS_TOKEN: ""
+    volumes:
+      - truememory_test_data:/app/data
 
   mcp-test:
     image: curlimages/curl:8.10.1
@@ -47,3 +82,6 @@ services:
       api-test:
         condition: service_healthy
     entrypoint: ["sh", "-c", "curl --fail http://api-test:8000/v1/memory/health"]
+
+volumes:
+  truememory_test_data:

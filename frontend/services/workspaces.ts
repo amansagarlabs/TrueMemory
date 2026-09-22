@@ -8,7 +8,7 @@ export async function fetchWorkspaces(): Promise<AuthWorkspace[]> {
   let response: Response;
   try {
     response = await fetch(`${API_URL}/api/workspaces`, {
-      headers: buildAuthHeaders("Kontext Memory"),
+      headers: buildAuthHeaders("TrueMemory Memory"),
       cache: "no-store",
       signal: controller.signal,
     });
@@ -34,7 +34,7 @@ export async function persistWorkspace(
       method: "PUT",
       headers: {
         "Content-Type": "application/json",
-        ...buildAuthHeaders("Kontext Memory"),
+        ...buildAuthHeaders("TrueMemory Memory"),
       },
       body: JSON.stringify(workspace),
     },
@@ -47,7 +47,7 @@ export async function persistWorkspace(
 export async function deleteWorkspace(workspaceId: string): Promise<void> {
   const response = await fetch(`${API_URL}/api/workspaces/${encodeURIComponent(workspaceId)}`, {
     method: "DELETE",
-    headers: buildAuthHeaders("Kontext Memory"),
+    headers: buildAuthHeaders("TrueMemory Memory"),
   });
   if (!response.ok) throw new Error(`Space could not be deleted (${response.status}).`);
 }

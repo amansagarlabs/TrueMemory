@@ -21,6 +21,7 @@ from uuid import uuid4
 from services.retry_policy import RETRYABLE_STATUSES
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -166,6 +167,23 @@ def register_exception_handlers(app: FastAPI) -> None:
                 "request_id": request_id,
                 "code": "http_error",
                 "retryable": exc.status_code in RETRYABLE_STATUSES,
+            },
+            headers={"X-Request-ID": request_id},
+        )
+
+    @app.exception_handler(RequestValidationError)
+    async def request_validation_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+        """Keep framework-generated 422 responses on the public error contract."""
+        request_id = getattr(request.state, "request_id", str(uuid4())[:12])
+        return JSONResponse(
+            status_code=422,
+            content={
+                "error": "validation_error",
+                "message": "Request validation failed.",
+                "request_id": request_id,
+                "code": "validation_error",
+                "retryable": False,
+                "detail": exc.errors(),
             },
             headers={"X-Request-ID": request_id},
         )

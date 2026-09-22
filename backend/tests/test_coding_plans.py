@@ -56,7 +56,7 @@ def test_plan_artifact_has_a_stable_workspace_path() -> None:
 def test_plan_markdown_contains_binding_scope_and_validation() -> None:
     markdown = render_coding_plan_markdown(_plan())
 
-    assert "# Current Kontext Goal" in markdown
+    assert "# Current TrueMemory Goal" in markdown
     assert "## Done Looks Like" in markdown
     assert "## Selected Approach" in markdown
     assert "`app/coding/page.tsx`" in markdown

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Literal
 from uuid import UUID, uuid4
@@ -10,7 +11,12 @@ from pydantic import BaseModel, Field
 
 from app.auth_middleware import AuthContext, require_auth
 from app.config import get_settings
-from app.routes.chat import ContextMentionRef, ImageAttachmentRef, _chat_event_stream
+from app.routes.chat import (
+    ContextMentionRef,
+    ImageAttachmentRef,
+    _chat_event_stream,
+    _selected_provider_model,
+)
 from services.ag_ui_events import sse
 from services.model_registry import is_local_model
 from query.models import QueryMode
@@ -70,10 +76,17 @@ async def query_stream(
             "project_id": str(body.project_id) if body.project_id else None,
         },
     )
-    if not getattr(settings, "openrouter_api_key", "") and not is_local_model(body.selected_model):
+    requested_provider, _ = _selected_provider_model(body.selected_model, settings)
+    provider_configured = (
+        (requested_provider == "openai" and bool(getattr(settings, "openai_api_key", "")))
+        or (requested_provider == "openrouter" and bool(getattr(settings, "openrouter_api_key", "")))
+        or requested_provider in {"ollama", "local"}
+    )
+    if not provider_configured and not is_local_model(body.selected_model):
+        key_name = "OPENAI_API_KEY" if requested_provider == "openai" else "OPENROUTER_API_KEY"
         raise HTTPException(
             status_code=400,
-            detail="OPENROUTER_API_KEY missing in .env — add your key from openrouter.ai",
+            detail=f"{key_name} missing on the backend; configure the selected provider and retry.",
         )
 
     mode = body.mode
@@ -134,9 +147,24 @@ async def query_stream(
         ) from exc
 
     async def guarded_stream():
+        iterator = stream.__aiter__()
+        pending = asyncio.create_task(iterator.__anext__())
         try:
-            async for event in stream:
+            while True:
+                done, _ = await asyncio.wait({pending}, timeout=15.0)
+                if not done:
+                    # Render/proxy layers may close an otherwise healthy SSE
+                    # connection when no bytes arrive during provider work.
+                    # SSE comments are ignored by clients but keep the socket
+                    # active until the next real event is ready.
+                    yield ": keep-alive\n\n"
+                    continue
+                try:
+                    event = pending.result()
+                except StopAsyncIteration:
+                    break
                 yield event
+                pending = asyncio.create_task(iterator.__anext__())
         except Exception as exc:
             logger.exception(
                 "Query stream failed during execution",
@@ -151,6 +179,9 @@ async def query_stream(
                 },
             )
             yield sse("error", {"message": f"Query stream failed: {exc}"})
+        finally:
+            if not pending.done():
+                pending.cancel()
 
     return StreamingResponse(
         guarded_stream(),

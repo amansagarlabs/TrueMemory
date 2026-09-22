@@ -26,8 +26,8 @@ AGENT_ID = "00000000-0000-4000-8000-000000000003"
 
 
 def provision() -> dict[str, str]:
-    if os.getenv("KONTEXT_ENABLE_TEST_AUTH") != "1":
-        raise RuntimeError("KONTEXT_ENABLE_TEST_AUTH=1 is required")
+    if os.getenv("TrueMemory_ENABLE_TEST_AUTH") != "1":
+        raise RuntimeError("TrueMemory_ENABLE_TEST_AUTH=1 is required")
     settings = get_settings()
     if not postgres_enabled(settings):
         raise RuntimeError("Postgres is required for browser test auth")
@@ -48,7 +48,7 @@ def provision() -> dict[str, str]:
             cur.execute(
                 """
                 INSERT INTO workspaces (id, owner_user_id, name, platform)
-                VALUES (%s, %s, %s, 'Kontext Memory')
+                VALUES (%s, %s, %s, 'TrueMemory Memory')
                 ON CONFLICT (id) DO UPDATE SET owner_user_id = EXCLUDED.owner_user_id
                 """,
                 (WORKSPACE_ID, user["id"], "TrueMemory browser E2E workspace"),
@@ -68,8 +68,8 @@ def provision() -> dict[str, str]:
 
 
 def revoke(user_id: str, token_id: str) -> None:
-    if os.getenv("KONTEXT_ENABLE_TEST_AUTH") != "1":
-        raise RuntimeError("KONTEXT_ENABLE_TEST_AUTH=1 is required")
+    if os.getenv("TrueMemory_ENABLE_TEST_AUTH") != "1":
+        raise RuntimeError("TrueMemory_ENABLE_TEST_AUTH=1 is required")
     settings = get_settings()
     if not revoke_api_token(settings, user_id=user_id, token_id=token_id):
         raise RuntimeError("browser test token was not revoked")

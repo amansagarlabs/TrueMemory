@@ -147,7 +147,7 @@ def _paddle_pipeline_for(device: str, pipeline_version: str):
 
 def _extract_with_paddle_vl(image, *, filename: str, device: str, pipeline_version: str) -> OcrResult:
     suffix = Path(filename).suffix.lower() or ".png"
-    with _paddle_lock, TemporaryDirectory(prefix="kontext-ocr-") as temp_dir:
+    with _paddle_lock, TemporaryDirectory(prefix="TrueMemory-ocr-") as temp_dir:
         temp_path = Path(temp_dir)
         input_path = temp_path / f"input{suffix}"
         output_path = temp_path / "output"

@@ -121,7 +121,7 @@ type MonacoDiffSurfaceProps = {
   revealFirstChange?: boolean;
 };
 
-const VIEW_STATE_PREFIX = "kontext-monaco-view";
+const VIEW_STATE_PREFIX = "TrueMemory-monaco-view";
 
 function normalizePath(path: string) {
   return path.replaceAll("\\", "/").replace(/^\/+/, "");
@@ -133,7 +133,7 @@ function modelUri(workspaceKey: string, path: string, variant = "working") {
     .split("/")
     .map((segment) => encodeURIComponent(segment))
     .join("/");
-  return `file:///kontext/${workspace}/${variant}/${file}`;
+  return `file:///TrueMemory/${workspace}/${variant}/${file}`;
 }
 
 function viewStateKey(workspaceKey: string, path: string) {
@@ -226,7 +226,7 @@ export function languageForPath(path: string) {
 }
 
 const configureMonaco: BeforeMount = (monaco) => {
-  monaco.editor.defineTheme("kontext-infrastructure", {
+  monaco.editor.defineTheme("TrueMemory-infrastructure", {
     base: "vs-dark",
     inherit: true,
     rules: [
@@ -425,7 +425,7 @@ export function MonacoFileEditor({
     };
     monaco.editor.setModelMarkers(
       model,
-      "kontext-runtime",
+      "TrueMemory-runtime",
       externalDiagnosticsRef.current.map((diagnostic) => ({
         severity: severity[diagnostic.severity],
         message: diagnostic.message,
@@ -534,7 +534,7 @@ export function MonacoFileEditor({
       path={uri}
       language={language}
       value={value}
-      theme="kontext-infrastructure"
+      theme="TrueMemory-infrastructure"
       beforeMount={configureMonaco}
       onMount={handleMount}
       onChange={(nextValue) => onChange?.(nextValue ?? "")}
@@ -585,7 +585,7 @@ export function MonacoDiffSurface({
       modifiedLanguage={language}
       originalModelPath={modelUri(workspaceKey, path, "original")}
       modifiedModelPath={modelUri(workspaceKey, path, "proposed")}
-      theme="kontext-infrastructure"
+      theme="TrueMemory-infrastructure"
       beforeMount={configureMonaco}
       onMount={handleMount}
       loading={<MonacoEditorLoading label="Preparing diff" />}

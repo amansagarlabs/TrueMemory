@@ -26,7 +26,7 @@ def test_create_coding_task_is_scoped_to_workspace_project_and_user(monkeypatch)
         lambda *_args, **_kwargs: {
             "id": str(workspace_id),
             "name": "My workspace",
-            "platform": "Kontext Coding",
+            "platform": "TrueMemory Coding",
             "last_active": "2026-07-31T00:00:00Z",
         },
     )
@@ -39,7 +39,7 @@ def test_create_coding_task_is_scoped_to_workspace_project_and_user(monkeypatch)
     body = coding.CodingTaskCreateRequest(
         workspace_id=workspace_id,
         project_id=project_id,
-        repository_full_name="aman/kontext",
+        repository_full_name="aman/TrueMemory",
         branch="main",
         task_type="review",
         goal="Review the authentication flow",
@@ -51,7 +51,7 @@ def test_create_coding_task_is_scoped_to_workspace_project_and_user(monkeypatch)
     assert captured["user_id"] == "user-1"
     assert captured["workspace_id"] == str(workspace_id)
     assert captured["project_id"] == str(project_id)
-    assert captured["repository_full_name"] == "aman/kontext"
+    assert captured["repository_full_name"] == "aman/TrueMemory"
 
 
 def test_post_task_upserts_workspace_before_creating_task(monkeypatch) -> None:
@@ -80,7 +80,7 @@ def test_post_task_upserts_workspace_before_creating_task(monkeypatch) -> None:
         workspace_id=workspace_id,
         workspace_name="My workspace",
         project_id=project_id,
-        repository_full_name="aman/kontext",
+        repository_full_name="aman/TrueMemory",
         branch="main",
         task_type="review",
         goal="Review the authentication flow",
@@ -92,7 +92,7 @@ def test_post_task_upserts_workspace_before_creating_task(monkeypatch) -> None:
     assert calls[0][0] == "upsert"
     assert calls[0][1]["workspace_id"] == str(workspace_id)
     assert calls[0][1]["name"] == "My workspace"
-    assert calls[0][1]["platform"] == "Kontext Coding"
+    assert calls[0][1]["platform"] == "TrueMemory Coding"
     assert calls[1][0] == "create"
     assert calls[1][1]["workspace_id"] == str(workspace_id)
 
@@ -332,7 +332,7 @@ def test_remote_repository_cannot_use_browser_workspace_sync(monkeypatch) -> Non
         "_owned_task",
         lambda *_args: {
             "id": str(task_id),
-            "repository_full_name": "aman/kontext",
+            "repository_full_name": "aman/TrueMemory",
         },
     )
 
@@ -593,7 +593,7 @@ def test_repository_index_build_is_scoped_and_emits_progress(monkeypatch) -> Non
         "_owned_task",
         lambda *_args: {
             "id": str(task_id),
-            "repository_full_name": "aman/kontext",
+            "repository_full_name": "aman/TrueMemory",
             "branch": "main",
         },
     )
@@ -624,7 +624,7 @@ def test_repository_index_build_is_scoped_and_emits_progress(monkeypatch) -> Non
 
     assert response["status"] == "ready"
     assert captured["github_token"] == "installation-token"
-    assert captured["repository"] == "aman/kontext"
+    assert captured["repository"] == "aman/TrueMemory"
     assert captured["cache_scope"] == "user-1"
     assert captured["force"] is False
     assert [event["event_type"] for event in events] == [
@@ -694,7 +694,7 @@ def test_agent_stream_queues_run_and_replays_durable_state(monkeypatch) -> None:
         "_owned_task",
         lambda *_args: {
             "id": str(task_id),
-            "repository_full_name": "aman/kontext",
+            "repository_full_name": "aman/TrueMemory",
             "branch": "main",
             "task_type": "explain",
             "goal": "Explain the authentication flow",
@@ -786,7 +786,7 @@ def test_coding_worker_claims_and_completes_a_run(monkeypatch) -> None:
         "updated_at": "2026-07-29T00:00:00Z",
         "started_at": None,
         "completed_at": None,
-        "repository_full_name": "aman/kontext",
+        "repository_full_name": "aman/TrueMemory",
         "branch": "main",
         "task_type": "explain",
         "goal": "Explain the authentication flow",
@@ -984,7 +984,7 @@ def test_coding_worker_dispatches_runtime_operations_without_indexing(
             "approval_id": str(uuid4()),
             "payload": {"command": "npm test", "timeout_seconds": 120},
         },
-        "repository_full_name": "aman/kontext",
+        "repository_full_name": "aman/TrueMemory",
         "branch": "main",
         "task_type": "implement",
         "goal": "Implement the feature",
@@ -1257,7 +1257,7 @@ def test_agent_run_rejects_reused_idempotency_key_for_different_request(
         "_owned_task",
         lambda *_args: {
             "id": str(task_id),
-            "repository_full_name": "aman/kontext",
+            "repository_full_name": "aman/TrueMemory",
             "branch": "main",
             "task_type": "review",
             "goal": "Review the changed files",

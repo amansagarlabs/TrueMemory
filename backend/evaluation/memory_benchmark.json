@@ -1,5 +1,5 @@
 {
-  "name": "KONTEXT Memory Benchmark",
+  "name": "TrueMemory Memory Benchmark",
   "version": "0.1",
   "datasets": [10000, 100000, 1000000, 10000000, 100000000],
   "metrics": [

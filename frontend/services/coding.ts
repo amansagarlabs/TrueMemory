@@ -370,7 +370,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
     headers: {
       "Content-Type": "application/json",
-      ...buildAuthHeaders("Kontext coding tasks"),
+      ...buildAuthHeaders("TrueMemory coding tasks"),
       ...init?.headers,
     },
     cache: "no-store",
@@ -456,7 +456,7 @@ export async function uploadCodingWorkspaceSnapshot(
       method: "PUT",
       headers: {
         "Content-Type": "application/zip",
-        ...buildAuthHeaders("Kontext local coding workspace"),
+        ...buildAuthHeaders("TrueMemory local coding workspace"),
       },
       body: new Blob([archive as BlobPart], { type: "application/zip" }),
       cache: "no-store",
@@ -682,7 +682,7 @@ export async function streamCodingAgent(
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              ...buildAuthHeaders("Kontext coding agent"),
+              ...buildAuthHeaders("TrueMemory coding agent"),
             },
             body: JSON.stringify({
               ...normalizedInput,

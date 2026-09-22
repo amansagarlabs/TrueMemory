@@ -1,6 +1,6 @@
 # Chat image OCR
 
-Kontext accepts PNG, JPG, WebP, BMP, and TIFF images from the file picker or
+TrueMemory accepts PNG, JPG, WebP, BMP, and TIFF images from the file picker or
 clipboard. The browser shows a local thumbnail immediately, then sends the image
 to the authenticated `/api/ocr/image` endpoint. Extracted text is attached to the
 model request as untrusted document context rather than displayed as user-authored
@@ -13,13 +13,13 @@ text.
 - `OCR_PROVIDER=tesseract` is the smallest CPU-first deployment. It is suitable
   for screenshots and plain documents, but it does not reconstruct complex
   tables, charts, or formula layout.
-- `OCR_PROVIDER=paddleocr-vl` requires the structured VLM parser. Kontext targets
+- `OCR_PROVIDER=paddleocr-vl` requires the structured VLM parser. TrueMemory targets
   PaddleOCR-VL 1.6, the current 0.9B revision, because it retains the compact model
   size while improving document, table, formula, chart, seal, and multilingual
   parsing.
 
 PaddleOCR recommends isolating its document parser runtime and using a dedicated
-inference service for production concurrency. Kontext therefore keeps it out of
+inference service for production concurrency. TrueMemory therefore keeps it out of
 the base backend requirements and loads it only when an image needs OCR.
 
 Official references:

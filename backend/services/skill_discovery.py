@@ -65,7 +65,7 @@ class LocalSkillProvider:
                 continue
             results.append(SkillSearchResult(
                 id=f"local:{skill.name}", name=skill.name, description=skill.description,
-                author="KONTEXT", registry="Local Skills", verified=True, official=skill.kind == "bundled",
+                author="TrueMemory", registry="Local Skills", verified=True, official=skill.kind == "bundled",
                 trust_score=92, security_score=90, tags=(skill.kind,),
             ))
         return results[:limit]
@@ -83,7 +83,7 @@ class GitHubSkillProvider:
             return []
         request = Request(
             f"{self.endpoint}/search/repositories?q={quote(search_query + ' skill')}&per_page={min(limit, 50)}",
-            headers={"Accept": "application/vnd.github+json", "User-Agent": "Kontext-Skill-Discovery"},
+            headers={"Accept": "application/vnd.github+json", "User-Agent": "TrueMemory-Skill-Discovery"},
         )
         try:
             with urlopen(request, timeout=6) as response:
@@ -113,7 +113,7 @@ class OpenAgentSkillProvider:
 
     def search(self, query: str, limit: int = 20) -> list[SkillSearchResult]:
         url = f"{self.base_url}/api/skills/search?q={quote(query)}&limit={min(limit, 30)}&format=json"
-        request = Request(url, headers={"Accept": "application/json", "User-Agent": "Kontext-Skill-Discovery"})
+        request = Request(url, headers={"Accept": "application/json", "User-Agent": "TrueMemory-Skill-Discovery"})
         try:
             with urlopen(request, timeout=8) as response:
                 payload = json.loads(response.read().decode("utf-8"))
@@ -155,7 +155,7 @@ class HtmlSkillCatalogProvider:
     def search(self, query: str, limit: int = 20) -> list[SkillSearchResult]:
         request = Request(
             f"{self.base_url}/?q={quote(query)}",
-            headers={"Accept": "text/html", "User-Agent": "Kontext-Skill-Discovery"},
+            headers={"Accept": "text/html", "User-Agent": "TrueMemory-Skill-Discovery"},
         )
         try:
             with urlopen(request, timeout=6) as response:
@@ -203,7 +203,7 @@ class SkillsShProvider:
             endpoint = f"{self.base_url}/api/v1/skills/search?q={quote(query)}&limit={min(limit, 200)}"
         else:
             endpoint = f"{self.base_url}/api/v1/skills?view=all-time&page=0&per_page={min(limit, 500)}"
-        headers = {"Accept": "application/json", "User-Agent": "Kontext-Skill-Discovery"}
+        headers = {"Accept": "application/json", "User-Agent": "TrueMemory-Skill-Discovery"}
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"
         request = Request(endpoint, headers=headers)
@@ -231,21 +231,21 @@ class SkillsShProvider:
 
 
 def providers() -> list[SkillProvider]:
-    configured = [item.strip() for item in os.getenv("KONTEXT_SKILL_PROVIDERS", "local,github,openagentskill,skillsllm,skills-sh").split(",") if item.strip()]
+    configured = [item.strip() for item in os.getenv("TrueMemory_SKILL_PROVIDERS", "local,github,openagentskill,skillsllm,skills-sh").split(",") if item.strip()]
     result: list[SkillProvider] = []
     for provider_id in configured:
         if provider_id == "local":
             result.append(LocalSkillProvider())
         elif provider_id == "github":
-            result.append(GitHubSkillProvider(os.getenv("KONTEXT_GITHUB_API", "https://api.github.com")))
+            result.append(GitHubSkillProvider(os.getenv("TrueMemory_GITHUB_API", "https://api.github.com")))
         elif provider_id == "openagentskill":
-            result.append(OpenAgentSkillProvider(os.getenv("KONTEXT_OPENAGENTSKILL_URL", "https://www.openagentskill.com")))
+            result.append(OpenAgentSkillProvider(os.getenv("TrueMemory_OPENAGENTSKILL_URL", "https://www.openagentskill.com")))
         elif provider_id == "skillsllm":
-            result.append(HtmlSkillCatalogProvider("skillsllm", "SkillsLLM", os.getenv("KONTEXT_SKILLSLLM_URL", "https://skillsllm.com")))
+            result.append(HtmlSkillCatalogProvider("skillsllm", "SkillsLLM", os.getenv("TrueMemory_SKILLSLLM_URL", "https://skillsllm.com")))
         elif provider_id in {"skills-sh", "skillssh"}:
             result.append(SkillsShProvider(
-                os.getenv("KONTEXT_SKILLS_SH_URL", "https://skills.sh"),
-                os.getenv("KONTEXT_SKILLS_SH_TOKEN", ""),
+                os.getenv("TrueMemory_SKILLS_SH_URL", "https://skills.sh"),
+                os.getenv("TrueMemory_SKILLS_SH_TOKEN", ""),
             ))
     return result
 

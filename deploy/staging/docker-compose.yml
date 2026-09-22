@@ -27,7 +27,7 @@ services:
       DATABASE_URL_DOCKER: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       AUTH_COOKIE_SECURE: "true"
       CORS_ORIGINS: https://${STAGING_DOMAIN:?set STAGING_DOMAIN}
-      KONTEXT_ENABLE_TEST_AUTH: "0"
+      TrueMemory_ENABLE_TEST_AUTH: "0"
     depends_on:
       postgres:
         condition: service_healthy
@@ -51,7 +51,7 @@ services:
       APP_ENV: staging
       USE_DOCKER_POSTGRES: "true"
       DATABASE_URL_DOCKER: postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      KONTEXT_ENABLE_TEST_AUTH: "0"
+      TrueMemory_ENABLE_TEST_AUTH: "0"
     depends_on:
       postgres:
         condition: service_healthy

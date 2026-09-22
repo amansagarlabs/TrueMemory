@@ -45,9 +45,9 @@ Legacy route names, internal event names, persisted workspace platform values, s
 
 ## Remaining legacy-reference classification
 
-- `kontext-*` browser events and toast/CSS class names: PRESERVE — runtime compatibility identifiers, not user-visible product identity.
-- `kontext-*` local-storage keys and Monaco virtual paths: PRESERVE — persisted client state and editor implementation details.
-- `Kontext Memory` workspace platform union values: PRESERVE — serialized/API compatibility value; rendered UI uses TrueMemory/Space terminology.
+- `TrueMemory-*` browser events and toast/CSS class names: PRESERVE — runtime compatibility identifiers, not user-visible product identity.
+- `TrueMemory-*` local-storage keys and Monaco virtual paths: PRESERVE — persisted client state and editor implementation details.
+- `TrueMemory Memory` workspace platform union values: PRESERVE — serialized/API compatibility value; rendered UI uses TrueMemory/Space terminology.
 - Assistant/chat internal error IDs and download filenames: PRESERVE unless surfaced as visible copy; visible Assistant copy should say TrueMemory Assistant.
 - Legacy research, coding, web-retrieval, demo, and integration pages: DEFER/MOVE — keep functional routes available, but do not expose them as the platform identity or primary navigation.
 - Public metadata, page titles, landing copy, auth copy, onboarding copy, Memory, Spaces, Connections, Activity, Usage, and API & SDK surfaces: MIGRATED to TrueMemory terminology.

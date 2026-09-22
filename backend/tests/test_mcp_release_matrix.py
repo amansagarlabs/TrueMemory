@@ -17,7 +17,7 @@ from services.auth_store import create_api_token, create_user_with_password, rev
 from services.postgres_store import _connect
 
 
-BASE = os.getenv("KONTEXT_RELEASE_BASE_URL", "http://127.0.0.1:8000")
+BASE = os.getenv("TrueMemory_RELEASE_BASE_URL", "http://127.0.0.1:8000")
 
 
 def _read_project_env() -> dict[str, str]:
@@ -42,7 +42,7 @@ def _configure_release_database() -> None:
     those variables automatically. The test must therefore select the local
     published-port URL explicitly instead of inheriting a container hostname.
     """
-    requested = os.getenv("KONTEXT_RELEASE_EXECUTION_ENV", "").strip().lower()
+    requested = os.getenv("TrueMemory_RELEASE_EXECUTION_ENV", "").strip().lower()
     if requested not in {"host", "container"}:
         requested = "container" if Path("/.dockerenv").exists() else "host"
     values = _read_project_env() if requested == "host" else {}
@@ -153,7 +153,7 @@ def _identity(*, scopes: list[str], workspace_id: str, agent_id: str):
     )
     with _connect(settings) as conn:
         with conn.cursor() as cur:
-            cur.execute("INSERT INTO workspaces (id, owner_user_id, name, platform) VALUES (%s, %s, %s, 'Kontext Memory')", (workspace_id, user["id"], "MCP release matrix"))
+            cur.execute("INSERT INTO workspaces (id, owner_user_id, name, platform) VALUES (%s, %s, %s, 'TrueMemory Memory')", (workspace_id, user["id"], "MCP release matrix"))
         conn.commit()
     return user, create_api_token(settings, user_id=str(user["id"]), token_name="mcp-release-matrix", scopes=scopes, expires_days=1, tenant_id=str(uuid.uuid4()), workspace_id=workspace_id, agent_id=agent_id)
 

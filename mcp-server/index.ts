@@ -2,11 +2,11 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-const API_URL = process.env.KONTEXT_API_URL || "http://localhost:3000";
-const server = new McpServer({ name: "kontext", version: "1.0.0" });
+const API_URL = process.env.TrueMemory_API_URL || "http://localhost:3000";
+const server = new McpServer({ name: "TrueMemory", version: "1.0.0" });
 
 server.tool(
-  "kontext_search",
+  "TrueMemory_search",
   "Search the web and get full page content from results",
   { query: z.string(), limit: z.number().optional() },
   async ({ query, limit }) => {
@@ -21,7 +21,7 @@ server.tool(
 );
 
 server.tool(
-  "kontext_scrape",
+  "TrueMemory_scrape",
   "Scrape a URL and return clean markdown content",
   { url: z.string() },
   async ({ url }) => {
@@ -36,7 +36,7 @@ server.tool(
 );
 
 server.tool(
-  "kontext_map",
+  "TrueMemory_map",
   "Discover all URLs on a website",
   { url: z.string() },
   async ({ url }) => {
@@ -51,7 +51,7 @@ server.tool(
 );
 
 server.tool(
-  "kontext_agent",
+  "TrueMemory_agent",
   "Autonomous multi-source web research. Describe what you need, agent finds it.",
   { prompt: z.string(), maxSteps: z.number().optional() },
   async ({ prompt, maxSteps }) => {

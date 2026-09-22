@@ -26,7 +26,7 @@ def test_query_stream_http_shape(monkeypatch):
     client = TestClient(app)
     response = client.post(
         "/api/v1/query/stream",
-        json={"question": "What is Kontext?"},
+        json={"question": "What is TrueMemory?"},
     )
 
     assert response.status_code == 200
@@ -52,7 +52,7 @@ def test_query_stream_http_rejects_missing_openrouter_key(monkeypatch):
     client = TestClient(app)
     response = client.post(
         "/api/v1/query/stream",
-        json={"question": "What is Kontext?"},
+        json={"question": "What is TrueMemory?"},
     )
 
     assert response.status_code == 400
@@ -80,7 +80,7 @@ def test_query_stream_http_reports_stream_construction_failure(monkeypatch):
     client = TestClient(app)
     response = client.post(
         "/api/v1/query/stream",
-        json={"question": "What is Kontext?", "fast_mode": True},
+        json={"question": "What is TrueMemory?", "fast_mode": True},
     )
 
     assert response.status_code == 500
@@ -109,7 +109,7 @@ def test_query_stream_http_emits_error_event_on_runtime_failure(monkeypatch):
     client = TestClient(app)
     response = client.post(
         "/api/v1/query/stream",
-        json={"question": "What is Kontext?"},
+        json={"question": "What is TrueMemory?"},
     )
 
     assert response.status_code == 200

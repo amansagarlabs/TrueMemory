@@ -49,8 +49,8 @@ def _get_llm_headers() -> dict:
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://Kontext.local",
-        "X-Title": "Kontext Crawl",
+        "HTTP-Referer": "https://TrueMemory.local",
+        "X-Title": "TrueMemory Crawl",
     }
     return headers
 

@@ -66,6 +66,7 @@ from services.postgres_store import (
     get_artifact_for_user,
     get_project_for_user,
     list_recent_conversations,
+    load_conversation_messages as load_postgres_conversation_messages,
     postgres_enabled,
     resolve_user_id,
     save_message as save_postgres_message,
@@ -226,16 +227,21 @@ def _normalized_conversation_id(conversation_id: str, user_id: str) -> str:
     try:
         return str(UUID(conversation_id))
     except (TypeError, ValueError, AttributeError):
-        return str(uuid5(NAMESPACE_URL, f"kontext:{user_id}:{conversation_id}"))
+        return str(uuid5(NAMESPACE_URL, f"TrueMemory:{user_id}:{conversation_id}"))
 
 
 def load_conversation_messages(settings, user_id: str, conversation_id: str) -> list[dict[str, Any]]:
-    """Compatibility seam; conversation memory still flows through MemoryClient."""
-    return MemoryClient(settings).recent_messages(
+    """Load durable history without the hot-memory cache.
+
+    The chat history endpoint is a source-of-truth read. Using the cached
+    conversational context here could return an empty snapshot captured
+    immediately before the current turn was persisted, making refresh appear
+    to lose messages for up to the cache TTL.
+    """
+    return load_postgres_conversation_messages(
+        settings,
         user_id=user_id,
-        resolved_user_id=user_id,
         conversation_id=conversation_id,
-        limit=getattr(settings, "memory_recent_turns", 12),
     )
 
 
@@ -381,13 +387,13 @@ def _profile_memory_answer(
             "role": "My role is platform engineer.",
             "location": "I am based in Bengaluru.",
             "skills": "My skills are Python and SQL.",
-            "projects": "My project is Kontext.",
+            "projects": "My project is TrueMemory.",
             "goals": "My career goal is to become an AI engineer.",
             "learning": "I am learning Python.",
             "experience": "I have experience in software engineering.",
         }
         return (
-            f"I don’t have a {requested_field} saved in your KONTEXT profile yet. "
+            f"I don’t have a {requested_field} saved in your TrueMemory profile yet. "
             f'You can add it by telling me “{examples[requested_field]}”'
         )
     if not _PROFILE_SUMMARY_RE.search(question):
@@ -408,7 +414,7 @@ def _profile_memory_answer(
             continue
         seen.add(fingerprint)
         lines.append(f"- **{label}:** {content}")
-    return "Here’s your saved KONTEXT profile:\n\n" + "\n".join(lines)
+    return "Here’s your saved TrueMemory profile:\n\n" + "\n".join(lines)
 
 
 def _safe_profile_memories(memories: list[dict]) -> list[dict]:
@@ -1961,7 +1967,12 @@ async def _chat_event_stream(
         knowledge_sources = []
     validate_fresh_answer = bool(decision.live_data_kind or decision.needs_fresh_data)
 
-    if not settings.openrouter_api_key and not (
+    provider_configured = (
+        (requested_provider == "openai" and bool(settings.openai_api_key))
+        or (requested_provider == "openrouter" and bool(settings.openrouter_api_key))
+        or requested_local_model
+    )
+    if not provider_configured and not (
         verified_market_answer or verified_profile_answer
     ):
         yield sse("error", {"message": "The answer model is not configured."})

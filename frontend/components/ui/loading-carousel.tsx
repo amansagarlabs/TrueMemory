@@ -68,7 +68,7 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 function getTipKey(tip: Tip): string {
-  return `${tip.text}-${tip.image ?? "kontext"}`
+  return `${tip.text}-${tip.image ?? "TrueMemory"}`
 }
 
 const carouselVariants: Variants = {

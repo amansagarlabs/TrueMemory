@@ -1,12 +1,12 @@
-# Kontext two-service architecture
+# TrueMemory two-service architecture
 
-Kontext has two products with separate runtime ownership. Kontext Memory is
+TrueMemory has two products with separate runtime ownership. TrueMemory Memory is
 the universal memory provider itself. No dependency on Supermemory, Mem0, Zep,
 or another external memory provider exists.
 
-## 1. Kontext Memory — universal memory provider
+## 1. TrueMemory Memory — universal memory provider
 
-Long-term memory infrastructure for any AI agent: Kontext Assistant, custom
+Long-term memory infrastructure for any AI agent: TrueMemory Assistant, custom
 agents, CrewAI routes, MCP clients, and future agent runtimes.
 
 Owns:
@@ -39,7 +39,7 @@ All memory mutations require authenticated `memory` scope. Storage is shared
 with current local development code during migration; production deployment
 must give Memory sole write ownership.
 
-## 2. Kontext Assistant
+## 2. TrueMemory Assistant
 
 Full AI assistant application.
 
@@ -61,17 +61,17 @@ cutover.
 ```text
 User / external agent
         |
-        +--> Kontext Assistant --> model, web, files, tools
+        +--> TrueMemory Assistant --> model, web, files, tools
         |             |
-        |             +----------> Kontext Memory --> facts, recall, storage
+        |             +----------> TrueMemory Memory --> facts, recall, storage
         |
-        +--> Kontext Memory API (direct agent integration)
+        +--> TrueMemory Memory API (direct agent integration)
 ```
 
-External agents use Kontext Memory as their memory backend:
+External agents use TrueMemory Memory as their memory backend:
 
 ```text
-Any AI agent --> Kontext Memory API --> profile, facts, recall, storage
+Any AI agent --> TrueMemory Memory API --> profile, facts, recall, storage
 ```
 
 “Infinity” means provider scope and durable growth across agents. It does not

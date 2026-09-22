@@ -22,7 +22,7 @@ import { buildAuthHeaders, loadAuthUser } from "@/lib/auth";
 import type { AuthUser } from "@/lib/types";
 import { useToast } from "@/hooks/use-toast";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "https://truememory.onrender.com";
 
 type BillingCycle = "monthly" | "yearly";
 
@@ -171,7 +171,7 @@ export default function SubscriptionPage() {
       if (user && isAuthPlan(planKey)) {
         const nextUser: AuthUser = { ...user, plan: planKey };
         localStorage.setItem("app-agent-auth-user", JSON.stringify(nextUser));
-        window.dispatchEvent(new Event("kontext-auth-user-changed"));
+        window.dispatchEvent(new Event("TrueMemory-auth-user-changed"));
         setUser(nextUser);
       }
 

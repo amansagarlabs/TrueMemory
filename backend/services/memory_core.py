@@ -29,7 +29,7 @@ from services.memory_hot_cache import HotMemoryCache, get_hot_cache
 from services.memory_hybrid import get_memory_hybrid_retriever
 from services.temporal_reasoning import extract_temporal_intent, filter_by_temporal_intent
 
-logger = logging.getLogger("kontext.memory")
+logger = logging.getLogger("TrueMemory.memory")
 
 
 @dataclass(frozen=True)

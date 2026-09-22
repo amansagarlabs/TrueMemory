@@ -44,10 +44,10 @@ if (!useRedis) {
 }
 
 const queue = useRedis && connection
-  ? new Queue<AgentPayload>("kontext-agent", { connection })
+  ? new Queue<AgentPayload>("TrueMemory-agent", { connection })
   : null;
 const queueEvents = useRedis && connection
-  ? new QueueEvents("kontext-agent", { connection })
+  ? new QueueEvents("TrueMemory-agent", { connection })
   : null;
 
 function createJobId(): string {
@@ -120,8 +120,8 @@ async function planAndResearch(job: AgentJobRecord): Promise<unknown> {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": process.env.OPENROUTER_SITE_URL ?? "http://localhost:3000",
-        "X-Title": "Kontext",
+        "HTTP-Referer": process.env.OPENROUTER_SITE_URL ?? "https://true-memory.vercel.app",
+        "X-Title": "TrueMemory",
       },
       body: JSON.stringify({
         model: DEFAULT_AGENT_MODEL,
@@ -195,8 +195,8 @@ async function planAndResearch(job: AgentJobRecord): Promise<unknown> {
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
-      "HTTP-Referer": process.env.OPENROUTER_SITE_URL ?? "http://localhost:3000",
-      "X-Title": "Kontext",
+      "HTTP-Referer": process.env.OPENROUTER_SITE_URL ?? "https://true-memory.vercel.app",
+      "X-Title": "TrueMemory",
     },
     body: JSON.stringify({
       model: DEFAULT_AGENT_MODEL,
@@ -341,7 +341,7 @@ export async function ensureBullWorker() {
   if (!queue || !connection || bullWorkerInitialized) return;
   bullWorkerInitialized = true;
   const worker = new Worker<AgentPayload>(
-    "kontext-agent",
+    "TrueMemory-agent",
     async (job: Job<AgentPayload>) => {
       const jobId = String(job.id || createJobId());
       const record = createMemoryRecord(job.data, jobId);

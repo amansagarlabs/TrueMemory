@@ -1,5 +1,5 @@
 """
-CrewAI Flow for routing Kontext Crawl requests to appropriate agents.
+CrewAI Flow for routing TrueMemory Crawl requests to appropriate agents.
 """
 
 from enum import Enum
@@ -34,7 +34,7 @@ class CrawlResponse(BaseModel):
 
 
 class AmanCrawlFlow(Flow[CrawlRequest]):
-    """Flow that routes requests to the appropriate Kontext Crawl handler."""
+    """Flow that routes requests to the appropriate TrueMemory Crawl handler."""
 
     @start()
     def route_request(self) -> str:

@@ -1,4 +1,4 @@
-# KONTEXT Session Handoff — 2026-08-21
+# TrueMemory Session Handoff — 2026-08-21
 
 ## Completed in this session
 
@@ -35,7 +35,7 @@
 
 Build a separate Streamable HTTP Memory MCP boundary at:
 
-`https://memory.kontext.dev/mcp`
+`https://memory.TrueMemory.dev/mcp`
 
 Keep local stdio support. REST and MCP must call the same chain:
 
@@ -114,7 +114,7 @@ Continue from REMAINING_WORK_2026-08-21.md.
 
 Do not redo L0, L1, or L2. Do not redesign MemoryCore. Do not add a graph database.
 
-Implement the next milestone: a production-grade hosted KONTEXT Memory MCP service.
+Implement the next milestone: a production-grade hosted TrueMemory Memory MCP service.
 
 Use the existing boundary:
 
@@ -123,7 +123,7 @@ MCP → MemoryCore → MemoryRepository → Storage
 REST and MCP must share MemoryCore. Keep the existing local stdio adapter and add
 Streamable HTTP support for local development and deployment at:
 
-https://memory.kontext.dev/mcp
+https://memory.TrueMemory.dev/mcp
 
 Expose strict typed tools:
 memory_search, memory_retrieve, memory_store, memory_update, memory_forget,

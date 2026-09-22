@@ -148,7 +148,7 @@ def test_user(plan_name, creds):
 
 if __name__ == "__main__":
     print("\n" + "=" * 60)
-    print("  Kontext — CROSS-USER INTEGRATION TEST")
+    print("  TrueMemory — CROSS-USER INTEGRATION TEST")
     print("=" * 60)
 
     for plan, creds in USERS.items():

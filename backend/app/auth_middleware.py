@@ -1,7 +1,7 @@
 """
 Shared auth middleware — validates sessions, enforces scopes.
 
-Used by both Kontext Memory and Kontext Crawl backends.
+Used by both TrueMemory Memory and TrueMemory Crawl backends.
 Auth context flows from Next.js middleware → x-auth-context header → here.
 """
 
@@ -66,7 +66,7 @@ PLAN_SCOPES: dict[str, list[str]] = {
 class AuthContext:
     authenticated: bool
     user: dict[str, Any] | None = None
-    platform: str = "Kontext Memory"
+    platform: str = "TrueMemory Memory"
     session_token: str | None = None
     scopes: list[str] = field(default_factory=list)
     api_key: str | None = None
@@ -124,7 +124,7 @@ async def get_auth_context(request: Request) -> AuthContext:
         return AuthContext(
             authenticated=True,
             user=user,
-            platform=request.headers.get("x-aman-platform", "Kontext Memory"),
+            platform=request.headers.get("x-aman-platform", "TrueMemory Memory"),
             scopes=scopes,
             api_key=api_key,
             credential_type="api_key",
@@ -159,7 +159,7 @@ async def get_auth_context(request: Request) -> AuthContext:
     if not user:
         return AuthContext(authenticated=False, session_token=token)
 
-    platform = request.headers.get("x-aman-platform", "Kontext Memory")
+    platform = request.headers.get("x-aman-platform", "TrueMemory Memory")
     scopes_value = user.get("scopes") if credential_type == "api_key" else None
     if scopes_value is None:
         scopes = _scopes_for_user(user)

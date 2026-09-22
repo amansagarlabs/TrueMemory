@@ -1,4 +1,4 @@
-# Kontext — Development Log
+# TrueMemory — Development Log
 
 > **Last updated:** June 17, 2026
 > **Repo:** [amanpdfagent](https://github.com/amansagar070707-crypto/amanpdfagent) → `development-features` branch
@@ -7,7 +7,7 @@
 
 ## Goal
 
-Build and polish the **Kontext** — a two-product AI platform:
+Build and polish the **TrueMemory** — a two-product AI platform:
 
 | Product | Purpose |
 |---------|---------|
@@ -21,7 +21,7 @@ Current focus: production-ready usage tracking, cross-platform dashboard, anti-b
 ## Constraints & Preferences
 
 - **Products:** AmanAgentLab (personal AI OS) + AmanCrawl(web intelligence)
-- **Platform branding:** "Kontext" with Zap icon
+- **Platform branding:** "TrueMemory" with Zap icon
 - **CrewAI** chosen over LangGraph (5.76× faster, LangChain-free, 53k stars)
 - **Four crawl tools:** Jina Reader, Crawl4AI, LLM Scraper, ScrapeGraphAI
 - **Auth system** shared across both products with scope-based access control
@@ -270,4 +270,4 @@ Monthly/yearly toggle, 17% discount, API-driven plans.
 
 ---
 
-*Generated from development log — Kontext*
+*Generated from development log — TrueMemory*
