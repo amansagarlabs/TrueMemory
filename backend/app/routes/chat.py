@@ -2002,6 +2002,7 @@ async def _chat_event_stream(
                     source_message_id=user_message_id,
                     text=question,
                     project_id=project_id,
+                    recent_messages=recent_messages,
                 )
                 if workspace_id
                 else []

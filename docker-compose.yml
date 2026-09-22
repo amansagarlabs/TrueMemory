@@ -1,4 +1,9 @@
-# TrueMemory application stack. PostgreSQL is hosted by Supabase; vector DB stays on Zilliz / Milvus.
+# TrueMemory application stack.
+#
+# Development/hosted runtime uses the DATABASE_URL supplied through
+# backend/.env (currently Supabase PostgreSQL). This compose file deliberately
+# does not start local PostgreSQL or pgAdmin. The disposable postgres-test
+# service exists only in docker-compose.test.yml.
 services:
   coding-runtime:
     image: truememory-coding-runtime:local

@@ -850,3 +850,6 @@ backend/services/retrieval_scoring.py — Add temporal, entity signals
 ---
 
 *This roadmap is a living document. Updates will be made as implementation progresses and new findings emerge.*
+## Phase 10.2 disposition
+
+The competitive audit supersedes feature-copying assumptions in this roadmap. Existing governed capture, temporal/versioned retrieval, telemetry, REST/MCP and SDK surfaces are treated as implemented evidence. The next high-confidence work is the generic agent integration contract, portable export/import, a deterministic internal benchmark, and a reusable source-aware envelope. Automatic recall remains an opt-in research/design item; L5 adaptive learning remains deferred.

@@ -54,6 +54,11 @@ export class TrueMemory {
   list(input: { scope?: string; limit?: number; workspace_id?: string; agent_id?: string } = {}, options?: RequestOptions) { return this.profile(input, options); }
   health(options?: RequestOptions) { return this.request<{ service: string; status: string }>("/v1/memory/health", {}, options); }
   usage(options?: RequestOptions) { return this.request<UsageResult>("/v1/memory/metrics", {}, options); }
+  exportMemory(input: RecallInput = {}, options?: RequestOptions) { return this.request<Record<string, unknown>>("/v1/memory/export", { method: "POST", body: JSON.stringify(input) }, options); }
+  importMemory(document: Record<string, unknown>, options?: RequestOptions) { return this.request<Record<string, unknown>>("/v1/memory/import", { method: "POST", body: JSON.stringify({ document }) }, options); }
+  extractNotes(text: string, options?: RequestOptions) { return this.request<Record<string, unknown>>("/v1/memory/import/notes", { method: "POST", body: JSON.stringify({ text }) }, options); }
+  importNotes(text: string, selected: number[], options?: RequestOptions) { return this.request<Record<string, unknown>>("/v1/memory/import/notes", { method: "POST", body: JSON.stringify({ text, selected }) }, options); }
+  exportNotes(input: RecallInput = {}, options?: RequestOptions) { return this.request<{ format: string; notes: string; lossy: boolean }>("/v1/memory/export/notes", { method: "POST", body: JSON.stringify(input) }, options); }
 }
 
 export { TrueMemory as MemoryClient };

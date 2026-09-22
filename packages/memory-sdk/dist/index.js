@@ -119,5 +119,9 @@ export class TrueMemory {
     list(input = {}, options) { return this.profile(input, options); }
     health(options) { return this.request("/v1/memory/health", {}, options); }
     usage(options) { return this.request("/v1/memory/metrics", {}, options); }
+    exportMemory(input = {}, options) { return this.request("/v1/memory/export", { method: "POST", body: JSON.stringify(input) }, options); }
+    importMemory(document, options) { return this.request("/v1/memory/import", { method: "POST", body: JSON.stringify({ document }) }, options); }
+    extractNotes(text, options) { return this.request("/v1/memory/import/notes", { method: "POST", body: JSON.stringify({ text }) }, options); }
+    importNotes(text, selected, options) { return this.request("/v1/memory/import/notes", { method: "POST", body: JSON.stringify({ text, selected }) }, options); }
 }
 export { TrueMemory as MemoryClient };

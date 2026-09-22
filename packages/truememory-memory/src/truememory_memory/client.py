@@ -63,3 +63,8 @@ class TrueMemory:
     async def list(self, *, signal=None, **kwargs): return await self.profile(signal=signal, **kwargs)
     async def health(self, *, signal=None): return await self._request("/v1/memory/health", signal=signal)
     async def usage(self, *, signal=None): return await self._request("/v1/memory/metrics", signal=signal)
+    async def export_memory(self, *, signal=None, **kwargs): return await self._request("/v1/memory/export", method="POST", payload=kwargs, signal=signal)
+    async def import_memory(self, document: dict, *, signal=None): return await self._request("/v1/memory/import", method="POST", payload={"document": document}, safe=False, signal=signal)
+    async def extract_notes(self, text: str, *, signal=None): return await self._request("/v1/memory/import/notes", method="POST", payload={"text": text}, signal=signal)
+    async def import_notes(self, text: str, selected: list[int], *, signal=None): return await self._request("/v1/memory/import/notes", method="POST", payload={"text": text, "selected": selected}, safe=False, signal=signal)
+    async def export_notes(self, *, signal=None, **kwargs): return await self._request("/v1/memory/export/notes", method="POST", payload=kwargs, signal=signal)

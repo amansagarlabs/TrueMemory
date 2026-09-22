@@ -11,6 +11,8 @@ from app.auth_middleware import AuthContext, require_scope
 from app.config import get_settings
 from services.memory_core import MemoryClient
 from services.rate_limiter import get_rate_limiter
+from services.portable_memory import make_document, validate_document
+from services.memory_notes import extract_note_candidates, extract_note_relationships, render_memory_notes
 
 router = APIRouter(prefix="/v1", tags=["memory-infrastructure"])
 class MemoryWrite(BaseModel):
@@ -44,6 +46,68 @@ class MemoryMutation(BaseModel):
     valid_from: str | None = Field(default=None, max_length=80)
     valid_until: str | None = Field(default=None, max_length=80)
     confidence: float = Field(default=0.75, ge=0.0, le=1.0)
+
+
+class PortableMemoryRequest(BaseModel):
+    document: dict
+
+
+class MemoryNotesRequest(BaseModel):
+    text: str = Field(min_length=1, max_length=20000)
+    selected: list[int] | None = None
+
+
+@router.post("/memory/import/notes")
+async def import_memory_notes(payload: MemoryNotesRequest, auth: AuthContext = Depends(require_scope("memory"))):
+    """Preview by default; persist only explicitly selected candidates."""
+    candidates = extract_note_candidates(payload.text)
+    if payload.selected is None:
+        return {"candidates": candidates, "relationships": extract_note_relationships(payload.text), "source": {"source_type": "memory_note"}, "requires_confirmation": True}
+    user_id = _user(auth)
+    selected = [candidates[index] for index in payload.selected if 0 <= index < len(candidates)]
+    client = _client()
+    saved = []
+    for candidate in selected:
+        client.remember(user_id=user_id, scope="general", key=candidate["key"], content=candidate["content"], source="memory_note")
+        saved.append(candidate)
+    return {"saved": saved, "count": len(saved), "source": {"source_type": "memory_note"}}
+
+
+@router.post("/memory/export/notes")
+async def export_memory_notes(payload: MemoryRecall = MemoryRecall(), auth: AuthContext = Depends(require_scope("memory"))):
+    ws_id = _scope_workspace_id(auth, payload.workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=payload.agent_id)
+    scope = _effective_scope(auth, payload.scope.strip() or "general")
+    items = _client().list(user_id=_user(auth), scope=scope, limit=500, workspace_id=ws_id, agent_id=payload.agent_id)
+    return {"format": "truememory-memory-notes", "notes": render_memory_notes(items), "lossy": True}
+
+
+@router.post("/memory/export")
+async def export_memory(payload: MemoryRecall = MemoryRecall(), auth: AuthContext = Depends(require_scope("memory"))):
+    ws_id = _scope_workspace_id(auth, payload.workspace_id)
+    _authorize_bindings(auth, workspace_id=ws_id, agent_id=payload.agent_id)
+    scope = _effective_scope(auth, payload.scope.strip() or "general")
+    items = _client().list(user_id=_user(auth), scope=scope, limit=500, workspace_id=ws_id, agent_id=payload.agent_id)
+    return make_document(items)
+
+
+@router.post("/memory/import")
+async def import_memory(payload: PortableMemoryRequest, auth: AuthContext = Depends(require_scope("memory"))):
+    try:
+        memories = validate_document(payload.document)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    user_id = _user(auth)
+    imported = 0
+    client = _client()
+    # Portable ownership is data, never authorization. All records are mapped
+    # into the authenticated principal's explicitly authorized destination.
+    for item in memories:
+        scope = _effective_scope(auth, str(item["scope"] or "general"))
+        ws_id = _scope_workspace_id(auth, None)
+        client.remember(user_id=user_id, scope=scope, key=item["key"], content=item["content"], source="portable_import", valid_from=item.get("valid_from"), valid_until=item.get("valid_until"), confidence=float(item.get("confidence") or 0.75), workspace_id=ws_id)
+        imported += 1
+    return {"imported": imported, "format": "truememory-memory-v1"}
 
 
 def _user(auth: AuthContext) -> str:

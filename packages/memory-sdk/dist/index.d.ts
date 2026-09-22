@@ -157,5 +157,9 @@ export declare class TrueMemory {
         status: string;
     }>;
     usage(options?: RequestOptions): Promise<UsageResult>;
+    exportMemory(input?: RecallInput, options?: RequestOptions): Promise<Record<string, unknown>>;
+    importMemory(document: Record<string, unknown>, options?: RequestOptions): Promise<Record<string, unknown>>;
+    extractNotes(text: string, options?: RequestOptions): Promise<Record<string, unknown>>;
+    importNotes(text: string, selected: number[], options?: RequestOptions): Promise<Record<string, unknown>>;
 }
 export { TrueMemory as MemoryClient };

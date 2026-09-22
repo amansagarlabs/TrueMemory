@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import {
   fetchRecentMemories, importMemories, updateMemory, type MemoryItem,
+  previewMemoryNotes, saveMemoryNotes, exportMemoryNotes, type MemoryNoteCandidate, type MemoryNoteRelationship,
 } from "@/services/dashboard";
 
 type MemoryStatus = "all" | "pending" | "approved" | "rejected" | "superseded" | "archived";
@@ -42,6 +43,11 @@ function MemoryPageContent() {
   const [editing, setEditing] = useState<MemoryItem | null>(null);
   const [editContent, setEditContent] = useState("");
   const [saving, setSaving] = useState(false);
+  const [noteText, setNoteText] = useState("");
+  const [noteCandidates, setNoteCandidates] = useState<MemoryNoteCandidate[]>([]);
+  const [selectedNotes, setSelectedNotes] = useState<number[]>([]);
+  const [notesBusy, setNotesBusy] = useState(false);
+  const [noteRelationships, setNoteRelationships] = useState<MemoryNoteRelationship[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
   const visibleItems = typeFilter === "all"
     ? items
@@ -111,6 +117,15 @@ function MemoryPageContent() {
     URL.revokeObjectURL(url);
   }
 
+  async function exportNotes() {
+    try {
+      const result = await exportMemoryNotes();
+      const blob = new Blob([result.notes], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a"); anchor.href = url; anchor.download = "truememory-notes.txt"; anchor.click(); URL.revokeObjectURL(url);
+    } catch (cause) { setMessage(cause instanceof Error ? cause.message : "Could not export memory notes."); }
+  }
+
   async function importFile(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -152,12 +167,32 @@ function MemoryPageContent() {
                 <button onClick={exportData} disabled={!items.length} className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-[#f6e879] px-4 text-sm font-semibold text-[#171814] disabled:opacity-40">
                   <Download className="size-4" aria-hidden="true" />Export JSON
                 </button>
+                <button onClick={() => void exportNotes()} disabled={!items.length} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#f6e879]/30 bg-white/[.04] px-4 text-sm disabled:opacity-40">
+                  <Download className="size-4" aria-hidden="true" />Share as notes
+                </button>
                 <button onClick={() => fileInput.current?.click()} className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-white/10 bg-white/[.04] px-4 text-sm">
                   <Upload className="size-4" aria-hidden="true" />Import profile memory
                 </button>
                 <input ref={fileInput} type="file" accept="application/json,.json" onChange={importFile} className="hidden" />
               </div>
             </div>
+          </section>
+
+          <section className="mt-5 rounded-[20px] border border-[#f6e879]/20 bg-[#15140e] p-5" aria-labelledby="memory-notes-title">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-[.16em] text-[#f6e879]">Memory Notes</p>
+                <h2 id="memory-notes-title" className="mt-2 text-lg font-semibold text-white">Add memories from your own notes</h2>
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-white/45">Paste notes to extract a reviewable set of memories. Nothing is saved until you confirm the selected candidates.</p>
+              </div>
+              <span className="rounded-full border border-white/10 px-3 py-1 text-xs text-white/40">Preview first</span>
+            </div>
+            <textarea value={noteText} onChange={(event) => setNoteText(event.target.value)} rows={4} placeholder="I am 19 years old. I prefer TypeScript. This project uses PostgreSQL." className="mt-4 w-full resize-y rounded-xl border border-white/10 bg-black/25 p-3 text-sm leading-6 text-white outline-none placeholder:text-white/25 focus:border-[#f6e879]/50" />
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button disabled={notesBusy || !noteText.trim()} onClick={() => void (async () => { setNotesBusy(true); try { const result = await previewMemoryNotes(noteText); setNoteCandidates(result.candidates); setNoteRelationships(result.relationships || []); setSelectedNotes(result.candidates.map((_, index) => index)); setMessage(result.candidates.length ? "Review the extracted memories before saving." : "No high-confidence memories found in those notes."); } catch (cause) { setMessage(cause instanceof Error ? cause.message : "Could not extract memory notes."); } finally { setNotesBusy(false); } })()} className="min-h-10 rounded-xl bg-[#f6e879] px-4 text-sm font-semibold text-[#171814] disabled:opacity-40">{notesBusy ? "Extracting…" : "Extract memories"}</button>
+              {noteCandidates.length ? <button disabled={notesBusy || !selectedNotes.length} onClick={() => void (async () => { setNotesBusy(true); try { const result = await saveMemoryNotes(noteText, selectedNotes); setMessage(`${result.count} memories saved.`); setNoteCandidates([]); setSelectedNotes([]); setNoteText(""); await reload(); } catch (cause) { setMessage(cause instanceof Error ? cause.message : "Could not save memory notes."); } finally { setNotesBusy(false); } })()} className="min-h-10 rounded-xl border border-emerald-300/30 px-4 text-sm text-emerald-200 disabled:opacity-40">Save selected memories</button> : null}
+            </div>
+            {noteCandidates.length ? <div className="mt-4 grid gap-2">{noteCandidates.map((candidate, index) => <label key={`${candidate.key}-${index}`} className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[.03] p-3"><input type="checkbox" checked={selectedNotes.includes(index)} onChange={() => setSelectedNotes((current) => current.includes(index) ? current.filter((item) => item !== index) : [...current, index])} className="mt-1 accent-[#f6e879]" /><span className="min-w-0"><span className="block text-sm text-white/80">{candidate.content}</span><span className="mt-1 block text-xs text-white/35">{Math.round(candidate.confidence * 100)}% confidence · {candidate.subject} · {candidate.locator}</span></span></label>)}{noteRelationships.length ? <div className="mt-2 rounded-xl border border-[#f6e879]/15 bg-[#f6e879]/[.04] p-3"><p className="font-mono text-[10px] uppercase tracking-[.14em] text-[#f6e879]">Related information · review only</p>{noteRelationships.map((relationship, index) => <p key={`${relationship.from}-${relationship.to}-${index}`} className="mt-2 text-sm text-white/65">{relationship.from} <span className="text-white/30">→ {relationship.type} →</span> {relationship.to}</p>)}</div> : null}</div> : null}
           </section>
 
           {message ? <p role="status" className="mt-4 rounded-xl border border-white/10 bg-white/[.03] px-4 py-3 text-sm text-white/55">{message}</p> : null}

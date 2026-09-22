@@ -84,7 +84,7 @@ export default function StatusPage() {
             <div>
               <h1 className="text-2xl font-bold text-[#201510] dark:text-white">System Status</h1>
               <p className="mt-1 text-sm text-[#999] dark:text-white/40">
-                amansagar.in
+                Truememory
               </p>
             </div>
             <div className="flex items-center gap-2">

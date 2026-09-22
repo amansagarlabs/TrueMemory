@@ -174,6 +174,42 @@ export async function importMemories(items: Array<{ key: string; content: string
   return res.json() as Promise<{ imported: number }>;
 }
 
+export interface MemoryNoteCandidate {
+  key: string;
+  content: string;
+  memory_type: string;
+  confidence: number;
+  subject: string;
+  locator: string;
+  source_type: string;
+}
+export interface MemoryNoteRelationship { from: string; type: string; to: string; kind: string; locator: string; }
+
+export async function previewMemoryNotes(text: string) {
+  const res = await fetch(`${API_URL}/v1/memory/import/notes`, {
+    method: "POST", headers: authHeaders(), body: JSON.stringify({ text }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Could not extract memory notes.");
+  return data as { candidates: MemoryNoteCandidate[]; relationships: MemoryNoteRelationship[]; requires_confirmation: boolean };
+}
+
+export async function saveMemoryNotes(text: string, selected: number[]) {
+  const res = await fetch(`${API_URL}/v1/memory/import/notes`, {
+    method: "POST", headers: authHeaders(), body: JSON.stringify({ text, selected }),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Could not save memory notes.");
+  return data as { count: number };
+}
+
+export async function exportMemoryNotes() {
+  const res = await fetch(`${API_URL}/v1/memory/export/notes`, { method: "POST", headers: authHeaders(), body: JSON.stringify({}) });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Could not export memory notes.");
+  return data as { notes: string; lossy: boolean };
+}
+
 export async function deleteMemory(key: string) {
   const res = await fetch(`${API_URL}/api/dashboard/memories/${encodeURIComponent(key)}`, {
     method: "DELETE",

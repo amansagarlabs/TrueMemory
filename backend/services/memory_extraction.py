@@ -276,3 +276,68 @@ def extract_memories_sync(
         success=True,
         latency_ms=latency,
     )
+
+
+def extract_contextual_memories_sync(
+    text: str,
+    *,
+    recent_messages: list[dict[str, Any]] | None = None,
+    source_type: str = "user_message",
+) -> ExtractionResult:
+    """Extract explicit memories and high-confidence answers to recent questions.
+
+    This is deliberately conservative: a short answer is promoted only when the
+    immediately preceding assistant message is an information-seeking question
+    and the question identifies a stable subject. Bare numbers in unrelated
+    conversations therefore remain ordinary conversation.
+    """
+    base = extract_memories_sync(text, source_type=source_type)
+    normalized = text.strip()
+    if not normalized or len(normalized.split()) > 12 or not recent_messages:
+        return base
+    previous = next(
+        (m for m in reversed(recent_messages) if str(m.get("role", "")).lower() == "assistant"),
+        None,
+    )
+    question = str(previous.get("content", "")).strip() if previous else ""
+    if not question or not re.search(r"\?\s*$", question):
+        return base
+
+    # Stable semantic slots used by the current product. The mechanism is
+    # question→answer linking; adding a slot must not change MemoryCore.
+    slot_patterns = (
+        ("age", r"\b(?:how old|age)\b"),
+        ("location", r"\b(?:where do I live|where are you based|location)\b"),
+        ("preference.language", r"\b(?:language|programming language)\b"),
+        ("project.database", r"\b(?:database|db)\b"),
+    )
+    slot = next((key for key, pattern in slot_patterns if re.search(pattern, question, re.I)), None)
+    if not slot or re.search(r"\b(?:don't|do not|not|never)\b", normalized, re.I):
+        return base
+    if slot == "age" and not re.fullmatch(r"\d{1,3}", normalized):
+        return base
+    if slot != "age" and not re.fullmatch(r"[A-Za-z][A-Za-z0-9 ._+#-]{1,80}", normalized):
+        return base
+
+    content = f"{slot} = {normalized}"
+    candidate = _validate_candidate(
+        {
+            "type": "preference" if slot.startswith("preference.") else "fact",
+            "content": content,
+            "confidence": 0.97,
+            "importance": 0.8,
+            "scope": "user" if not slot.startswith("project.") else "project",
+            "entities": [normalized],
+            "reason": "high_confidence_answer_to_recent_assistant_question",
+        },
+        source_type,
+    )
+    if not candidate:
+        return base
+    return ExtractionResult(
+        candidates=[*base.candidates, candidate],
+        source=source_type,
+        method="contextual_deterministic",
+        success=True,
+        latency_ms=base.latency_ms,
+    )

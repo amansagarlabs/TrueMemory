@@ -180,3 +180,9 @@ TrueMemory has completed Phase 8.7 and is ready for production observation. The 
 - **Telemetry infrastructure** to collect production signals
 
 **Next step:** Fund OpenRouter account to achieve L4 PROVEN status.
+## Phase 10.2 competitive audit
+
+The Phase 10.2 audit is documented in `TRUE_MEMORY_PHASE10_2_SUPERMEMORY_AUDIT.md`, with differentiation, recommendations and benchmark plan in the companion documents. It confirms that L4 remains **HARDENED — LIVE EVIDENCE PARTIAL** and L5 remains **NOT IMPLEMENTED**. No competitive research promotes either certification.
+## Environment isolation
+
+The active backend configuration uses Supabase PostgreSQL through `DATABASE_URL` with Docker Postgres disabled. Disposable tests use the separate `docker-compose.test.yml` `postgres-test` target and require test-only credentials. Production Supabase is not a portability-test target.

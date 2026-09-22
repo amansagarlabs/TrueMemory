@@ -406,15 +406,16 @@ class MemoryClient:
     def cache_metrics(self) -> dict[str, Any]:
         return self.hot_cache.metrics()
 
-    def extract_and_save_workspace_memory(self, *, user_id: str, workspace_id: str, conversation_id: str, source_message_id: str | None, text: str, project_id: str | None = None) -> list[dict[str, Any]]:
+    def extract_and_save_workspace_memory(self, *, user_id: str, workspace_id: str, conversation_id: str, source_message_id: str | None, text: str, project_id: str | None = None, recent_messages: list[dict[str, Any]] | None = None) -> list[dict[str, Any]]:
         """Extract memories using LLM pipeline with governance, then save."""
-        from services.memory_extraction import extract_memories_sync
+        from services.memory_extraction import extract_contextual_memories_sync
         from services.memory_governor import govern_candidate, GovernorDecision, MemoryPolicy
         from services.memory_pipeline import candidates_to_write_objects
 
-        extraction = extract_memories_sync(
+        extraction = extract_contextual_memories_sync(
             text,
             source_type="user_message",
+            recent_messages=recent_messages,
         )
 
         policy = MemoryPolicy()
