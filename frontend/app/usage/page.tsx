@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Activity, ArrowLeft, BarChart3, Clock3, DollarSign, MessageSquare, RefreshCw, Zap } from "lucide-react";
 import { AuthenticatedAppShell } from "@/components/authenticated-app-shell";
 import { fetchUsageAnalytics, fetchUsageSummary, type ResourceUsage, type UsageBucket } from "@/services/subscriptions";
@@ -16,14 +16,17 @@ export default function UsagePage() {
   const [plan, setPlan] = useState("free");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const load = async () => {
+  const load = useCallback(async () => {
     setLoading(true); setError(false);
     try {
       const [analytics, summary] = await Promise.all([fetchUsageAnalytics(period), fetchUsageSummary()]);
       setBuckets(analytics.buckets); setUsage(summary.usage["ai:tokens"] || null); setPlan(summary.plan);
     } catch { setError(true); } finally { setLoading(false); }
-  };
-  useEffect(() => { void load(); }, [period]);
+  }, [period]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => void load(), 0);
+    return () => window.clearTimeout(timer);
+  }, [load]);
   const totals = useMemo(() => buckets.reduce((a, b) => ({ input: a.input + b.tokens_input, output: a.output + b.tokens_output, requests: a.requests + b.requests, cost: a.cost + b.cost_cents }), { input: 0, output: 0, requests: 0, cost: 0 }), [buckets]);
   const max = Math.max(1, ...buckets.map((b) => b.tokens_total));
   const metrics: Array<{ icon: typeof Zap; label: string; value: string; detail: string }> = [

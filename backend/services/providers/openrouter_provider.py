@@ -25,6 +25,11 @@ from services.llm_provider import (
     ToolDefinition,
     Message,
 )
+from services.model_registry import (
+    OPENROUTER_FREE_MODEL,
+    OPENROUTER_MODEL_ALIASES,
+    resolve_openrouter_model,
+)
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 OPENROUTER_SITE_URL = os.getenv("OPENROUTER_SITE_URL", "https://true-memory.vercel.app")
@@ -102,9 +107,27 @@ class OpenRouterProvider(LLMProvider):
         base_url: str = "https://openrouter.ai/api/v1",
     ):
         self._api_key = api_key
-        self._model = model
+        self._model = self._normalize_model(model, OPENROUTER_FREE_MODEL)
         self._on_usage = on_usage
         self._base_url = base_url.rstrip("/")
+
+    @staticmethod
+    def _normalize_model(model: str | None, fallback: str) -> str:
+        value = str(model or "").strip()
+        lowered = value.casefold()
+        alias = lowered.split("::", 1)[1] if "::" in lowered else lowered
+        if alias in OPENROUTER_MODEL_ALIASES:
+            return resolve_openrouter_model(
+                alias,
+                has_images=False,
+                default_model=fallback,
+                vision_model=fallback,
+            )
+        return value or fallback
+
+    def _request_model(self, model: str | None) -> str:
+        """Normalize legacy UI aliases before they reach OpenRouter."""
+        return self._normalize_model(model, self._model)
 
     def name(self) -> str:
         return "openrouter"
@@ -127,7 +150,7 @@ class OpenRouterProvider(LLMProvider):
             "X-Title": "TrueMemory",
         }
         payload = {
-            "model": request.model or self._model,
+            "model": self._request_model(request.model),
             "messages": self.format_messages(request.messages),
             "stream": False,
             "max_tokens": request.max_tokens,
@@ -168,7 +191,7 @@ class OpenRouterProvider(LLMProvider):
             "X-Title": "TrueMemory",
         }
         payload = {
-            "model": request.model or self._model,
+            "model": self._request_model(request.model),
             "messages": self.format_messages(request.messages),
             "stream": True,
             "stream_options": {"include_usage": True},
@@ -225,7 +248,7 @@ class OpenRouterProvider(LLMProvider):
             "X-Title": "TrueMemory",
         }
         payload: dict[str, Any] = {
-            "model": request.model or self._model,
+            "model": self._request_model(request.model),
             "messages": self.format_messages(request.messages),
             "stream": True,
             "stream_options": {"include_usage": True},
@@ -318,7 +341,7 @@ class OpenRouterProvider(LLMProvider):
             "X-Title": "TrueMemory",
         }
         payload: dict[str, Any] = {
-            "model": request.model or self._model,
+            "model": self._request_model(request.model),
             "messages": self.format_messages(request.messages),
             "stream": False,
             "max_tokens": request.max_tokens,

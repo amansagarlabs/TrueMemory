@@ -212,6 +212,8 @@ export function ChatAppSidebar({
         activeWorkspaceId,
       );
       setRecentChats(items);
+      if (items.some((item) => item.is_pinned)) setPinnedHistoryOpen(true);
+      if (items.some((item) => !item.is_pinned)) setRecentHistoryOpen(true);
       setHasMoreRecents(items.length >= recentLimitRef.current);
     } catch {
       setRecentChats([]);
@@ -345,11 +347,6 @@ export function ChatAppSidebar({
   const isChatRoute = pathname === "/chat";
   const pinnedChats = recentChats.filter((chat) => chat.is_pinned);
   const regularChats = recentChats.filter((chat) => !chat.is_pinned);
-
-  useEffect(() => {
-    if (pinnedChats.length > 0) setPinnedHistoryOpen(true);
-    if (regularChats.length > 0) setRecentHistoryOpen(true);
-  }, [pinnedChats.length, regularChats.length]);
 
   function toggleSection(section: string) {
     setOpenSections((current) => ({ ...current, [section]: !current[section] }));
