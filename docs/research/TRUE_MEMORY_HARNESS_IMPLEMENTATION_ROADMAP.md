@@ -871,3 +871,32 @@ Local component measurements are distinct from production latency. Cloudflare ed
 ## Phase 11.15 validation boundary
 
 The disposable compose stack is now executable and has real HTTP evidence for PostgreSQL, FastAPI, the existing worker, authentication boundaries, ingestion idempotency, and performance. The result is still PARTIAL: failure injection, SDK live E2E, Redis failure, crash/lease recovery, streaming failure, and production diagnostics are not certified by this run.
+
+## Phase 11.17 fast decision boundary
+
+The agent harness now has a provider-neutral fast-decision contract with a
+deterministic baseline and an optional server-side Jev adapter. Disabled mode
+has no external dependency; shadow mode compares Jev without changing the
+authoritative path; active mode is limited by an explicit low-risk policy.
+MemoryCore, MemoryClient, the public memory API, and existing authorization
+remain provider-independent. Live Jev validation and performance/calibration
+evidence remain pending.
+
+## Embedded OPA and optional Groq boundary
+
+The current implementation adds versioned Rego, an OPA CLI build script, an
+optional in-process Wasm loader, and a server-only Groq structured-output
+adapter. The default remains deterministic. A compiled policy bundle and live
+Groq credentials are validation inputs, not production prerequisites. Jev is
+not part of the new target architecture and remains only in historical
+validation compatibility code until its retirement is separately verified.
+
+## Phase 11.18 live Jev validation boundary
+
+Phase 11.18 adds only guarded evidence infrastructure: disposable-only model
+discovery, typed System One validation, synthetic calibration fixtures,
+failure-matrix reporting, and a research-only trace evaluator. Missing live
+credentials must remain an explicit `NOT_VERIFIED` result. Jev cannot become
+authoritative for MemoryCore, authorization, tool risk, forgetting, memory
+writes, consolidation, scope, or revisions. Production activation, billing
+claims, and L4/L5 promotion require separate live evidence.

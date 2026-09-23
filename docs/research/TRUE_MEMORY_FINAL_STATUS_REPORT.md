@@ -241,3 +241,40 @@ commit, duplicate worker delivery, handler fault injection, Redis outage
 comparison, live HTTP status injection, restart orchestration, and streaming
 termination tests remain **NOT VERIFIED**. No production data was touched and
 no HA/zero-downtime/production-readiness claim is made.
+
+## Phase 11.17 fast decision layer
+
+Phase 11.17 adds a provider-neutral FastDecisionProvider contract, a
+dependency-free deterministic implementation, an isolated optional Jev/TypeSafe
+adapter, bounded retry/fallback handling, explicit confidence policy, shadow
+telemetry, minimal chat shadow state, and MemoryCore import-isolation tests.
+Production defaults remain deterministic and disabled. Jev is not required for
+memory correctness and cannot authorize destructive tools, memory writes,
+forgetting, consolidation, scope changes, or revision changes. Live Jev
+authentication/model behavior, calibration, and p50/p95/p99 measurements are
+**NOT VERIFIED**; Phase 11.17 is **PARTIAL**.
+
+## Embedded OPA and optional Groq decision engine
+
+The decision architecture now has a provider-independent replacement path:
+deterministic signals remain required, an optional Rego-to-Wasm policy is
+evaluated in-process, and an opt-in Groq structured-output advisor is
+server-side only. No OPA service, `OPA_URL`, Jev key, or AI provider is needed
+for startup or MemoryCore correctness. Groq failures fall back locally and
+cannot authorize tools, writes, forgetting, scope changes, or revisions. The
+OPA compiled artifact, live Groq request, and offline full-stack acceptance run
+remain **NOT VERIFIED**; production remains deterministic and disabled.
+
+## Phase 11.18 live Jev validation and calibration
+
+Phase 11.18 adds a disposable-test-only Jev validation runner with model
+discovery, typed Noul/Choice/Score coverage, synthetic A–I fixtures, failure
+status reporting, latency/calibration fields, and an isolated provider-as-judge
+research helper. The local evidence run found no `TYPESAFE_API_KEY`, so live
+TypeSafe authentication, model discovery, System One execution, Jev latency,
+shadow overhead, agreement, cost, and live failure injection remain **NOT
+VERIFIED**. Deterministic fixture evidence is recorded, but its measured
+fixture accuracy is not a production-quality claim. Jev remains optional,
+shadow-first, server-side only, and unable to authorize tools or mutate
+MemoryCore. Phase 11.18 is **PARTIAL**; production defaults remain
+deterministic and disabled.

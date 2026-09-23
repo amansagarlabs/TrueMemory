@@ -1,0 +1,298 @@
+{
+  "phase": "11.18",
+  "timestamp": "2026-09-23T07:03:53.244926+00:00",
+  "live_typesafe": "NOT_VERIFIED",
+  "live_reason": "TYPESAFE_API_KEY is not configured",
+  "model_discovery": {
+    "status": "NOT_VERIFIED",
+    "model_count": 0,
+    "selected_model": null,
+    "models": []
+  },
+  "system_one": "NOT_VERIFIED",
+  "deterministic_rows": [
+    {
+      "fixture_id": "A-current-framework",
+      "decision_type": "chat_routing",
+      "provider": "deterministic",
+      "model": "rules-v1",
+      "values": {
+        "memory_needed": true,
+        "memory_depth": "current_state",
+        "model_route": "fast"
+      },
+      "confidences": {
+        "memory_needed": 0.7,
+        "memory_depth": 0.7,
+        "model_route": 0.78
+      },
+      "confidence": 0.7266666666666666,
+      "latency_ms": 0.091,
+      "request_id": "phase11-18-deterministic-A-current-framework",
+      "run_id": "phase11-18-A-current-framework",
+      "status": "ok",
+      "fallback": false,
+      "error": null,
+      "expected": {
+        "memory_depth": "current_state",
+        "model_route": "fast"
+      }
+    },
+    {
+      "fixture_id": "B-arithmetic",
+      "decision_type": "chat_routing",
+      "provider": "deterministic",
+      "model": "rules-v1",
+      "values": {
+        "memory_needed": false,
+        "memory_depth": "none",
+        "model_route": "fast"
+      },
+      "confidences": {
+        "memory_needed": 0.7,
+        "memory_depth": 0.7,
+        "model_route": 0.78
+      },
+      "confidence": 0.7266666666666666,
+      "latency_ms": 0.02,
+      "request_id": "phase11-18-deterministic-B-arithmetic",
+      "run_id": "phase11-18-B-arithmetic",
+      "status": "ok",
+      "fallback": false,
+      "error": null,
+      "expected": {
+        "memory_depth": "none",
+        "model_route": "fast"
+      }
+    },
+    {
+      "fixture_id": "C-postgres-decision",
+      "decision_type": "chat_routing",
+      "provider": "deterministic",
+      "model": "rules-v1",
+      "values": {
+        "memory_needed": false,
+        "memory_depth": "none",
+        "model_route": "fast"
+      },
+      "confidences": {
+        "memory_needed": 0.3,
+        "memory_depth": 0.3,
+        "model_route": 0.78
+      },
+      "confidence": 0.45999999999999996,
+      "latency_ms": 0.015,
+      "request_id": "phase11-18-deterministic-C-postgres-decision",
+      "run_id": "phase11-18-C-postgres-decision",
+      "status": "ok",
+      "fallback": false,
+      "error": null,
+      "expected": {
+        "memory_depth": "semantic",
+        "model_route": "fast"
+      }
+    },
+    {
+      "fixture_id": "D-before-vue",
+      "decision_type": "chat_routing",
+      "provider": "deterministic",
+      "model": "rules-v1",
+      "values": {
+        "memory_needed": true,
+        "memory_depth": "episodic",
+        "model_route": "fast"
+      },
+      "confidences": {
+        "memory_needed": 0.8,
+        "memory_depth": 0.8,
+        "model_route": 0.78
+      },
+      "confidence": 0.7933333333333333,
+      "latency_ms": 0.013,
+      "request_id": "phase11-18-deterministic-D-before-vue",
+      "run_id": "phase11-18-D-before-vue",
+      "status": "ok",
+      "fallback": false,
+      "error": null,
+      "expected": {
+        "memory_depth": "episodic",
+        "model_route": "fast"
+      }
+    },
+    {
+      "fixture_id": "E-forget-preference",
+      "decision_type": "tool_risk",
+      "provider": "deterministic",
+      "model": "rules-v1",
+      "values": {
+        "risk": "high"
+      },
+      "confidences": {
+        "risk": 0.9
+      },
+      "confidence": 0.9,
+      "latency_ms": 0.003,
+      "request_id": "phase11-18-deterministic-E-forget-preference",
+      "run_id": "phase11-18-E-forget-preference",
+      "status": "ok",
+      "fallback": false,
+      "error": null,
+      "expected": {
+        "risk": "high"
+      }
+    },
+    {
+      "fixture_id": "F-files-not-age",
+      "decision_type": "memory_write_triage",
+      "provider": "deterministic",
+      "model": "rules-v1",
+      "values": {
+        "should_remember": false,
+        "memory_category": "none",
+        "temporary_or_durable": "temporary"
+      },
+      "confidences": {
+        "should_remember": 0.72
+      },
+      "confidence": 0.72,
+      "latency_ms": 0.002,
+      "request_id": "phase11-18-deterministic-F-files-not-age",
+      "run_id": "phase11-18-F-files-not-age",
+      "status": "ok",
+      "fallback": false,
+      "error": null,
+      "expected": {
+        "should_remember": false
+      }
+    },
+    {
+      "fixture_id": "G-age-candidate",
+      "decision_type": "memory_write_triage",
+      "provider": "deterministic",
+      "model": "rules-v1",
+      "values": {
+        "should_remember": false,
+        "memory_category": "none",
+        "temporary_or_durable": "temporary"
+      },
+      "confidences": {
+        "should_remember": 0.72
+      },
+      "confidence": 0.72,
+      "latency_ms": 0.002,
+      "request_id": "phase11-18-deterministic-G-age-candidate",
+      "run_id": "phase11-18-G-age-candidate",
+      "status": "ok",
+      "fallback": false,
+      "error": null,
+      "expected": {
+        "should_remember": true
+      }
+    },
+    {
+      "fixture_id": "H-noul-relevance",
+      "decision_type": "memory_relevance",
+      "provider": "deterministic",
+      "model": "rules-v1",
+      "values": {
+        "memory_needed": true,
+        "memory_depth": "episodic",
+        "relevant": 0.2
+      },
+      "confidences": {
+        "memory_needed": 0.8,
+        "memory_depth": 0.8,
+        "relevant": 0.8
+      },
+      "confidence": 0.8000000000000002,
+      "latency_ms": 0.008,
+      "request_id": "phase11-18-deterministic-H-noul-relevance",
+      "run_id": "phase11-18-H-noul-relevance",
+      "status": "ok",
+      "fallback": false,
+      "error": null,
+      "expected": {
+        "relevant": true
+      }
+    },
+    {
+      "fixture_id": "I-score-memory-strength",
+      "decision_type": "score",
+      "provider": "deterministic",
+      "model": "rules-v1",
+      "values": {
+        "strength": 0.0
+      },
+      "confidences": {
+        "strength": 0.55
+      },
+      "confidence": 0.55,
+      "latency_ms": 0.003,
+      "request_id": "phase11-18-deterministic-I-score-memory-strength",
+      "run_id": "phase11-18-I-score-memory-strength",
+      "status": "ok",
+      "fallback": false,
+      "error": null,
+      "expected": {
+        "strength": 2.0
+      }
+    }
+  ],
+  "jev_rows": [],
+  "agreement": {
+    "count": 0,
+    "rate": null,
+    "disagreements": 0
+  },
+  "metrics": {
+    "deterministic_memory_depth": {
+      "count": 4,
+      "accuracy": 0.75,
+      "confusion_matrix": {
+        "current_state->current_state": 1,
+        "none->none": 1,
+        "semantic->none": 1,
+        "episodic->episodic": 1
+      }
+    },
+    "deterministic_memory_write": {
+      "count": 2,
+      "accuracy": 0.5,
+      "confusion_matrix": {
+        "False->False": 1,
+        "True->False": 1
+      }
+    },
+    "jev_memory_depth": {
+      "count": 0,
+      "accuracy": null,
+      "confusion_matrix": {}
+    },
+    "jev_memory_write": {
+      "count": 0,
+      "accuracy": null,
+      "confusion_matrix": {}
+    }
+  },
+  "latency_ms": {
+    "deterministic": {
+      "p50": 0.008,
+      "p95": 0.091,
+      "p99": 0.091
+    },
+    "jev": {
+      "p50": null,
+      "p95": null,
+      "p99": null
+    }
+  },
+  "failure_matrix": {
+    "missing_key": "FALLBACK_TESTED_LOCALLY",
+    "timeout": "MOCK_TESTED",
+    "429": "MOCK_TESTED",
+    "5xx": "MOCK_TESTED",
+    "live_failure_injection": "NOT_VERIFIED"
+  },
+  "cost": "NOT_VERIFIED",
+  "production_touched": false
+}

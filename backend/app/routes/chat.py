@@ -22,6 +22,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 
+from agent.harness.decision.service import FastDecisionService
 from app.config import get_settings
 from app.auth_middleware import AuthContext, require_auth
 from rag.prompt_builder import (
@@ -1290,6 +1291,22 @@ async def _chat_event_stream(
             "confidence": decision.confidence,
         },
     )
+    # Optional shadow observation only. The existing route decision remains
+    # authoritative and no advisor result can change memory, authorization, or
+    # revision behavior from this integration point.
+    if str(getattr(settings, "fast_decision_mode", "disabled")).lower() == "shadow":
+        try:
+            await FastDecisionService.from_settings(settings).evaluate_chat_routing(
+                user_message=question,
+                project_id=project_id,
+                request_id=conversation_id,
+                run_id=conversation_id,
+            )
+        except Exception:
+            logger.exception(
+                "fast_decision_shadow_failed",
+                extra={"request_id": conversation_id, "user_id": user_id},
+            )
     plan = build_execution_plan(decision)
     plan.capabilities = rank_capabilities(
         routed_question,

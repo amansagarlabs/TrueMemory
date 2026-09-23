@@ -88,6 +88,22 @@ class Settings:
     cross_encoder_model: str = ""
     warm_retrieval_models: bool = False
 
+    # Provider-independent decision layer. Deterministic is always available;
+    # embedded OPA and Groq are optional advisory components.
+    fast_decision_provider: str = "deterministic"
+    fast_decision_mode: str = "disabled"
+    ai_decision_enabled: bool = False
+    groq_api_key: str = ""
+    groq_base_url: str = "https://api.groq.com/openai/v1"
+    groq_decision_model: str = "openai/gpt-oss-20b"
+    opa_policy_bundle_path: str = "backend/policies/bundle/policy.wasm"
+    typesafe_api_key: str = ""
+    typesafe_base_url: str = "https://api.typesafe.ai"
+    typesafe_default_model: str = "jev-latest"
+    fast_decision_timeout_seconds: float = 1.5
+    fast_decision_max_attempts: int = 2
+    fast_decision_active_min_confidence: float = 0.85
+
     uploads_dir: str = "uploads"
     ocr_provider: str = "auto"
     ocr_language: str = "eng"
@@ -263,6 +279,28 @@ def get_settings() -> Settings:
         ),
         cross_encoder_model=os.getenv("CROSS_ENCODER_MODEL", ""),
         warm_retrieval_models=_env_bool("WARM_RETRIEVAL_MODELS", False),
+        fast_decision_provider=os.getenv("FAST_DECISION_PROVIDER", "deterministic").strip().lower(),
+        fast_decision_mode=os.getenv("FAST_DECISION_MODE", "disabled").strip().lower(),
+        ai_decision_enabled=_env_bool("AI_DECISION_ENABLED", False),
+        groq_api_key=os.getenv("GROQ_API_KEY", "").strip(),
+        groq_base_url=os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1").rstrip("/"),
+        groq_decision_model=os.getenv("GROQ_DECISION_MODEL", "openai/gpt-oss-20b").strip() or "openai/gpt-oss-20b",
+        opa_policy_bundle_path=os.getenv("OPA_POLICY_BUNDLE_PATH", "backend/policies/bundle/policy.wasm").strip(),
+        typesafe_api_key=os.getenv("TYPESAFE_API_KEY", "").strip(),
+        typesafe_base_url=os.getenv("TYPESAFE_BASE_URL", "https://api.typesafe.ai").rstrip("/"),
+        typesafe_default_model=os.getenv("TYPESAFE_DEFAULT_MODEL", "jev-latest").strip() or "jev-latest",
+        fast_decision_timeout_seconds=max(
+            0.1,
+            min(float(os.getenv("FAST_DECISION_TIMEOUT_SECONDS", "1.5")), 30.0),
+        ),
+        fast_decision_max_attempts=max(
+            1,
+            min(int(os.getenv("FAST_DECISION_MAX_ATTEMPTS", "2")), 3),
+        ),
+        fast_decision_active_min_confidence=max(
+            0.5,
+            min(float(os.getenv("FAST_DECISION_ACTIVE_MIN_CONFIDENCE", "0.85")), 1.0),
+        ),
         uploads_dir=os.getenv("UPLOADS_DIR", "uploads"),
         ocr_provider=os.getenv("OCR_PROVIDER", "auto"),
         ocr_language=os.getenv("OCR_LANGUAGE", "eng"),
