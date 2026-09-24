@@ -666,7 +666,7 @@ def list_workspace_memories(
     include_history: bool = False,
 ) -> list[dict[str, Any]]:
     if not postgres_enabled(settings):
-        return []
+        raise RuntimeError("Postgres is required for workspace memory reads.")
     with _connect(settings) as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -709,7 +709,7 @@ def timeline_workspace_memories(
 ) -> list[dict[str, Any]]:
     """Return version events; never collapses revisions into current rows."""
     if not postgres_enabled(settings):
-        return []
+        raise RuntimeError("Postgres is required for workspace memory history.")
     direction = "ASC" if order == "asc" else "DESC"
     with _connect(settings) as conn:
         with conn.cursor() as cur:
@@ -1317,6 +1317,7 @@ def save_artifact(
     title: str | None = None,
     workspace_id: str | None = None,
     project_id: str | None = None,
+    checksum_sha256: str | None = None,
 ) -> None:
     if not postgres_enabled(settings):
         return
@@ -1341,10 +1342,11 @@ def save_artifact(
                     mime_type,
                     file_size_bytes,
                     page_count,
+                    checksum_sha256,
                     source_type,
                     status
                 )
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'upload', 'uploaded')
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 'upload', 'uploaded')
                 ON CONFLICT (id)
                 DO UPDATE SET
                     title = EXCLUDED.title,
@@ -1355,6 +1357,7 @@ def save_artifact(
                     mime_type = EXCLUDED.mime_type,
                     file_size_bytes = EXCLUDED.file_size_bytes,
                     page_count = EXCLUDED.page_count,
+                    checksum_sha256 = COALESCE(EXCLUDED.checksum_sha256, artifacts.checksum_sha256),
                     updated_at = NOW()
                 """,
                 (
@@ -1368,6 +1371,7 @@ def save_artifact(
                     mime_type,
                     file_size_bytes,
                     page_count,
+                    checksum_sha256,
                 ),
             )
             conn.commit()

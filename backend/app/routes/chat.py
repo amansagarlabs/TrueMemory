@@ -34,11 +34,7 @@ from rag.retriever import retrieve_chunks
 from rag.hybrid_retriever import HybridKnowledgeRetriever
 from services.ag_ui_events import sse
 from services.memory_core import MemoryClient
-from services.memory_store import (
-    get_local_artifact,
-    save_message,
-    update_message as update_local_message,
-)
+from services.memory_store import get_local_artifact
 from services.openrouter import (
     complete_chat_completion,
     stream_chat_completion,
@@ -618,11 +614,14 @@ async def recent_conversations(
 ):
     settings = get_settings()
     if not postgres_enabled(settings):
-        return {"items": []}
+        raise HTTPException(status_code=503, detail="Conversation storage is unavailable.")
 
-    resolved_user_id = resolve_user_id(settings, str(auth.user_id))
+    try:
+        resolved_user_id = resolve_user_id(settings, str(auth.user_id))
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Conversation storage is unavailable.") from exc
     if not resolved_user_id:
-        return {"items": []}
+        raise HTTPException(status_code=503, detail="Conversation storage is unavailable.")
 
     items = list_recent_conversations(
         settings,
@@ -741,14 +740,20 @@ async def conversation_messages(
 ):
     settings = get_settings()
     if not postgres_enabled(settings):
-        return {"items": []}
+        raise HTTPException(status_code=503, detail="Conversation storage is unavailable.")
 
-    resolved_user_id = resolve_user_id(settings, str(auth.user_id))
+    try:
+        resolved_user_id = resolve_user_id(settings, str(auth.user_id))
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Conversation storage is unavailable.") from exc
     if not resolved_user_id:
-        return {"items": []}
+        raise HTTPException(status_code=503, detail="Conversation storage is unavailable.")
 
     resolved_conversation_id = _normalized_conversation_id(conversation_id, resolved_user_id)
-    items = load_conversation_messages(settings, resolved_user_id, resolved_conversation_id)
+    try:
+        items = load_conversation_messages(settings, resolved_user_id, resolved_conversation_id)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Conversation storage is unavailable.") from exc
     return {"items": items}
 
 
@@ -1024,7 +1029,24 @@ async def _chat_event_stream(
         return
     selected_memory_ids = _selected_memory_ids(context_mentions)
     conversation_id = _normalized_conversation_id(conversation_id, user_id)
-    resolved_user_id = resolve_user_id(settings, user_id) if postgres_enabled(settings) else None
+    try:
+        resolved_user_id = resolve_user_id(settings, user_id) if postgres_enabled(settings) else None
+    except Exception:
+        logger.exception("Could not resolve chat user in durable database")
+        yield sse("error", {"message": "Conversation storage is temporarily unavailable. Please retry."})
+        return
+    if settings.environment in {"production", "staging"} and not postgres_enabled(settings):
+        logger.critical("Postgres is required for durable chat history in production")
+        yield sse("error", {"message": "Conversation storage is not configured."})
+        return
+    if postgres_enabled(settings) and not resolved_user_id:
+        logger.error("Chat history database user could not be resolved; refusing SQLite fallback")
+        yield sse("error", {"message": "Conversation storage is temporarily unavailable. Please retry."})
+        return
+    if settings.environment in {"production", "staging"} and not postgres_enabled(settings):
+        logger.critical("Postgres is required for durable chat history in production")
+        yield sse("error", {"message": "Conversation storage is not configured."})
+        return
     if resolved_user_id and workspace_id:
         try:
             upsert_workspace(
@@ -1174,10 +1196,15 @@ async def _chat_event_stream(
             query=question,
             limit=settings.memory_profile_items,
         )
-    recent_messages, profile_memories = await asyncio.gather(recent_task, profile_task)
-    durable_memories: list[dict] = (
-        await durable_task if durable_task is not None else []
-    )
+    try:
+        recent_messages, profile_memories = await asyncio.gather(recent_task, profile_task)
+        durable_memories: list[dict] = (
+            await durable_task if durable_task is not None else []
+        )
+    except Exception:
+        logger.exception("Could not read durable chat memory")
+        yield sse("error", {"message": "Conversation storage is temporarily unavailable. Please retry."})
+        return
     if "profile-memory" in selected_memory_ids:
         account_memories = _account_profile_memories(account_profile)
         account_keys = {str(item.get("key") or "") for item in account_memories}
@@ -2048,7 +2075,6 @@ async def _chat_event_stream(
         {"message": "Preparing the answer...", "stage": "answer"},
     )
     streaming_message_id: str | None = None
-    local_streaming_message_id: int | None = None
     user_message_id: str | None = None
     try:
         if resolved_user_id:
@@ -2116,26 +2142,11 @@ async def _chat_event_stream(
                 retrieval_ms=(retrieval["retrieval_ms"] + knowledge_retrieval["retrieval_ms"]),
             )
         else:
-            save_message(
-                settings,
-                conversation_id=conversation_id,
-                user_id=user_id,
-                doc_id=doc_id or "general",
-                role="user",
-                content=question,
-            )
-            local_streaming_message_id = save_message(
-                settings,
-                conversation_id=conversation_id,
-                user_id=user_id,
-                doc_id=doc_id or "general",
-                role="assistant",
-                content="",
-            )
+            raise RuntimeError("Postgres is required for durable chat history.")
     except Exception:
-        # Persistence must never take down an otherwise healthy answer stream.
         logger.exception("Chat history persistence failed before model streaming")
-        yield sse("step.failed", {"step_id": "persistence", "message": "History persistence is temporarily unavailable; the answer will continue."})
+        yield sse("error", {"message": "Conversation storage is temporarily unavailable. Please retry."})
+        return
     try:
         verified_answer = verified_profile_answer or verified_market_answer
         if verified_answer:
@@ -2196,16 +2207,6 @@ async def _chat_event_stream(
                                 )
                             except Exception:
                                 streaming_message_id = None
-                        elif local_streaming_message_id and len(full_answer) % 12 == 0:
-                            try:
-                                update_local_message(
-                                    settings,
-                                    message_id=local_streaming_message_id,
-                                    user_id=user_id,
-                                    content="".join(full_answer),
-                                )
-                            except Exception:
-                                local_streaming_message_id = None
                     safe_token = stream_guard.finish()
                     if safe_token:
                         full_answer.append(safe_token)
@@ -2264,16 +2265,6 @@ async def _chat_event_stream(
                                     )
                                 except Exception:
                                     streaming_message_id = None
-                            elif local_streaming_message_id and len(full_answer) % 12 == 0:
-                                try:
-                                    update_local_message(
-                                        settings,
-                                        message_id=local_streaming_message_id,
-                                        user_id=user_id,
-                                        content="".join(full_answer),
-                                    )
-                                except Exception:
-                                    local_streaming_message_id = None
                         elif isinstance(event, dict):
                             if "tool_started" in event:
                                 yield sse("memory.tool.started", {
@@ -2392,16 +2383,6 @@ async def _chat_event_stream(
                 )
             except Exception:
                 pass
-        elif local_streaming_message_id:
-            try:
-                update_local_message(
-                    settings,
-                    message_id=local_streaming_message_id,
-                    user_id=user_id,
-                    content="".join(full_answer),
-                )
-            except Exception:
-                pass
         raise
     except Exception as exc:
         logger.exception(
@@ -2421,16 +2402,6 @@ async def _chat_event_stream(
                     content="".join(full_answer),
                     message_status="failed",
                     metadata={"error": str(exc)},
-                )
-            except Exception:
-                pass
-        elif local_streaming_message_id:
-            try:
-                update_local_message(
-                    settings,
-                    message_id=local_streaming_message_id,
-                    user_id=user_id,
-                    content="".join(full_answer),
                 )
             except Exception:
                 pass
@@ -2500,16 +2471,6 @@ async def _chat_event_stream(
                     content="",
                     message_status="failed",
                     metadata={"error": "empty_model_response"},
-                )
-            except Exception:
-                pass
-        elif local_streaming_message_id:
-            try:
-                update_local_message(
-                    settings,
-                    message_id=local_streaming_message_id,
-                    user_id=user_id,
-                    content="",
                 )
             except Exception:
                 pass
@@ -2679,13 +2640,6 @@ async def _chat_event_stream(
                 message_id=assistant_message_id,
                 sources=[*web_sources, *knowledge_sources],
             )
-    if local_streaming_message_id:
-        update_local_message(
-            settings,
-            message_id=local_streaming_message_id,
-            user_id=user_id,
-            content=answer_text,
-        )
     memory_client.remember_declaration(
         user_id=user_id,
         question=question,

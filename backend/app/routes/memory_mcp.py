@@ -11,6 +11,7 @@ import logging
 from typing import Any
 
 from fastapi import APIRouter, Depends, Request
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
 from app.auth_middleware import AuthContext, get_auth_context
@@ -30,7 +31,7 @@ TOOLS: list[dict[str, Any]] = [
     {"name": "memory_forget", "description": "Forget an authorized memory.", "inputSchema": {"type": "object", "required": ["id"], "properties": {"id": {"type": "string"}, "scope": {"type": "string"}}, "additionalProperties": False}},
     {"name": "memory_current_state", "description": "Return the current authorized project memory state.", "inputSchema": {"type": "object", "required": ["workspace_id"], "properties": {"workspace_id": {"type": "string"}, "project_id": {"type": "string"}}, "additionalProperties": False}},
     {"name": "memory_timeline", "description": "Return ordered authorized memory version events.", "inputSchema": {"type": "object", "required": ["workspace_id"], "properties": {"workspace_id": {"type": "string"}, "project_id": {"type": "string"}, "memory_key": {"type": "string"}, "start": {"type": "string"}, "end": {"type": "string"}, "as_of": {"type": "string"}, "order": {"type": "string", "enum": ["asc", "desc"]}, "limit": {"type": "integer", "minimum": 1, "maximum": 200}}, "additionalProperties": False}},
-    {"name": "memory_related", "description": "Find memories related to a query.", "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}, "scope": {"type": "string"}, "limit": {"type": "integer"}}, "additionalProperties": False}},
+    {"name": "memory_related", "description": "Find memories related to a memory ID, or search by query when no workspace is supplied.", "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}, "scope": {"type": "string"}, "limit": {"type": "integer"}, "workspace_id": {"type": "string"}, "agent_id": {"type": "string"}, "project_id": {"type": "string"}}, "additionalProperties": False}},
     {"name": "memory_context", "description": "Build relevant authorized memory context.", "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}, "scope": {"type": "string"}, "limit": {"type": "integer"}}, "additionalProperties": False}},
     {"name": "memory_profile", "description": "List authorized profile memories.", "inputSchema": {"type": "object", "properties": {"scope": {"type": "string"}, "limit": {"type": "integer"}}, "additionalProperties": False}},
     {"name": "memory_entities", "description": "Return entities found in authorized memories.", "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}, "scope": {"type": "string"}, "limit": {"type": "integer"}}, "additionalProperties": False}},
@@ -91,6 +92,19 @@ def _call(name: str, args: dict[str, Any], auth: AuthContext) -> dict[str, Any]:
             start=args.get("start"), end=args.get("end"), as_of=args.get("as_of"),
             order=str(args.get("order") or "desc"), limit=int(args.get("limit") or 50))
         return {"items": items, "count": len(items), "as_of": args.get("as_of"), "scope": scope}
+    if name == "memory_related":
+        query = str(args.get("query") or "")
+        if workspace_id:
+            items = client.related(
+                user_id=user_id,
+                workspace_id=workspace_id,
+                memory_id=query,
+                project_id=args.get("project_id"),
+                limit=int(args.get("limit") or 10),
+            )
+            return {"items": items, "count": len(items), "scope": scope, "relationship": "same_key_or_memory_type"}
+        items = client.search(user_id=user_id, scope=scope, query=query, limit=int(args.get("limit") or 10), agent_id=agent_id)
+        return {"items": items, "count": len(items), "scope": scope, "relationship": "query_match"}
     if name == "memory_store":
         client.remember(user_id=user_id, scope=scope, key=str(args["key"]), content=str(args["content"]), source=str(args.get("source") or "mcp"), valid_from=args.get("valid_from"), valid_until=args.get("valid_until"), confidence=float(args["confidence"] if args.get("confidence") is not None else 0.75), workspace_id=workspace_id, agent_id=agent_id)
         key = str(args["key"]).strip()
@@ -103,6 +117,15 @@ def _call(name: str, args: dict[str, Any], auth: AuthContext) -> dict[str, Any]:
     if not target_scope or not key:
         raise ValueError("invalid_memory_id")
     target_scope = target_scope.split("|", 1)[0]
+    # Memory IDs may use the legacy `workspace:<id>` scope, while reads and
+    # writes with a workspace-bound token canonicalize through `general` and
+    # add workspace/agent dimensions in MemoryClient._storage_scope. Apply the
+    # same authorization and canonicalization here so mutation targets the
+    # exact same durable row and cache key as REST.
+    try:
+        target_scope = _effective_scope(auth, target_scope)
+    except Exception as exc:
+        raise PermissionError("forbidden") from exc
     if name == "memory_update":
         return {"updated": client.update(user_id=user_id, scope=target_scope, key=key, content=str(args["content"]), source=str(args.get("source") or "mcp"), valid_from=args.get("valid_from"), valid_until=args.get("valid_until"), confidence=float(args["confidence"] if args.get("confidence") is not None else 0.75), workspace_id=workspace_id, agent_id=agent_id), "memory_id": memory_id, "scope": target_scope}
     return {"forgotten": client.forget(user_id=user_id, scope=target_scope, key=key, workspace_id=workspace_id, agent_id=agent_id), "memory_id": memory_id, "scope": target_scope}
@@ -129,7 +152,7 @@ async def memory_mcp(request: Request, auth: AuthContext = Depends(get_auth_cont
         else:
             return _error(request_id, -32601, "Method not found")
         logger.info("memory_mcp_request", extra={"request_id": request_id, "operation": method, "user_id": auth.user_id})
-        return JSONResponse({"jsonrpc": "2.0", "id": request_id, "result": result})
+        return JSONResponse(jsonable_encoder({"jsonrpc": "2.0", "id": request_id, "result": result}))
     except PermissionError as exc:
         return _error(request_id, -32001, str(exc))
     except (KeyError, TypeError, ValueError):

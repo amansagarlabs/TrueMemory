@@ -43,6 +43,12 @@ def _validate_runtime_configuration(settings) -> None:
     missing = []
     if not settings.database_url:
         missing.append("DATABASE_URL")
+    if not settings.cloudinary_cloud_name:
+        missing.append("CLOUDINARY_CLOUD_NAME")
+    if not settings.cloudinary_api_key:
+        missing.append("CLOUDINARY_API_KEY")
+    if not settings.cloudinary_api_secret:
+        missing.append("CLOUDINARY_API_SECRET")
     if not settings.aman_jwt_secret:
         missing.append("AMAN_JWT_SECRET")
     if not settings.cors_origins or any("localhost" in origin or "127.0.0.1" in origin for origin in settings.cors_origins):
@@ -63,7 +69,8 @@ async def lifespan(app: FastAPI):
     settings = get_settings()
     _validate_runtime_configuration(settings)
     app.state.settings = settings
-    init_memory_store(settings)
+    if not postgres_enabled(settings):
+        init_memory_store(settings)
     ensure_hot_cache_schema(settings)
     ensure_rate_limit_schema(settings)
     if postgres_enabled(settings):

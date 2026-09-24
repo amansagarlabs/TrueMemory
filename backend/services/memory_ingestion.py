@@ -24,7 +24,7 @@ from services.agent_guardrails import sanitize_model_output
 from services.artifact_extract import extract_artifact_text
 from services.crawl_service import crawl_site, scrape_url
 from services.memory_core import MemoryClient
-from services.pdf_upload import get_uploads_dir
+from services.artifact_storage import materialize_artifact
 from services.postgres_store import _connect, get_artifact_for_user, postgres_enabled
 
 try:
@@ -853,11 +853,16 @@ async def retrieve_job_sources(job: dict[str, Any]) -> list[SourceEnvelope]:
         )
         if not artifact:
             raise ValueError("artifact_not_found")
-        uploads_dir = get_uploads_dir(settings.uploads_dir).resolve()
-        path = (uploads_dir.parent / str(artifact.get("storage_path") or "")).resolve()
-        if uploads_dir not in path.parents or not path.is_file():
-            raise ValueError("artifact_file_not_found")
-        extracted = await asyncio.to_thread(extract_artifact_text, Path(path))
+        path = await asyncio.to_thread(
+            materialize_artifact,
+            settings,
+            storage_path=str(artifact.get("storage_path") or ""),
+            filename=str(artifact.get("filename") or "artifact"),
+        )
+        try:
+            extracted = await asyncio.to_thread(extract_artifact_text, path)
+        finally:
+            path.unlink(missing_ok=True)
         pages = extracted.get("pages") if isinstance(extracted, dict) else []
         content = "\n\n".join(str(page.get("text") or "") for page in pages if isinstance(page, dict)).strip()
         if not content:

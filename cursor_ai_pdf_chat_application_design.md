@@ -2059,7 +2059,7 @@ Implementing Steps 8–10: RAG retrieval, OpenRouter chat, and SSE streaming in 
 Add to **`my-ai-app\.env`**:
 
 ```env
-OPENROUTER_API_KEY=sk-or-v1-your-key-here
+OPENROUTER_API_KEY=<your-secret>
 OPENROUTER_MODEL=openai/gpt-4o-mini
 ```
 

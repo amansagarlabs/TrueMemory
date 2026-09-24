@@ -159,7 +159,7 @@ def test_l2_enforces_bound_workspace_before_retrieval(tmp_path) -> None:
         raise AssertionError("unauthorized L2 workspace query was allowed")
 
 
-def test_l2_returns_empty_on_workspace_store_failure(monkeypatch, tmp_path) -> None:
+def test_l2_fails_closed_on_workspace_store_failure(monkeypatch, tmp_path) -> None:
     settings = SimpleNamespace(
         memory_db_path=str(tmp_path / "memory.db"),
         database_url="postgresql://unavailable",
@@ -173,7 +173,10 @@ def test_l2_returns_empty_on_workspace_store_failure(monkeypatch, tmp_path) -> N
         lambda *args, **kwargs: (_ for _ in ()).throw(ConnectionError("postgres down")),
     )
 
-    assert client.search_l2(user_id="user-a", workspace_id="workspace-a", query="anything") == []
+    import pytest
+
+    with pytest.raises(ConnectionError, match="postgres down"):
+        client.search_l2(user_id="user-a", workspace_id="workspace-a", query="anything")
 
 
 def test_hierarchy_does_not_return_expired_l1_memory(tmp_path, monkeypatch) -> None:

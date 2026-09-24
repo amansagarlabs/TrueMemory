@@ -12,6 +12,7 @@ pymupdf==1.25.2
 sentence-transformers==3.3.1
 pymilvus==2.5.4
 httpx==0.28.1
+cloudinary==1.44.1
 # Optional embedded OPA-Wasm runtime. The application remains functional when
 # the compiled policy bundle/runtime is absent; no OPA server is required.
 opa-wasm==0.3.2

@@ -10,13 +10,17 @@ from app.routes import memory_mcp
 from services.memory_store import init_memory_store
 from services.memory_hot_cache import ensure_hot_cache_schema
 from services.rate_limiter import ensure_rate_limit_schema
+from services.postgres_store import postgres_enabled
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     settings = get_settings()
     app.state.settings = settings
-    init_memory_store(settings)
+    if settings.environment in {"production", "staging"} and not postgres_enabled(settings):
+        raise RuntimeError("Postgres is required for production Memory API and MCP services.")
+    if not postgres_enabled(settings):
+        init_memory_store(settings)
     ensure_hot_cache_schema(settings)
     ensure_rate_limit_schema(settings)
     yield

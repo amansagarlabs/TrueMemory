@@ -9,11 +9,12 @@ from uuid import UUID
 import zipfile
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import Response
 
 from app.auth_middleware import AuthContext, require_auth
 from app.config import get_settings
 from services.artifact_extract import extract_artifact_pages
+from services.artifact_storage import ArtifactStorageError, materialize_artifact, retrieve_artifact_bytes
 from services.memory_store import get_local_artifact, save_local_artifact
 from services.pdf_upload import get_uploads_dir, save_pdf_upload
 from services.postgres_store import (
@@ -47,7 +48,10 @@ async def upload_artifact(
 
     resolved_user_id = None
     if postgres_enabled(settings):
-        resolved_user_id = resolve_user_id(settings, auth.user_id or "")
+        try:
+            resolved_user_id = resolve_user_id(settings, auth.user_id or "")
+        except Exception as exc:
+            raise HTTPException(status_code=503, detail="Artifact metadata storage is unavailable.") from exc
         if not resolved_user_id:
             raise HTTPException(status_code=403, detail="User account could not be resolved")
         if project_id:
@@ -60,6 +64,8 @@ async def upload_artifact(
             if not project:
                 raise HTTPException(status_code=404, detail="Project was not found.")
             workspace_id = UUID(project["workspace_id"])
+    elif settings.environment in {"production", "staging"}:
+        raise HTTPException(status_code=503, detail="Postgres is required for production artifact metadata.")
 
     try:
         raw = await file.read()
@@ -67,6 +73,7 @@ async def upload_artifact(
             file_bytes=raw,
             original_filename=file.filename,
             uploads_dir_name=settings.uploads_dir,
+            settings=settings,
         )
         if resolved_user_id:
             save_artifact(
@@ -78,11 +85,12 @@ async def upload_artifact(
                 mime_type=file.content_type or _mime_type_for_filename(result.filename),
                 file_size_bytes=result.size_bytes,
                 page_count=result.page_count,
+                checksum_sha256=result.checksum_sha256,
                 title=title,
                 workspace_id=str(workspace_id) if workspace_id else None,
                 project_id=str(project_id) if project_id else None,
             )
-        elif auth.user_id:
+        elif auth.user_id and settings.environment not in {"production", "staging"}:
             save_local_artifact(
                 settings,
                 artifact_id=result.doc_id,
@@ -94,8 +102,14 @@ async def upload_artifact(
                 page_count=result.page_count,
                 title=title,
             )
+        else:
+            raise HTTPException(status_code=503, detail="Postgres is required for artifact metadata.")
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except HTTPException:
+        raise
+    except ArtifactStorageError as exc:
+        raise HTTPException(status_code=503, detail="Durable file storage is unavailable.") from exc
     except Exception as exc:
         raise HTTPException(status_code=500, detail="Upload failed") from exc
 
@@ -128,15 +142,17 @@ async def get_artifact_content(
 ):
     """Stream an authenticated artifact for the in-app document viewer."""
     settings = get_settings()
-    path, metadata = _resolve_artifact(settings, artifact_id, auth)
-    filename = str(metadata.get("filename") or _original_filename(path, artifact_id))
+    metadata = _resolve_artifact(settings, artifact_id, auth)
+    filename = str(metadata.get("filename") or artifact_id)
     mime_type = str(metadata.get("mime_type") or _mime_type_for_filename(filename))
-    return FileResponse(
-        path,
-        media_type=mime_type,
-        filename=filename,
-        content_disposition_type="inline",
-    )
+    try:
+        content = retrieve_artifact_bytes(settings, storage_path=str(metadata.get("storage_path") or ""))
+    except ArtifactStorageError as exc:
+        raise HTTPException(status_code=503, detail="Durable file storage is unavailable.") from exc
+    except FileNotFoundError as exc:
+        raise HTTPException(status_code=404, detail="Artifact not found") from exc
+    from urllib.parse import quote
+    return Response(content=content, media_type=mime_type, headers={"Content-Disposition": f"inline; filename*=UTF-8''{quote(filename)}"})
 
 
 @router.get("/artifacts/{artifact_id}/preview")
@@ -146,12 +162,18 @@ async def get_artifact_preview(
 ):
     """Return bounded, extracted pages/slides/sheets for the document modal."""
     settings = get_settings()
-    path, metadata = _resolve_artifact(settings, artifact_id, auth)
-    filename = str(metadata.get("filename") or _original_filename(path, artifact_id))
+    metadata = _resolve_artifact(settings, artifact_id, auth)
+    filename = str(metadata.get("filename") or artifact_id)
     try:
+        path = materialize_artifact(settings, storage_path=str(metadata.get("storage_path") or ""), filename=filename)
         extracted_pages = extract_artifact_pages(path)
+    except ArtifactStorageError as exc:
+        raise HTTPException(status_code=503, detail="Durable file storage is unavailable.") from exc
     except (ValueError, KeyError, OSError, zipfile.BadZipFile) as exc:
         raise HTTPException(status_code=415, detail="A text preview is not available for this file.") from exc
+    finally:
+        if "path" in locals():
+            path.unlink(missing_ok=True)
 
     pages = []
     remaining_chars = 250_000
@@ -170,47 +192,58 @@ async def get_artifact_preview(
         "artifact_id": artifact_id,
         "filename": filename,
         "mime_type": str(metadata.get("mime_type") or _mime_type_for_filename(filename)),
-        "size_bytes": int(metadata.get("size_bytes") or path.stat().st_size),
+        "size_bytes": int(metadata.get("size_bytes") or 0),
         "page_count": len(extracted_pages),
         "pages": pages,
         "truncated": len(pages) < len(extracted_pages) or remaining_chars <= 0,
     }
 
 
-def _resolve_artifact(settings, artifact_id: str, auth: AuthContext) -> tuple[Path, dict]:
+def _resolve_artifact(settings, artifact_id: str, auth: AuthContext) -> dict:
     try:
         UUID(artifact_id)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail="Artifact not found") from exc
 
-    uploads_dir = get_uploads_dir(settings.uploads_dir).resolve()
     metadata: dict = {}
     if postgres_enabled(settings):
-        user_id = resolve_user_id(settings, auth.user_id or "")
+        try:
+            user_id = resolve_user_id(settings, auth.user_id or "")
+        except Exception as exc:
+            raise HTTPException(status_code=503, detail="Artifact metadata storage is unavailable.") from exc
         if not user_id:
             raise HTTPException(status_code=403, detail="User account could not be resolved")
         row = get_artifact_for_user(settings, artifact_id=artifact_id, user_id=user_id)
         if not row:
             raise HTTPException(status_code=404, detail="Artifact not found")
         metadata = dict(row)
-        path = (uploads_dir.parent / str(metadata.get("storage_path") or "")).resolve()
     else:
         if not auth.user_id:
             raise HTTPException(status_code=401, detail="Authentication required")
+        if settings.environment in {"production", "staging"}:
+            raise HTTPException(status_code=503, detail="Postgres is required for production artifact metadata.")
         row = get_local_artifact(settings, artifact_id=artifact_id, user_id=auth.user_id)
         if row:
             metadata = dict(row)
-            path = (uploads_dir.parent / str(metadata.get("storage_path") or "")).resolve()
         else:
             # Compatibility for local uploads created before the artifact index existed.
-            path = next(uploads_dir.glob(f"{artifact_id}_*"), None)
+            path = next(get_uploads_dir(settings.uploads_dir).resolve().glob(f"{artifact_id}_*"), None)
             if path is None:
                 raise HTTPException(status_code=404, detail="Artifact not found")
             path = path.resolve()
+            metadata = {"storage_path": str(path.relative_to(get_uploads_dir(settings.uploads_dir).resolve().parent)), "filename": _original_filename(path, artifact_id), "size_bytes": path.stat().st_size}
 
-    if uploads_dir not in path.parents or not path.is_file():
+    storage_path = str(metadata.get("storage_path") or "")
+    if not storage_path:
         raise HTTPException(status_code=404, detail="Artifact not found")
-    return path, metadata
+    if not storage_path.startswith("cloudinary:"):
+        if settings.environment in {"production", "staging"}:
+            raise HTTPException(status_code=503, detail="Artifact has not been moved to durable storage.")
+        uploads_dir = get_uploads_dir(settings.uploads_dir).resolve()
+        path = (uploads_dir.parent / storage_path).resolve()
+        if uploads_dir not in path.parents or not path.is_file():
+            raise HTTPException(status_code=404, detail="Artifact not found")
+    return metadata
 
 
 def _original_filename(path: Path, artifact_id: str) -> str:

@@ -95,6 +95,8 @@ class HotMemoryCache:
     def _read(self, key: str) -> Any | None:
         if self.shared:
             return self._shared_get(key)
+        if getattr(self.settings, "database_url", "") and str(getattr(self.settings, "environment", "development")).lower() in {"production", "prod", "staging"}:
+            raise RuntimeError("Shared Postgres cache is unavailable; local cache cannot replace production state.")
         with self._lock:
             entry = self._local.get(key)
             if entry and entry[0] > time.monotonic():
@@ -121,19 +123,16 @@ class HotMemoryCache:
             return {**self._metrics.snapshot(), "shared": self.shared, "entries": len(self._local), "ttl_seconds": self.ttl_seconds}
 
     def _shared_get(self, key: str) -> Any | None:
-        try:
-            with _connect(self.settings) as conn:
-                with conn.cursor() as cur:
-                    cur.execute(
-                        "SELECT payload FROM memory_hot_cache WHERE cache_key = %s AND expires_at > NOW()",
-                        (key,),
-                    )
-                    row = cur.fetchone()
-                    if not row:
-                        return None
-                    return row["payload"]
-        except Exception:
-            return None
+        with _connect(self.settings) as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT payload FROM memory_hot_cache WHERE cache_key = %s AND expires_at > NOW()",
+                    (key,),
+                )
+                row = cur.fetchone()
+                if not row:
+                    return None
+                return row["payload"]
 
     def _shared_set(self, key: str, value: Any) -> None:
         try:

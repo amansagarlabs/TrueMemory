@@ -4,14 +4,13 @@ from __future__ import annotations
 
 import base64
 from io import BytesIO
-from pathlib import Path
 from uuid import UUID
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
 from services.image_ocr import MAX_IMAGE_BYTES, MAX_IMAGE_PIXELS
 from services.memory_store import get_local_artifact
-from services.pdf_upload import get_uploads_dir
+from services.artifact_storage import ArtifactStorageError, retrieve_artifact_bytes
 from services.postgres_store import (
     get_artifact_for_user,
     postgres_enabled,
@@ -80,8 +79,10 @@ def load_user_image_content(
     user_id: str,
 ) -> list[dict]:
     """Load only artifacts owned by the authenticated chat user."""
-    uploads_dir = get_uploads_dir(settings.uploads_dir).resolve()
-    resolved_user_id = resolve_user_id(settings, user_id) if postgres_enabled(settings) else None
+    try:
+        resolved_user_id = resolve_user_id(settings, user_id) if postgres_enabled(settings) else None
+    except Exception as exc:
+        raise ImageInputError("The user account could not be resolved for this image.") from exc
     if postgres_enabled(settings) and not resolved_user_id:
         raise ImageInputError("The user account could not be resolved for this image.")
 
@@ -105,11 +106,10 @@ def load_user_image_content(
         if not row:
             raise ImageInputError("An attached image could not be found.")
 
-        path = (uploads_dir.parent / str(row.get("storage_path") or "")).resolve()
-        if uploads_dir not in path.parents or not path.is_file():
-            raise ImageInputError("An attached image could not be found.")
-
-        raw = path.read_bytes()
+        try:
+            raw = retrieve_artifact_bytes(settings, storage_path=str(row.get("storage_path") or ""))
+        except (ArtifactStorageError, OSError) as exc:
+            raise ImageInputError("An attached image could not be loaded from durable storage.") from exc
         total_bytes += len(raw)
         if total_bytes > MAX_TOTAL_IMAGE_BYTES:
             raise ImageInputError("Attached images must be 20 MB or smaller in total.")

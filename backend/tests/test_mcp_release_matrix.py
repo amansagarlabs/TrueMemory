@@ -14,7 +14,8 @@ from urllib.request import Request, urlopen
 
 from app.config import get_settings
 from services.auth_store import create_api_token, create_user_with_password, revoke_api_token
-from services.postgres_store import _connect
+from services.durable_memory import DurableMemoryCandidate
+from services.postgres_store import _connect, ensure_conversation, save_durable_memories
 
 
 BASE = os.getenv("TrueMemory_RELEASE_BASE_URL", "http://127.0.0.1:8000")
@@ -178,6 +179,29 @@ def test_live_mcp_release_matrix():
     user_a, token_a = _identity(scopes=["memory"], workspace_id=ws_a, agent_id=agent_a)
     user_b, token_b = _identity(scopes=["memory"], workspace_id=ws_b, agent_id=agent_b)
     settings = get_settings()
+    state_workspace, state_agent = str(uuid.uuid4()), str(uuid.uuid4())
+    state_user, state_token = _identity(scopes=["memory"], workspace_id=state_workspace, agent_id=state_agent)
+    conversation_id = str(uuid.uuid4())
+    ensure_conversation(
+        settings,
+        conversation_id=conversation_id,
+        user_id=str(state_user["id"]),
+        workspace_id=state_workspace,
+        question="Disposable MCP scope verification",
+        conversation_type="general_chat",
+    )
+    durable_records = save_durable_memories(
+        settings,
+        user_id=str(state_user["id"]),
+        workspace_id=state_workspace,
+        conversation_id=conversation_id,
+        source_message_id=None,
+        candidates=[
+            DurableMemoryCandidate("preference", f"phase1125-current-{uuid.uuid4().hex}", "I prefer a disposable current state.", 0.8),
+            DurableMemoryCandidate("preference", f"phase1125-related-{uuid.uuid4().hex}", "I prefer a disposable related state.", 0.8),
+        ],
+    )
+    assert len(durable_records) == 2
 
     assert _mcp(token_a["token"], "tools/list")[0] == 200
     assert _mcp(None, "tools/list")[0] == 401
@@ -253,6 +277,12 @@ def test_live_mcp_release_matrix():
     assert now["items"][0]["confidence"] == 0.95 and now["items"][0]["revision"] == 2
     historical = _call(token_a["token"], "memory_retrieve", {"query": "PostgreSQL", "as_of": "2024-06-01T00:00:00+00:00", "include_history": True, "workspace_id": ws_a, "agent_id": agent_a})
     assert historical["items"][0]["content"] == "I use PostgreSQL."
+    current_state = _call(state_token["token"], "memory_current_state", {"workspace_id": state_workspace})
+    assert current_state["count"] >= 2
+    timeline = _call(state_token["token"], "memory_timeline", {"workspace_id": state_workspace, "memory_key": durable_records[0]["memory_key"]})
+    assert timeline["count"] == 1 and timeline["items"][0]["memory_key"] == durable_records[0]["memory_key"]
+    related = _call(state_token["token"], "memory_related", {"query": durable_records[0]["id"], "workspace_id": state_workspace})
+    assert related["count"] == 1 and related["items"][0]["id"] == durable_records[1]["id"]
     assert _mcp(token_a["token"], "tools/list", origin="https://evil.invalid")[0] == 403
     assert _mcp(token_a["token"], "tools/list", origin="http://localhost:3000")[0] == 200
 

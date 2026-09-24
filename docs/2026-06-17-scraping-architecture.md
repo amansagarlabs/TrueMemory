@@ -428,7 +428,7 @@ enterprise
 
 ```bash
 # Required
-OPENROUTER_API_KEY=sk-or-v1-...
+OPENROUTER_API_KEY=<your-secret>
 DATABASE_URL=postgresql://...
 
 # Search Providers (optional, enables fallback)

@@ -211,14 +211,48 @@ CREATE TABLE IF NOT EXISTS profile_memories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     artifact_id UUID REFERENCES artifacts(id) ON DELETE SET NULL,
+    doc_id TEXT NOT NULL DEFAULT 'general',
     profile_key TEXT NOT NULL,
     content TEXT NOT NULL,
     source TEXT NOT NULL DEFAULT 'chat-summary',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    valid_from TIMESTAMPTZ,
+    valid_until TIMESTAMPTZ,
+    confidence_score NUMERIC(4,3) NOT NULL DEFAULT 0.750,
+    revision INTEGER NOT NULL DEFAULT 1,
     UNIQUE (user_id, artifact_id, profile_key)
 );
+CREATE UNIQUE INDEX IF NOT EXISTS idx_profile_memories_scope_key
+    ON profile_memories(user_id, doc_id, profile_key)
+    WHERE artifact_id IS NULL;
+CREATE INDEX IF NOT EXISTS idx_profile_memories_scope_updated
+    ON profile_memories(user_id, doc_id, updated_at DESC);
 
+ALTER TABLE profile_memories ADD COLUMN IF NOT EXISTS doc_id TEXT NOT NULL DEFAULT 'general';
+ALTER TABLE profile_memories ADD COLUMN IF NOT EXISTS valid_from TIMESTAMPTZ;
+ALTER TABLE profile_memories ADD COLUMN IF NOT EXISTS valid_until TIMESTAMPTZ;
+ALTER TABLE profile_memories ADD COLUMN IF NOT EXISTS confidence_score NUMERIC(4,3) NOT NULL DEFAULT 0.750;
+ALTER TABLE profile_memories ADD COLUMN IF NOT EXISTS revision INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE profile_memories ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS profile_memory_revisions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    doc_id TEXT NOT NULL DEFAULT 'general',
+    profile_key TEXT NOT NULL,
+    content TEXT NOT NULL,
+    source TEXT NOT NULL DEFAULT 'chat-summary',
+    valid_from TIMESTAMPTZ,
+    valid_until TIMESTAMPTZ,
+    confidence_score NUMERIC(4,3) NOT NULL DEFAULT 0.750
+        CHECK (confidence_score BETWEEN 0 AND 1),
+    revision INTEGER NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE profile_memory_revisions ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE profile_memories, profile_memory_revisions FROM anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE profile_memories, profile_memory_revisions TO service_role;
 CREATE TABLE IF NOT EXISTS audit_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     actor_user_id UUID REFERENCES users(id) ON DELETE SET NULL,

@@ -15,8 +15,8 @@ from services.image_ocr import (
     extract_image_text,
     validate_image_input,
 )
-from services.memory_store import save_local_artifact
 from services.pdf_upload import save_pdf_upload
+from services.artifact_storage import ArtifactStorageError
 from services.postgres_store import (
     postgres_enabled,
     resolve_user_id,
@@ -43,9 +43,14 @@ async def ocr_image(
     settings = get_settings()
     resolved_user_id = None
     if postgres_enabled(settings):
-        resolved_user_id = resolve_user_id(settings, auth.user_id or "")
+        try:
+            resolved_user_id = resolve_user_id(settings, auth.user_id or "")
+        except Exception as exc:
+            raise HTTPException(status_code=503, detail="Artifact metadata storage is unavailable.") from exc
         if not resolved_user_id:
             raise HTTPException(status_code=403, detail="User account could not be resolved.")
+    elif settings.environment in {"production", "staging"}:
+        raise HTTPException(status_code=503, detail="Postgres is required for production artifact metadata.")
 
     try:
         # Validate and persist first. OCR enriches the image, but it must not be
@@ -55,6 +60,7 @@ async def ocr_image(
             file_bytes=raw,
             original_filename=file.filename,
             uploads_dir_name=settings.uploads_dir,
+            settings=settings,
         )
         mime_type = file.content_type or "image/png"
         if resolved_user_id:
@@ -67,18 +73,10 @@ async def ocr_image(
                 mime_type=mime_type,
                 file_size_bytes=stored.size_bytes,
                 page_count=1,
+                checksum_sha256=stored.checksum_sha256,
             )
-        elif auth.user_id:
-            save_local_artifact(
-                settings,
-                artifact_id=stored.doc_id,
-                user_id=auth.user_id,
-                filename=stored.filename,
-                storage_path=stored.stored_path,
-                mime_type=mime_type,
-                file_size_bytes=stored.size_bytes,
-                page_count=1,
-            )
+        else:
+            raise HTTPException(status_code=503, detail="Postgres is required for artifact metadata.")
         try:
             result = await run_in_threadpool(
                 extract_image_text,
@@ -100,6 +98,10 @@ async def ocr_image(
             )
     except OcrInputError as exc:
         raise HTTPException(status_code=415, detail=str(exc)) from exc
+    except HTTPException:
+        raise
+    except ArtifactStorageError as exc:
+        raise HTTPException(status_code=503, detail="Durable file storage is unavailable.") from exc
 
     log_operation(
         auth,

@@ -42,6 +42,10 @@ services:
     environment:
       HF_HOME: /root/.cache/huggingface
       MEMORY_DB_PATH: /app/data/memory.db
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      CLOUDINARY_FOLDER: ${CLOUDINARY_FOLDER:-truememory}
       CODING_RUNTIME_ENABLED: ${CODING_RUNTIME_ENABLED:-true}
       CODING_RUNTIME_IMAGE: truememory-coding-runtime:local
       CODING_RUNTIME_ROOT: /app/coding-workspaces
@@ -80,6 +84,10 @@ services:
     environment:
       HF_HOME: /root/.cache/huggingface
       MEMORY_DB_PATH: /app/data/memory.db
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      CLOUDINARY_FOLDER: ${CLOUDINARY_FOLDER:-truememory}
       CODING_RUNTIME_ENABLED: ${CODING_RUNTIME_ENABLED:-true}
       CODING_RUNTIME_IMAGE: truememory-coding-runtime:local
       CODING_RUNTIME_ROOT: /app/coding-workspaces
@@ -120,6 +128,10 @@ services:
     environment:
       HF_HOME: /root/.cache/huggingface
       MEMORY_DB_PATH: /app/data/memory.db
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-}
+      CLOUDINARY_FOLDER: ${CLOUDINARY_FOLDER:-truememory}
     dns:
       - 8.8.8.8
       - 8.8.4.4

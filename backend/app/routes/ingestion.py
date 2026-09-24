@@ -138,9 +138,6 @@ async def create_ingestion(payload: IngestionRequest, auth: AuthContext = Depend
             raise HTTPException(status_code=422, detail=str(exc)) from exc
     settings = get_settings()
     requested_scope = payload.scope.strip() or "general"
-    bound_workspace = auth.token_bindings.get("workspace_id")
-    if bound_workspace and requested_scope == "general":
-        requested_scope = f"workspace:{bound_workspace}"
     try:
         job, created = create_ingestion_job(
             settings,

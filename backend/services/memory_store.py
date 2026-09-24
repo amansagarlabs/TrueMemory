@@ -26,6 +26,8 @@ def _db_path(settings) -> Path:
 
 
 def init_memory_store(settings) -> None:
+    if getattr(settings, "database_url", ""):
+        return
     path = _db_path(settings)
     path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -90,6 +92,8 @@ def init_memory_store(settings) -> None:
 
 
 def _connect(settings) -> sqlite3.Connection:
+    if getattr(settings, "database_url", ""):
+        raise RuntimeError("SQLite is disabled when PostgreSQL is configured; refusing split-brain persistence.")
     conn = sqlite3.connect(_db_path(settings))
     conn.row_factory = sqlite3.Row
     return conn

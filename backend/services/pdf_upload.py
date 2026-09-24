@@ -8,8 +8,10 @@ LEARNING: The first step in any document AI pipeline is durable storage.
 
 from __future__ import annotations
 
+import hashlib
 import re
 import uuid
+import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
@@ -34,6 +36,7 @@ class UploadResult:
     page_count: int
     uploaded_at: str
     stored_path: str
+    checksum_sha256: str = ""
 
 
 def get_uploads_dir(uploads_dir_name: str) -> Path:
@@ -60,6 +63,7 @@ async def save_pdf_upload(
     file_bytes: bytes,
     original_filename: str,
     uploads_dir_name: str,
+    settings=None,
 ) -> UploadResult:
     if not file_bytes:
         raise ValueError("Empty file")
@@ -71,22 +75,41 @@ async def save_pdf_upload(
         allowed = ", ".join(sorted(SUPPORTED_EXTENSIONS))
         raise ValueError(f"Unsupported file type. Supported: {allowed}")
 
-    uploads_dir = get_uploads_dir(uploads_dir_name)
     doc_id = str(uuid.uuid4())
     safe_name = _safe_filename(original_filename)
-    disk_name = f"{doc_id}_{safe_name}"
-    dest = uploads_dir / disk_name
+    temporary = tempfile.NamedTemporaryFile(prefix="truememory-upload-", suffix=extension, delete=False)
+    temp_path = Path(temporary.name)
+    try:
+        temporary.write(file_bytes)
+        temporary.close()
+        if extension == ".pdf":
+            try:
+                page_count = _read_page_count(temp_path)
+            except Exception as exc:
+                raise ValueError("Invalid or corrupted PDF") from exc
+        else:
+            page_count = 1
 
-    dest.write_bytes(file_bytes)
+        if settings is not None:
+            from services.artifact_storage import store_artifact
 
-    if extension == ".pdf":
-        try:
-            page_count = _read_page_count(dest)
-        except Exception as exc:
-            dest.unlink(missing_ok=True)
-            raise ValueError("Invalid or corrupted PDF") from exc
-    else:
-        page_count = 1
+            stored = store_artifact(
+                settings,
+                artifact_id=doc_id,
+                filename=safe_name,
+                file_bytes=file_bytes,
+                uploads_dir_name=uploads_dir_name,
+            )
+            stored_path = stored.storage_path
+        else:
+            uploads_dir = get_uploads_dir(uploads_dir_name)
+            dest = uploads_dir / f"{doc_id}_{safe_name}"
+            dest.write_bytes(file_bytes)
+            stored_path = str(dest.relative_to(uploads_dir.parent))
+    finally:
+        if not temporary.closed:
+            temporary.close()
+        temp_path.unlink(missing_ok=True)
 
     uploaded_at = datetime.now(timezone.utc).isoformat()
 
@@ -96,5 +119,6 @@ async def save_pdf_upload(
         size_bytes=len(file_bytes),
         page_count=page_count,
         uploaded_at=uploaded_at,
-        stored_path=str(dest.relative_to(uploads_dir.parent)),
+        stored_path=stored_path,
+        checksum_sha256=hashlib.sha256(file_bytes).hexdigest(),
     )

@@ -395,7 +395,11 @@ async def get_connections(auth: AuthContext = Depends(require_auth)):
     settings = get_settings()
     postgres = check_postgres_connection(settings)
     return {
-        "memory": {"connected": True, "driver": "SQLite", "path": settings.memory_db_path},
+        "memory": {
+            "connected": postgres["connected"] if postgres_enabled(settings) else True,
+            "driver": "PostgreSQL" if postgres_enabled(settings) else "SQLite (local fallback)",
+            **({} if postgres_enabled(settings) else {"path": settings.memory_db_path}),
+        },
         "metadata": postgres,
         "vectors": {
             "connected": bool(settings.milvus_address and settings.milvus_token),

@@ -105,6 +105,10 @@ class Settings:
     fast_decision_active_min_confidence: float = 0.85
 
     uploads_dir: str = "uploads"
+    cloudinary_cloud_name: str = ""
+    cloudinary_api_key: str = ""
+    cloudinary_api_secret: str = ""
+    cloudinary_folder: str = "truememory"
     ocr_provider: str = "auto"
     ocr_language: str = "eng"
     tesseract_cmd: str = ""
@@ -302,6 +306,10 @@ def get_settings() -> Settings:
             min(float(os.getenv("FAST_DECISION_ACTIVE_MIN_CONFIDENCE", "0.85")), 1.0),
         ),
         uploads_dir=os.getenv("UPLOADS_DIR", "uploads"),
+        cloudinary_cloud_name=os.getenv("CLOUDINARY_CLOUD_NAME", "").strip(),
+        cloudinary_api_key=os.getenv("CLOUDINARY_API_KEY", "").strip(),
+        cloudinary_api_secret=os.getenv("CLOUDINARY_API_SECRET", "").strip(),
+        cloudinary_folder=os.getenv("CLOUDINARY_FOLDER", "truememory").strip("/ ") or "truememory",
         ocr_provider=os.getenv("OCR_PROVIDER", "auto"),
         ocr_language=os.getenv("OCR_LANGUAGE", "eng"),
         tesseract_cmd=os.getenv("TESSERACT_CMD", ""),

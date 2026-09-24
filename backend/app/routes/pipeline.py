@@ -29,9 +29,11 @@ async def visualize_pipeline(
         raise HTTPException(status_code=400, detail="Missing doc_id")
 
     settings = get_settings()
-    _authorize_pipeline_artifact(settings, doc_id=doc_id, auth=auth)
+    if settings.environment in {"production", "staging"} and not postgres_enabled(settings):
+        raise HTTPException(status_code=503, detail="Postgres is required for production artifact metadata.")
+    artifact = _authorize_pipeline_artifact(settings, doc_id=doc_id, auth=auth)
     return StreamingResponse(
-        run_pipeline_visualization(doc_id, settings),
+        run_pipeline_visualization(doc_id, settings, artifact=artifact),
         media_type="text/event-stream",
         headers={
             "Cache-Control": "no-cache",
@@ -41,13 +43,16 @@ async def visualize_pipeline(
     )
 
 
-def _authorize_pipeline_artifact(settings, *, doc_id: str, auth: AuthContext) -> None:
+def _authorize_pipeline_artifact(settings, *, doc_id: str, auth: AuthContext) -> dict:
     """Fail closed unless the artifact belongs to the authenticated user."""
     if not auth.user_id:
         raise HTTPException(status_code=401, detail="Authentication required")
 
     if postgres_enabled(settings):
-        user_id = resolve_user_id(settings, auth.user_id)
+        try:
+            user_id = resolve_user_id(settings, auth.user_id)
+        except Exception as exc:
+            raise HTTPException(status_code=503, detail="Artifact metadata storage is unavailable.") from exc
         artifact = (
             get_artifact_for_user(settings, artifact_id=doc_id, user_id=user_id)
             if user_id
@@ -62,3 +67,4 @@ def _authorize_pipeline_artifact(settings, *, doc_id: str, auth: AuthContext) ->
 
     if not artifact:
         raise HTTPException(status_code=404, detail="Artifact not found")
+    return dict(artifact)

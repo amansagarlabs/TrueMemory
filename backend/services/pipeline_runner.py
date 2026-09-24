@@ -12,26 +12,44 @@ from pathlib import Path
 from app.config import Settings
 from embeddings.embedder import embed_texts
 from services.chunking import chunk_pages
-from services.document_store import find_artifact_for_doc
 from services.artifact_extract import extract_artifact_pages, extract_artifact_text
+from services.artifact_storage import ArtifactStorageError, materialize_artifact
+from services.document_store import find_artifact_for_doc
 from services.tokenizer_viz import analyze_tokens
 from vector_db.milvus_store import insert_chunks
 
 
 async def run_pipeline_visualization(
-    doc_id: str, settings: Settings
+    doc_id: str, settings: Settings, *, artifact: dict | None = None
 ) -> AsyncGenerator[str, None]:
     pipeline_start = time.perf_counter()
     metrics: dict[str, float] = {}
 
     try:
-        artifact_path, filename = find_artifact_for_doc(doc_id, settings.uploads_dir)
-    except FileNotFoundError as exc:
-        yield _event("error", {"message": str(exc)})
+        if artifact is not None:
+            filename = str(artifact.get("filename") or doc_id)
+            artifact_path = materialize_artifact(
+                settings,
+                storage_path=str(artifact.get("storage_path") or ""),
+                filename=filename,
+            )
+        else:
+            artifact_path, filename = find_artifact_for_doc(doc_id, settings.uploads_dir)
+    except (FileNotFoundError, ArtifactStorageError) as exc:
+        yield _event("error", {"message": "Artifact could not be loaded from durable storage."})
         return
 
     yield _event("step", {"id": "upload", "status": "done", "label": "Artifact Uploaded"})
 
+    try:
+        async for event in _run_artifact_pipeline(doc_id, filename, artifact_path, settings, pipeline_start, metrics):
+            yield event
+    finally:
+        if artifact is not None:
+            artifact_path.unlink(missing_ok=True)
+
+
+async def _run_artifact_pipeline(doc_id, filename, artifact_path, settings, pipeline_start, metrics):
     # --- Extract ---
     yield _event("step", {"id": "extract", "status": "running", "label": "Text Extracted"})
     extract_data = extract_artifact_text(artifact_path)

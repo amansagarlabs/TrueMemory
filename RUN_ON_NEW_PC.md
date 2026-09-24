@@ -56,7 +56,7 @@ copy .env.example .env
 Open `.env` and set these required values:
 
 ```env
-OPENROUTER_API_KEY=sk-or-v1-your-real-key
+OPENROUTER_API_KEY=<your-secret>
 OPENROUTER_MODEL=openai/gpt-4o-mini
 
 MILVUS_ADDRESS=https://your-zilliz-endpoint:443

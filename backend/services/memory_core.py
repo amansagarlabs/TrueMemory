@@ -20,8 +20,8 @@ from services.memory_store import (
     update_profile_memory,
     upsert_profile_memory,
     maybe_store_profile_memory,
-    sync_account_profile_memories,
 )
+from services.memory_store import sync_account_profile_memories
 from services.durable_memory import extract_durable_memories, rank_durable_memories
 from services.postgres_store import load_conversation_messages, list_managed_memories, list_workspace_memories, timeline_workspace_memories, postgres_enabled, save_durable_memories, update_managed_memory, _connect
 from services.memory_store import get_recent_messages
@@ -83,6 +83,7 @@ class MemoryRepository(Protocol):
     def create(self, *, user_id: str, scope: str, key: str, content: str, source: str, valid_from: str | None = None, valid_until: str | None = None, confidence: float = 0.75) -> None: ...
     def update(self, *, user_id: str, scope: str, key: str, content: str, source: str, valid_from: str | None = None, valid_until: str | None = None, confidence: float = 0.75) -> bool: ...
     def forget(self, *, user_id: str, scope: str, key: str) -> bool: ...
+    def history(self, *, user_id: str, scope: str, limit: int) -> list[dict[str, Any]]: ...
 
 
 class SQLiteMemoryRepository:
@@ -108,6 +109,199 @@ class SQLiteMemoryRepository:
 
     def forget(self, *, user_id: str, scope: str, key: str) -> bool:
         return forget_profile_memory(self.settings, user_id=user_id, doc_id=scope, memory_key=key)
+
+    def history(self, *, user_id: str, scope: str, limit: int) -> list[dict[str, Any]]:
+        return get_profile_memories(self.settings, user_id=user_id, doc_id=scope, limit=limit, include_history=True)
+
+
+class PostgresProfileMemoryRepository:
+    """Durable profile-memory adapter over the canonical Supabase table."""
+
+    def __init__(self, settings: Any):
+        self.settings = settings
+
+    @staticmethod
+    def _item(row: dict[str, Any], scope: str) -> dict[str, Any]:
+        return {
+            "id": f"profile:{scope}:{row['profile_key']}",
+            "key": row["profile_key"],
+            "content": row["content"],
+            "source": row["source"],
+            "updated_at": row["updated_at"],
+            "valid_from": row.get("valid_from"),
+            "valid_until": row.get("valid_until"),
+            "confidence": float(row.get("confidence_score") or 0.75),
+            "revision": int(row.get("revision") or 1),
+        }
+
+    def list(self, *, user_id: str, scope: str, limit: int) -> list[dict[str, Any]]:
+        if not postgres_enabled(self.settings):
+            raise RuntimeError("Postgres is unavailable; refusing to read a local profile-memory copy.")
+        with _connect(self.settings) as conn, conn.cursor() as cur:
+            cur.execute(
+                """SELECT profile_key, content, source, updated_at, valid_from,
+                          valid_until, confidence_score, revision
+                   FROM profile_memories WHERE user_id = %s AND doc_id = %s
+                   ORDER BY updated_at DESC, id DESC LIMIT %s""",
+                (user_id, scope, max(1, min(limit, 500))),
+            )
+            return [self._item(row, scope) for row in cur.fetchall()]
+
+    def history(self, *, user_id: str, scope: str, limit: int) -> list[dict[str, Any]]:
+        if not postgres_enabled(self.settings):
+            raise RuntimeError("Postgres is unavailable; refusing to read local profile-memory history.")
+        self._seed_history(user_id=user_id, scope=scope)
+        with _connect(self.settings) as conn, conn.cursor() as cur:
+            cur.execute(
+                """SELECT profile_key, content, source, created_at AS updated_at,
+                          valid_from, valid_until, confidence_score, revision
+                   FROM profile_memory_revisions WHERE user_id = %s AND doc_id = %s
+                   ORDER BY created_at DESC, id DESC LIMIT %s""",
+                (user_id, scope, max(1, min(limit, 500))),
+            )
+            return [self._item(row, scope) for row in cur.fetchall()]
+
+    def _seed_history(self, *, user_id: str, scope: str) -> None:
+        with _connect(self.settings) as conn, conn.cursor() as cur:
+            cur.execute(
+                """INSERT INTO profile_memory_revisions
+                       (user_id, doc_id, profile_key, content, source, valid_from,
+                        valid_until, confidence_score, revision)
+                   SELECT current.user_id, current.doc_id, current.profile_key,
+                          current.content, current.source, current.valid_from,
+                          current.valid_until, current.confidence_score, current.revision
+                   FROM profile_memories current
+                   WHERE current.user_id = %s AND current.doc_id = %s
+                     AND NOT EXISTS (
+                         SELECT 1 FROM profile_memory_revisions prior
+                         WHERE prior.user_id = current.user_id
+                           AND prior.doc_id = current.doc_id
+                           AND prior.profile_key = current.profile_key
+                     )""",
+                (user_id, scope),
+            )
+
+    def count(self, *, user_id: str, scope: str) -> int:
+        if not postgres_enabled(self.settings):
+            raise RuntimeError("Postgres is unavailable; refusing to read a local profile-memory copy.")
+        with _connect(self.settings) as conn, conn.cursor() as cur:
+            cur.execute("SELECT count(*) AS count FROM profile_memories WHERE user_id = %s AND doc_id = %s", (user_id, scope))
+            return int(cur.fetchone()["count"])
+
+    def search(self, *, user_id: str, scope: str, query: str, limit: int) -> list[dict[str, Any]]:
+        needle = " ".join(query.split()).strip().lower()
+        if not needle:
+            return self.list(user_id=user_id, scope=scope, limit=limit)
+        if not postgres_enabled(self.settings):
+            raise RuntimeError("Postgres is unavailable; refusing to read a local profile-memory copy.")
+        pattern = f"%{needle}%"
+        with _connect(self.settings) as conn, conn.cursor() as cur:
+            cur.execute(
+                """SELECT profile_key, content, source, updated_at, valid_from,
+                          valid_until, confidence_score, revision
+                   FROM profile_memories WHERE user_id = %s AND doc_id = %s
+                     AND (lower(profile_key) LIKE %s OR lower(content) LIKE %s)
+                   ORDER BY updated_at DESC, id DESC LIMIT %s""",
+                (user_id, scope, pattern, pattern, max(1, min(limit, 500))),
+            )
+            return [self._item(row, scope) for row in cur.fetchall()]
+
+    def create(self, *, user_id: str, scope: str, key: str, content: str, source: str, valid_from: str | None = None, valid_until: str | None = None, confidence: float = 0.75) -> None:
+        self._write(user_id=user_id, scope=scope, key=key, content=content, source=source, valid_from=valid_from, valid_until=valid_until, confidence=confidence)
+
+    def update(self, *, user_id: str, scope: str, key: str, content: str, source: str, valid_from: str | None = None, valid_until: str | None = None, confidence: float = 0.75) -> bool:
+        if not postgres_enabled(self.settings):
+            raise RuntimeError("Postgres is unavailable; refusing to update a local profile-memory copy.")
+        with _connect(self.settings) as conn, conn.cursor() as cur:
+            cur.execute("SAVEPOINT profile_memory_revision")
+            cur.execute(
+                """INSERT INTO profile_memory_revisions
+                       (user_id, doc_id, profile_key, content, source, valid_from,
+                        valid_until, confidence_score, revision)
+                   SELECT user_id, doc_id, profile_key, content, source, valid_from,
+                          valid_until, confidence_score, revision
+                   FROM profile_memories
+                   WHERE user_id = %s AND doc_id = %s AND profile_key = %s""",
+                (user_id, scope, key),
+            )
+            archived = cur.rowcount > 0
+            if not archived:
+                cur.execute("ROLLBACK TO SAVEPOINT profile_memory_revision")
+            cur.execute(
+                """UPDATE profile_memories SET content = %s, source = %s,
+                       valid_from = COALESCE(%s::timestamptz, valid_from),
+                       valid_until = %s, confidence_score = %s,
+                       revision = revision + 1, updated_at = NOW()
+                   WHERE user_id = %s AND doc_id = %s AND profile_key = %s""",
+                (content, source, valid_from, valid_until, max(0.0, min(confidence, 1.0)), user_id, scope, key),
+            )
+            updated = cur.rowcount > 0
+            if updated:
+                cur.execute("RELEASE SAVEPOINT profile_memory_revision")
+            else:
+                cur.execute("ROLLBACK TO SAVEPOINT profile_memory_revision")
+                cur.execute("RELEASE SAVEPOINT profile_memory_revision")
+            return updated
+
+    def forget(self, *, user_id: str, scope: str, key: str) -> bool:
+        if not postgres_enabled(self.settings):
+            raise RuntimeError("Postgres is unavailable; refusing to delete a local profile-memory copy.")
+        with _connect(self.settings) as conn, conn.cursor() as cur:
+            cur.execute("SAVEPOINT profile_memory_revision")
+            cur.execute(
+                """INSERT INTO profile_memory_revisions
+                       (user_id, doc_id, profile_key, content, source, valid_from,
+                        valid_until, confidence_score, revision)
+                   SELECT user_id, doc_id, profile_key, content, source, valid_from,
+                          valid_until, confidence_score, revision
+                   FROM profile_memories
+                   WHERE user_id = %s AND doc_id = %s AND profile_key = %s""",
+                (user_id, scope, key),
+            )
+            archived = cur.rowcount > 0
+            cur.execute("DELETE FROM profile_memories WHERE user_id = %s AND doc_id = %s AND profile_key = %s", (user_id, scope, key))
+            deleted = cur.rowcount > 0
+            if deleted:
+                if not archived:
+                    cur.execute("ROLLBACK TO SAVEPOINT profile_memory_revision")
+                cur.execute("RELEASE SAVEPOINT profile_memory_revision")
+            else:
+                cur.execute("ROLLBACK TO SAVEPOINT profile_memory_revision")
+                cur.execute("RELEASE SAVEPOINT profile_memory_revision")
+            return deleted
+
+    def _write(self, *, user_id: str, scope: str, key: str, content: str, source: str, valid_from: str | None, valid_until: str | None, confidence: float) -> None:
+        if not postgres_enabled(self.settings):
+            raise RuntimeError("Postgres is required for durable profile memory writes.")
+        with _connect(self.settings) as conn, conn.cursor() as cur:
+            cur.execute("SAVEPOINT profile_memory_revision")
+            cur.execute(
+                """INSERT INTO profile_memory_revisions
+                       (user_id, doc_id, profile_key, content, source, valid_from,
+                        valid_until, confidence_score, revision)
+                   SELECT user_id, doc_id, profile_key, content, source, valid_from,
+                          valid_until, confidence_score, revision
+                   FROM profile_memories
+                   WHERE user_id = %s AND doc_id = %s AND profile_key = %s""",
+                (user_id, scope, key),
+            )
+            archived = cur.rowcount > 0
+            if not archived:
+                cur.execute("ROLLBACK TO SAVEPOINT profile_memory_revision")
+            cur.execute(
+                """INSERT INTO profile_memories
+                       (user_id, doc_id, profile_key, content, source, valid_from,
+                        valid_until, confidence_score)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                   ON CONFLICT (user_id, doc_id, profile_key) WHERE artifact_id IS NULL DO UPDATE SET
+                       content = EXCLUDED.content, source = EXCLUDED.source,
+                       valid_from = COALESCE(EXCLUDED.valid_from, profile_memories.valid_from),
+                       valid_until = EXCLUDED.valid_until,
+                       confidence_score = EXCLUDED.confidence_score,
+                       revision = profile_memories.revision + 1, updated_at = NOW()""",
+                (user_id, scope, key, content, source, valid_from, valid_until, max(0.0, min(confidence, 1.0))),
+            )
+            cur.execute("RELEASE SAVEPOINT profile_memory_revision")
 
 
 class MemoryCore:
@@ -165,9 +359,18 @@ class MemoryClient:
 
     def __init__(self, settings: Any):
         self.settings = settings
-        self.core = MemoryCore(SQLiteMemoryRepository(settings))
+        repository = PostgresProfileMemoryRepository(settings) if postgres_enabled(settings) else SQLiteMemoryRepository(settings)
+        self.core = MemoryCore(repository)
         self.hot_cache = get_hot_cache(settings)
         self.hybrid = get_memory_hybrid_retriever(settings)
+
+    def _profile_records(self, *, user_id: str, scope: str, limit: int, include_history: bool = False) -> list[dict[str, Any]]:
+        return self.core.repository.history(user_id=user_id, scope=scope, limit=limit) if include_history else self.core.repository.list(user_id=user_id, scope=scope, limit=limit)
+
+    def _read_cached(self, key: str, loader):
+        if postgres_enabled(self.settings):
+            return loader()
+        return self._cached(key, loader)
 
     def _cached(self, key: str, loader) -> Any:
         return self.hot_cache.get_or_load(key, loader)
@@ -201,16 +404,24 @@ class MemoryClient:
 
     def recent_messages(self, *, user_id: str, conversation_id: str, limit: int, resolved_user_id: str | None = None) -> list[dict[str, Any]]:
         key = HotMemoryCache.key(user_id=user_id, scope="conversation", operation=f"recent:{limit}", session_id=conversation_id)
-        return self._cached(key, lambda: (
-            load_conversation_messages(self.settings, user_id=resolved_user_id, conversation_id=conversation_id)[-limit:]
-            if resolved_user_id and postgres_enabled(self.settings)
-            else get_recent_messages(self.settings, conversation_id=conversation_id, limit=limit)
+        if postgres_enabled(self.settings):
+            if not resolved_user_id:
+                raise RuntimeError("Postgres user is unresolved; refusing to read local conversation history.")
+            return load_conversation_messages(
+                self.settings, user_id=resolved_user_id, conversation_id=conversation_id
+            )[-limit:]
+        if getattr(self.settings, "environment", "development") in {"production", "staging"}:
+            raise RuntimeError("Postgres is required for durable conversation history.")
+        return self._cached(key, lambda: get_recent_messages(
+            self.settings, conversation_id=conversation_id, limit=limit
         ))
 
     def list(self, *, user_id: str, scope: str = "general", limit: int = 50, workspace_id: str | None = None, agent_id: str | None = None, request_id: str | None = None) -> list[dict[str, Any]]:
         storage_scope = self._storage_scope(scope, workspace_id=workspace_id, agent_id=agent_id)
         key = HotMemoryCache.key(user_id=user_id, scope=storage_scope, operation=f"list:{limit}", workspace_id=workspace_id, agent_id=agent_id)
-        return self._cached(key, lambda: self.core.list(self.context(user_id=user_id, scope=storage_scope, workspace_id=workspace_id, agent_id=agent_id, request_id=request_id), limit=limit))
+        if postgres_enabled(self.settings):
+            return self.core.list(self.context(user_id=user_id, scope=storage_scope, workspace_id=workspace_id, agent_id=agent_id, request_id=request_id), limit=limit)
+        return self._read_cached(key, lambda: self.core.list(self.context(user_id=user_id, scope=storage_scope, workspace_id=workspace_id, agent_id=agent_id, request_id=request_id), limit=limit))
 
     def count(self, *, user_id: str, scope: str = "general", workspace_id: str | None = None, agent_id: str | None = None, request_id: str | None = None) -> int:
         storage_scope = self._storage_scope(scope, workspace_id=workspace_id, agent_id=agent_id)
@@ -253,17 +464,15 @@ class MemoryClient:
                     include_history=include_history,
                 )
             except Exception:
-                # L2 must not turn a temporary Postgres outage into an
-                # assistant failure; the caller retains its L1 result.
-                return []
+                logger.exception("Postgres workspace-memory retrieval failed")
+                raise
+        elif isinstance(self.core.repository, PostgresProfileMemoryRepository):
+            if include_history:
+                records = self.core.repository.history(user_id=user_id, scope=storage_scope, limit=max(1, min(candidate_limit, 10000)))
+            else:
+                records = self.core.repository.search(user_id=user_id, scope=storage_scope, query=query, limit=max(1, min(candidate_limit, 10000)))
         else:
-            records = get_profile_memories(
-                self.settings,
-                user_id=user_id,
-                doc_id=storage_scope,
-                limit=max(1, min(candidate_limit, 10000)),
-                include_history=include_history,
-            )
+            records = self._profile_records(user_id=user_id, scope=storage_scope, limit=max(1, min(candidate_limit, 10000)), include_history=include_history)
         if include_history:
             query_terms = set(re.findall(r"[a-z0-9]+", str(query).casefold()))
             if query_terms:
@@ -293,9 +502,11 @@ class MemoryClient:
         if bindings:
             context = self.context(user_id=user_id, scope=scope, workspace_id=workspace_id, agent_id=agent_id, token_bindings=token_bindings, request_id=request_id)
             MemoryAuthorization.assert_bindings(context, {"organization_id": context.scope.organization_id, "tenant_id": context.scope.tenant_id, "workspace_id": workspace_id, "agent_id": agent_id})
+        if postgres_enabled(self.settings):
+            return self._search_hierarchy(user_id=user_id, scope=scope, query=query, limit=limit, workspace_id=workspace_id, agent_id=agent_id, as_of=as_of, include_history=include_history, token_bindings=token_bindings, request_id=request_id)
         import logging as _log
         _log.getLogger("memory.debug").warning("SEARCH user_id=%s scope=%s storage_scope=%s query=%s ws=%s cache_key=%s", user_id, scope, storage_scope, query, workspace_id, key)
-        result = self._cached(key, lambda: self._search_hierarchy(user_id=user_id, scope=scope, query=query, limit=limit, workspace_id=workspace_id, agent_id=agent_id, as_of=as_of, include_history=include_history, token_bindings=token_bindings, request_id=request_id))
+        result = self._read_cached(key, lambda: self._search_hierarchy(user_id=user_id, scope=scope, query=query, limit=limit, workspace_id=workspace_id, agent_id=agent_id, as_of=as_of, include_history=include_history, token_bindings=token_bindings, request_id=request_id))
         _log.getLogger("memory.debug").warning("SEARCH result_count=%d", len(result))
         return result
 
@@ -356,7 +567,29 @@ class MemoryClient:
         self.hot_cache.invalidate(user_id=user_id, scope=scope)
 
     def sync_account_profile(self, *, user_id: str, profile: dict[str, Any]) -> None:
-        sync_account_profile_memories(self.settings, user_id=user_id, profile=profile)
+        fields = {
+            "full_name": profile.get("full_name"),
+            "username": profile.get("username"),
+            "bio": profile.get("bio"),
+            "company": profile.get("company"),
+            "location": profile.get("location"),
+            "website": profile.get("website"),
+        }
+        full_name = str(fields["full_name"] or "").strip().casefold()
+        username = str(fields["username"] or "").strip().casefold()
+        if full_name and username == full_name:
+            fields["username"] = None
+        if isinstance(self.core.repository, PostgresProfileMemoryRepository):
+            repository = self.core.repository
+            for name, value in fields.items():
+                key = f"account_{name}"
+                content = str(value or "").strip()
+                if content:
+                    repository.create(user_id=user_id, scope="general", key=key, content=content[:1000], source="account-profile")
+                else:
+                    repository.forget(user_id=user_id, scope="general", key=key)
+        else:
+            sync_account_profile_memories(self.settings, user_id=user_id, profile=profile)
         self.hot_cache.invalidate(user_id=user_id, scope="general")
 
     def list_managed(self, *, user_id: str, workspace_id: str, project_id: str | None = None, query: str = "", status: str | None = None, limit: int = 200) -> list[dict[str, Any]]:
@@ -370,6 +603,8 @@ class MemoryClient:
 
     def workspace_search(self, *, user_id: str, workspace_id: str, query: str, project_id: str | None = None, limit: int = 8) -> list[dict[str, Any]]:
         """Provider-owned adapter for current durable workspace memory."""
+        if not postgres_enabled(self.settings):
+            raise RuntimeError("Postgres is required for workspace memory retrieval.")
         scope = f"workspace:{workspace_id}"
         key = HotMemoryCache.key(user_id=user_id, scope=scope, operation=f"workspace_search:{limit}", query=f"{project_id or ''}|{query}")
         def retrieve() -> list[dict[str, Any]]:
@@ -385,7 +620,7 @@ class MemoryClient:
                 return l1_items
             return self.hybrid.search(records, query=query, scope=scope, limit=limit)
 
-        return self._cached(key, retrieve)
+        return self._read_cached(key, retrieve)
 
     def save_workspace_candidates(self, *, user_id: str, workspace_id: str, conversation_id: str, source_message_id: str | None, candidates: list[Any], project_id: str | None = None) -> list[dict[str, Any]]:
         saved = save_durable_memories(

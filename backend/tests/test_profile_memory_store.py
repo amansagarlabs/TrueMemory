@@ -133,3 +133,9 @@ def test_equal_username_and_full_name_are_deduplicated(tmp_path) -> None:
     assert [(item["key"], item["content"]) for item in memories] == [
         ("account_full_name", "aman")
     ]
+
+
+def test_memory_store_does_not_create_sqlite_when_postgres_is_configured(tmp_path) -> None:
+    database_path = tmp_path / "must-not-exist.db"
+    init_memory_store(SimpleNamespace(database_url="postgresql://example", memory_db_path=str(database_path)))
+    assert not database_path.exists()
