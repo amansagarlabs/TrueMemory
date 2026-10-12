@@ -9,6 +9,8 @@ import json
 import logging
 from typing import Any
 
+from app.config import get_settings
+
 logger = logging.getLogger(__name__)
 
 # Reuse existing crawl utilities
@@ -22,6 +24,14 @@ from .openrouter import stream_ollama_completion
 
 # LLM endpoint
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+
+def _local_fallback_allowed() -> bool:
+    settings = get_settings()
+    environment = str(getattr(settings, "environment", "development")).lower()
+    return environment not in {"production", "prod", "staging"} and bool(
+        getattr(settings, "ollama_fallback_enabled", False)
+    )
 
 
 async def _ollama_extract(
@@ -218,21 +228,22 @@ Instruction: {instruction}{format_hint}"""
         except Exception:
             pass
         logger.error(f"Agent LLM error {e.response.status_code}: {error_body}")
-        try:
-            result_text = await _ollama_extract(messages=messages, output_format=output_format)
-            result = _try_parse_json(result_text) if output_format in {"json", "auto"} else result_text
-            return {
-                "url": url,
-                "instruction": instruction,
-                "result": result,
-                "raw_content": raw_content[:5000],
-                "raw_length": raw_length,
-                "model": os.getenv("OLLAMA_MODEL", "qwen3-coder:30b"),
-                "provider": "ollama",
-                "tokens_used": 0,
-            }
-        except Exception as fallback_error:
-            logger.error(f"Local Ollama extraction fallback failed: {fallback_error}")
+        if _local_fallback_allowed():
+            try:
+                result_text = await _ollama_extract(messages=messages, output_format=output_format)
+                result = _try_parse_json(result_text) if output_format in {"json", "auto"} else result_text
+                return {
+                    "url": url,
+                    "instruction": instruction,
+                    "result": result,
+                    "raw_content": raw_content[:5000],
+                    "raw_length": raw_length,
+                    "model": os.getenv("OLLAMA_MODEL", "qwen3-coder:30b"),
+                    "provider": "ollama",
+                    "tokens_used": 0,
+                }
+            except Exception as fallback_error:
+                logger.error(f"Local Ollama extraction fallback failed: {fallback_error}")
         return {
             "url": url,
             "instruction": instruction,
@@ -245,21 +256,22 @@ Instruction: {instruction}{format_hint}"""
         }
     except Exception as e:
         logger.error(f"Agent error: {e}")
-        try:
-            result_text = await _ollama_extract(messages=messages, output_format=output_format)
-            result = _try_parse_json(result_text) if output_format in {"json", "auto"} else result_text
-            return {
-                "url": url,
-                "instruction": instruction,
-                "result": result,
-                "raw_content": raw_content[:5000],
-                "raw_length": raw_length,
-                "model": os.getenv("OLLAMA_MODEL", "qwen3-coder:30b"),
-                "provider": "ollama",
-                "tokens_used": 0,
-            }
-        except Exception as fallback_error:
-            logger.error(f"Local Ollama extraction fallback failed: {fallback_error}")
+        if _local_fallback_allowed():
+            try:
+                result_text = await _ollama_extract(messages=messages, output_format=output_format)
+                result = _try_parse_json(result_text) if output_format in {"json", "auto"} else result_text
+                return {
+                    "url": url,
+                    "instruction": instruction,
+                    "result": result,
+                    "raw_content": raw_content[:5000],
+                    "raw_length": raw_length,
+                    "model": os.getenv("OLLAMA_MODEL", "qwen3-coder:30b"),
+                    "provider": "ollama",
+                    "tokens_used": 0,
+                }
+            except Exception as fallback_error:
+                logger.error(f"Local Ollama extraction fallback failed: {fallback_error}")
         return {
             "url": url,
             "instruction": instruction,

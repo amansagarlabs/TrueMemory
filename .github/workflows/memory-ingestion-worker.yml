@@ -1,0 +1,87 @@
+name: Memory ingestion worker
+
+on:
+  schedule:
+    # Avoid the top of the hour, when GitHub reports its highest schedule load.
+    - cron: "7-59/5 * * * *"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: truememory-memory-ingestion-worker
+  cancel-in-progress: false
+
+jobs:
+  process-ingestion:
+    # The production runner is deliberately dormant until its production secrets
+    # have been configured and the owner explicitly enables this repository var.
+    if: >-
+      github.repository == 'amansagarlabs/TrueMemory' &&
+      github.ref == 'refs/heads/master' &&
+      vars.TRUE_MEMORY_INGESTION_WORKER_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      ENVIRONMENT: production
+      DATABASE_URL: ${{ secrets.TRUE_MEMORY_DATABASE_URL }}
+      CLOUDINARY_CLOUD_NAME: ${{ secrets.CLOUDINARY_CLOUD_NAME }}
+      CLOUDINARY_API_KEY: ${{ secrets.CLOUDINARY_API_KEY }}
+      CLOUDINARY_API_SECRET: ${{ secrets.CLOUDINARY_API_SECRET }}
+      CLOUDINARY_FOLDER: ${{ vars.CLOUDINARY_FOLDER }}
+      HF_HOME: ${{ runner.temp }}/huggingface
+    steps:
+      # Use the event's trusted default-branch SHA. No third-party Actions are
+      # needed, so this job has no GITHUB_TOKEN permissions or action supply chain.
+      - name: Check out trusted source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git init --quiet
+          git remote add origin "https://github.com/${GITHUB_REPOSITORY}.git"
+          git fetch --quiet --depth=1 origin "$GITHUB_SHA"
+          git checkout --quiet --detach FETCH_HEAD
+
+      - name: Set up backend Python version
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        with:
+          python-version: "3.11"
+
+      - name: Validate required production configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in DATABASE_URL CLOUDINARY_CLOUD_NAME CLOUDINARY_API_KEY CLOUDINARY_API_SECRET; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Required Actions secret for ${name} is not configured."
+              exit 1
+            fi
+          done
+          if [[ "$GITHUB_REF" != "refs/heads/master" ]]; then
+            echo "::error::Worker execution is allowed only from master."
+            exit 1
+          fi
+
+      - name: Install OCR system dependency
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends tesseract-ocr tesseract-ocr-eng
+
+      - name: Restore Python package and embedding-model caches
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+        with:
+          path: |
+            ~/.cache/pip
+            ${{ runner.temp }}/huggingface
+          key: ${{ runner.os }}-py311-worker-${{ hashFiles('backend/requirements.txt') }}
+
+      - name: Install the same Python runtime as the backend
+        shell: bash
+        working-directory: backend
+        run: |
+          set -euo pipefail
+          python -m pip install --upgrade pip
+          python -m pip install --index-url https://download.pytorch.org/whl/cpu torch==2.5.1
+          python -m pip install -r requirements.txt
+
+      - name: Process one bounded batch from Supabase PostgreSQL
+        working-directory: backend
+        run: python -m worker.memory_ingestion_worker --once --max-jobs 10 --max-runtime 600

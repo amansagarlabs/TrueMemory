@@ -26,6 +26,7 @@ load_dotenv(Path(__file__).resolve().parent / ".env", override=True)
 
 from app.config import get_settings
 from app.logging_config import setup_logging
+from app.runtime_config import require_postgres_for_production
 from app.routes import auth, chat, coding, health, pipeline, upload, ocr, amancrawl, dashboard, subscriptions, integrations, query, evaluation, knowledge, projects, skills, workspaces, models, memory_api, memory_mcp, ingestion, oauth
 from services.memory_store import init_memory_store
 from services.memory_hot_cache import ensure_hot_cache_schema
@@ -59,6 +60,7 @@ def _validate_runtime_configuration(settings) -> None:
         raise RuntimeError("TrueMemory_ENABLE_TEST_AUTH is forbidden outside development")
     if missing:
         raise RuntimeError(f"missing required production settings: {', '.join(missing)}")
+    require_postgres_for_production(settings, postgres_available=postgres_enabled(settings))
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

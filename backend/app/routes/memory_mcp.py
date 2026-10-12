@@ -6,6 +6,8 @@ This module owns protocol translation only. Memory semantics remain in
 
 from __future__ import annotations
 
+import base64
+import binascii
 import json
 import logging
 from typing import Any
@@ -22,6 +24,13 @@ from services.rate_limiter import get_rate_limiter
 
 logger = logging.getLogger("TrueMemory.memory.mcp")
 router = APIRouter(tags=["memory-mcp"])
+
+MODERN_PROTOCOL_VERSION = "2026-07-28"
+LEGACY_PROTOCOL_VERSION = "2025-03-26"
+SUPPORTED_PROTOCOL_VERSIONS = [MODERN_PROTOCOL_VERSION]
+SERVER_INFO = {"name": "truememory-memory", "version": "0.1.0"}
+PROTOCOL_VERSION_META_KEY = "io.modelcontextprotocol/protocolVersion"
+SERVER_INFO_META_KEY = "io.modelcontextprotocol/serverInfo"
 
 TOOLS: list[dict[str, Any]] = [
     {"name": "memory_search", "description": "Search authorized memories.", "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}, "scope": {"type": "string"}, "limit": {"type": "integer", "minimum": 1, "maximum": 500}, "workspace_id": {"type": "string"}, "agent_id": {"type": "string"}, "as_of": {"type": "string"}, "include_history": {"type": "boolean"}}, "additionalProperties": False}},
@@ -41,6 +50,46 @@ TOOLS: list[dict[str, Any]] = [
 def _error(request_id: Any, code: int, message: str) -> JSONResponse:
     status = {"unauthorized": 401, "origin_not_allowed": 403, "forbidden": 403, "rate_limited": 429}.get(message, 200)
     return JSONResponse({"jsonrpc": "2.0", "id": request_id, "error": {"code": code, "message": message}}, status_code=status)
+
+
+def _modern_error(request_id: Any, code: int, message: str, *, status: int, data: Any = None) -> JSONResponse:
+    error: dict[str, Any] = {"code": code, "message": message}
+    if data is not None:
+        error["data"] = data
+    return JSONResponse({"jsonrpc": "2.0", "id": request_id, "error": error}, status_code=status)
+
+
+def _header_error(request_id: Any, message: str) -> JSONResponse:
+    return _modern_error(request_id, -32020, message, status=400)
+
+
+def _modern_metadata(body: dict[str, Any]) -> tuple[str | None, dict[str, Any] | None]:
+    params = body.get("params") or {}
+    metadata = params.get("_meta") if isinstance(params, dict) else None
+    if not isinstance(metadata, dict):
+        return None, None
+    version = metadata.get(PROTOCOL_VERSION_META_KEY)
+    return (version if isinstance(version, str) else None), metadata
+
+
+def _discovery_result() -> dict[str, Any]:
+    return {
+        "supportedVersions": SUPPORTED_PROTOCOL_VERSIONS,
+        "capabilities": {"tools": {"listChanged": False}},
+        "ttlMs": 0,
+        "cacheScope": "private",
+    }
+
+
+def _decode_mcp_header_value(value: str) -> str:
+    prefix, suffix = "=?base64?", "?="
+    if value.startswith(prefix) and value.endswith(suffix):
+        encoded = value[len(prefix):-len(suffix)]
+        try:
+            return base64.b64decode(encoded, validate=True).decode("utf-8")
+        except (binascii.Error, UnicodeDecodeError) as exc:
+            raise ValueError("invalid encoded MCP header") from exc
+    return value
 
 
 def _check_boundary(request: Request, auth: AuthContext) -> None:
@@ -131,32 +180,92 @@ def _call(name: str, args: dict[str, Any], auth: AuthContext) -> dict[str, Any]:
     return {"forgotten": client.forget(user_id=user_id, scope=target_scope, key=key, workspace_id=workspace_id, agent_id=agent_id), "memory_id": memory_id, "scope": target_scope}
 
 
-@router.post("/mcp")
+@router.api_route("/mcp", methods=["GET", "POST", "DELETE"])
 async def memory_mcp(request: Request, auth: AuthContext = Depends(get_auth_context)) -> JSONResponse:
     request_id: Any = None
+    modern = request.headers.get("mcp-protocol-version") == MODERN_PROTOCOL_VERSION
     try:
         _check_boundary(request, auth)
+        if request.method != "POST":
+            return JSONResponse({"error": "Method Not Allowed"}, status_code=405, headers={"Allow": "POST"})
+        if "application/json" not in request.headers.get("content-type", "").lower():
+            return JSONResponse({"error": "Content-Type must be application/json"}, status_code=415)
         body = await request.json()
+        if not isinstance(body, dict):
+            return _modern_error(None, -32600, "Invalid Request", status=400)
+        if body.get("jsonrpc") != "2.0" or not isinstance(body.get("method"), str):
+            return _modern_error(body.get("id"), -32600, "Invalid Request", status=400)
         request_id = body.get("id")
         method = body.get("method")
-        if method == "initialize":
-            result = {"protocolVersion": "2025-03-26", "capabilities": {"tools": {"listChanged": False}}, "serverInfo": {"name": "truememory-memory", "version": "0.1.0"}}
-        elif method == "notifications/initialized":
+        if body.get("params") is not None and not isinstance(body.get("params"), dict):
+            return _modern_error(request_id, -32600, "Invalid Request", status=400)
+        protocol_version, metadata = _modern_metadata(body)
+        protocol_header = request.headers.get("mcp-protocol-version")
+        method_header = request.headers.get("mcp-method")
+        modern = bool(protocol_version or protocol_header)
+        accepted_types = {
+            part.split(";", 1)[0].strip().lower()
+            for part in request.headers.get("accept", "").split(",")
+        }
+        if modern and not {"application/json", "text/event-stream"} <= accepted_types:
+            return JSONResponse({"error": "Accept must include application/json and text/event-stream"}, status_code=406)
+
+        # Legacy 2025-03-26 clients use the initialization handshake and do not
+        # send modern per-request metadata or mirrored routing headers.
+        if modern:
+            if "id" not in body:
+                return _modern_error(None, -32600, "Notifications are not supported over Streamable HTTP", status=400)
+            if not protocol_version or not metadata or not isinstance(metadata.get("io.modelcontextprotocol/clientCapabilities"), dict):
+                return _header_error(request_id, "Modern requests require protocolVersion and clientCapabilities metadata")
+            if protocol_version != protocol_header:
+                return _header_error(request_id, "MCP-Protocol-Version does not match request metadata")
+            if method_header != method:
+                return _header_error(request_id, "Mcp-Method does not match request method")
+            if protocol_version not in SUPPORTED_PROTOCOL_VERSIONS:
+                return _modern_error(request_id, -32022, "Unsupported protocol version", status=400, data={"supported": SUPPORTED_PROTOCOL_VERSIONS, "requested": protocol_version})
+            if protocol_version != MODERN_PROTOCOL_VERSION:
+                modern = False
+
+        if modern and method == "tools/call":
+            params = body.get("params") or {}
+            header_name = request.headers.get("mcp-name")
+            try:
+                header_name = _decode_mcp_header_value(header_name) if header_name is not None else None
+            except ValueError:
+                return _header_error(request_id, "Mcp-Name has invalid encoding")
+            if header_name != params.get("name"):
+                return _header_error(request_id, "Mcp-Name does not match tools/call name")
+
+        if modern and method == "server/discover":
+            result = _discovery_result()
+        elif method == "initialize" and not modern:
+            result = {"protocolVersion": LEGACY_PROTOCOL_VERSION, "capabilities": {"tools": {"listChanged": False}}, "serverInfo": SERVER_INFO}
+        elif method == "notifications/initialized" and not modern:
             return JSONResponse({}, status_code=202)
         elif method == "tools/list":
             result = {"tools": TOOLS}
+            if modern:
+                result.update({"ttlMs": 0, "cacheScope": "private"})
         elif method == "tools/call":
             params = body.get("params") or {}
             structured = _call(str(params.get("name")), params.get("arguments") or {}, auth)
             result = {"content": [{"type": "text", "text": json.dumps(structured, default=str)}], "structuredContent": structured}
         else:
+            if modern:
+                return _modern_error(request_id, -32601, "Method not found", status=404)
             return _error(request_id, -32601, "Method not found")
         logger.info("memory_mcp_request", extra={"request_id": request_id, "operation": method, "user_id": auth.user_id})
-        return JSONResponse(jsonable_encoder({"jsonrpc": "2.0", "id": request_id, "result": result}))
+        if modern:
+            result["resultType"] = "complete"
+            result["_meta"] = {SERVER_INFO_META_KEY: SERVER_INFO}
+        response: dict[str, Any] = {"jsonrpc": "2.0", "id": request_id, "result": result}
+        return JSONResponse(jsonable_encoder(response))
+    except json.JSONDecodeError:
+        return _modern_error(request_id, -32700, "Parse error", status=400) if modern else _error(request_id, -32700, "Parse error")
     except PermissionError as exc:
         return _error(request_id, -32001, str(exc))
     except (KeyError, TypeError, ValueError):
-        return _error(request_id, -32602, "Invalid tool arguments")
+        return _modern_error(request_id, -32602, "Invalid tool arguments", status=200) if modern else _error(request_id, -32602, "Invalid tool arguments")
     except Exception:
         logger.exception("memory_mcp_failure", extra={"request_id": request_id, "user_id": auth.user_id})
-        return _error(request_id, -32603, "Internal memory provider error")
+        return _modern_error(request_id, -32603, "Internal memory provider error", status=200) if modern else _error(request_id, -32603, "Internal memory provider error")
