@@ -7,9 +7,9 @@ export const AUTH_USER_CHANGED_EVENT = "TrueMemory-auth-user-changed";
 
 // ── Client-side helpers (localStorage) ─────────────────────────────────────
 
-export function saveAuthSession(_session: AuthSession, user: AuthUser) {
+export function saveAuthSession(session: AuthSession, user: AuthUser) {
   if (typeof window === "undefined") return;
-  localStorage.removeItem(AUTH_TOKEN_KEY);
+  localStorage.setItem(AUTH_TOKEN_KEY, session.access_token);
   localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
   window.dispatchEvent(new Event(AUTH_USER_CHANGED_EVENT));
 }
