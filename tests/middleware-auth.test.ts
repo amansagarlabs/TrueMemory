@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { NextRequest } from "next/server";
 
-import { middleware } from "../middleware";
+import { middleware } from "../frontend/middleware";
 
 test("web API routes reject unauthenticated requests", async () => {
   const response = await middleware(

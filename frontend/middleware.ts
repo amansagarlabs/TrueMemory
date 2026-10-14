@@ -13,7 +13,7 @@ const API_PROTECTED_PATHS = [
 ];
 
 function isProtectedPath(pathname: string): boolean {
-  return API_PROTECTED_PATHS.some((p) => pathname.startsWith(p));
+  return pathname === "/truebot" || pathname.startsWith("/truebot/") || API_PROTECTED_PATHS.some((p) => pathname.startsWith(p));
 }
 
 async function verifySession(
@@ -186,6 +186,7 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
+    "/truebot/:path*",
     "/dashboard/:path*",
     "/workspace/:path*",
     "/workspaces/:path*",

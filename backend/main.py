@@ -27,7 +27,7 @@ load_dotenv(Path(__file__).resolve().parent / ".env", override=True)
 from app.config import get_settings
 from app.logging_config import setup_logging
 from app.runtime_config import require_postgres_for_production
-from app.routes import auth, chat, coding, health, pipeline, upload, ocr, amancrawl, dashboard, subscriptions, integrations, query, evaluation, knowledge, projects, skills, workspaces, models, memory_api, memory_mcp, ingestion, oauth
+from app.routes import auth, chat, coding, health, pipeline, upload, ocr, amancrawl, dashboard, subscriptions, integrations, query, evaluation, knowledge, projects, skills, workspaces, models, memory_api, memory_mcp, ingestion, oauth, truebot
 from services.memory_store import init_memory_store
 from services.memory_hot_cache import ensure_hot_cache_schema
 from services.rate_limiter import ensure_rate_limit_schema
@@ -190,6 +190,7 @@ api.include_router(memory_api.router)
 api.include_router(ingestion.router)
 api.include_router(memory_mcp.router)
 api.include_router(oauth.router)
+api.include_router(truebot.router)
 
 settings = get_settings()
 # Keep CORS outermost so unexpected server errors still return browser-readable headers.

@@ -661,7 +661,12 @@ export async function fetchConversationMessages(
     `${API_URL}/api/chat/conversations/${encodeURIComponent(conversationId)}/messages`,
     { cache: "no-store", headers: buildAuthHeaders("TrueMemory Memory") },
   );
-  if (!res.ok) throw new Error(`Conversation history failed (${res.status})`);
+  if (!res.ok) {
+    if (res.status === 401) {
+      throw new Error("Your TrueMemory session expired. Please sign in again.");
+    }
+    throw new Error(`Conversation history failed (${res.status})`);
+  }
   const data = await res.json();
   return (data.items ?? []) as StoredConversationMessage[];
 }

@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { buildAuthHeaders, getAuthToken, loadAuthUser, saveAuthSession } from "../frontend/lib/auth";
+import { getChatFailureMessage } from "../frontend/lib/chat-errors";
 import type { AuthSession, AuthUser } from "../frontend/lib/types";
 
 test("saving a sign-in session persists its bearer token for direct API requests", () => {
@@ -49,4 +50,11 @@ test("saving a sign-in session persists its bearer token for direct API requests
     Object.defineProperty(globalThis, "localStorage", { configurable: true, value: previousStorage });
     Object.defineProperty(globalThis, "Event", { configurable: true, value: previousEvent });
   }
+});
+
+test("chat surfaces actionable guidance when the API rejects an expired session", () => {
+  assert.equal(
+    getChatFailureMessage("Your TrueMemory session expired. Please sign in again.", false),
+    "Your TrueMemory session has expired. Sign out and sign in again, then retry your message.",
+  );
 });

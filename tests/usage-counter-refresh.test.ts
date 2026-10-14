@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { startUsageRefreshTimer } from "../components/UsageCounter";
+import { startUsageRefreshTimer } from "../frontend/components/UsageCounter";
 
 test("usage counter refresh helper fires immediately and on interval", async () => {
   const previousWindow = (globalThis as typeof globalThis & { window?: typeof globalThis }).window;

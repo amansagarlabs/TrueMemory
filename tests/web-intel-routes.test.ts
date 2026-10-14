@@ -6,9 +6,9 @@ import { POST as scrapePost } from "../app/api/web/scrape/route";
 import { POST as mapPost } from "../app/api/web/map/route";
 import { GET as interactStatusGet } from "../app/api/web/interact/[scrapeId]/status/route";
 import { POST as interactRestorePost } from "../app/api/web/interact/[scrapeId]/restore/route";
-import { cacheService } from "../lib/cache/cache-service";
-import { cacheKeys } from "../lib/cache/keys";
-import { TTL } from "../lib/cache/ttl";
+import { cacheService } from "../frontend/lib/cache/cache-service";
+import { cacheKeys } from "../frontend/lib/cache/keys";
+import { TTL } from "../frontend/lib/cache/ttl";
 
 test("search route returns cached response without hitting provider", async () => {
   const key = cacheKeys.search("anthropic claude", 3);
@@ -152,7 +152,7 @@ test("interact status route returns stored session shape", async () => {
   }
 });
 
-test("interact restore route returns spec-shaped session data", async () => {
+test("interact restore route reports an unrecoverable checkpoint without browser state", async () => {
   const scrapeId = "scrape_restore_123";
   const key = `session:scrape:${scrapeId}`;
   await cacheService.set(
@@ -175,11 +175,11 @@ test("interact restore route returns spec-shaped session data", async () => {
       new Request(`http://localhost/api/web/interact/${scrapeId}/restore`, { method: "POST" }),
       { params: Promise.resolve({ scrapeId }) },
     );
-    assert.equal(response.status, 200);
+    assert.equal(response.status, 409);
     const body = await response.json();
-    assert.equal(body.success, true);
-    assert.equal(body.data.scrapeId, scrapeId);
-    assert.equal(body.data.canRestore, true);
+    assert.equal(body.success, false);
+    assert.equal(body.recoverable, true);
+    assert.match(body.error, /unable to restore session/i);
   } finally {
     await cacheService.invalidate(key);
   }

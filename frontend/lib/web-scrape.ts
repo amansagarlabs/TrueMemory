@@ -262,6 +262,10 @@ async function tryRehydrateSession(scrapeId: string): Promise<{ session: LiveScr
   const record = await loadSessionRecord(scrapeId);
   if (!record) return null;
 
+  // A URL alone cannot restore cookies, form state, or the prior interaction.
+  // Treat an incomplete checkpoint as unrecoverable instead of opening a new page.
+  if (!record.storageState) return null;
+
   try {
     const session = await createLiveSession({ ...record, status: "rehydrating" });
     pageSessions.set(scrapeId, session);

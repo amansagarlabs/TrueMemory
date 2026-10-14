@@ -58,6 +58,11 @@ class Settings:
     openai_fast_model: str = "gpt-5.6-luna"
     openai_reasoning_model: str = "gpt-5.6-sol"
     openai_embedding_model: str = "text-embedding-3-small"
+    truebot_enabled: bool = False
+    truebot_models: list[str] = field(default_factory=list)
+    truebot_max_agents: int = 10
+    truebot_daily_runs: int = 50
+    truebot_concurrent_runs: int = 2
     polar_access_token: str = ""
     polar_webhook_secret: str = ""
     polar_api_url: str = "https://api.polar.sh"
@@ -241,6 +246,11 @@ def get_settings() -> Settings:
         openai_fast_model=os.getenv("OPENAI_FAST_MODEL", "gpt-5.6-luna"),
         openai_reasoning_model=os.getenv("OPENAI_REASONING_MODEL", "gpt-5.6-sol"),
         openai_embedding_model=os.getenv("OPENAI_EMBEDDING_MODEL", "text-embedding-3-small"),
+        truebot_enabled=_env_bool("TRUEBOT_ENABLED"),
+        truebot_models=[m.strip() for m in os.getenv("TRUEBOT_OPENAI_MODELS", "").split(",") if m.strip()],
+        truebot_max_agents=max(1, min(100, int(os.getenv("TRUEBOT_MAX_AGENTS", "10")))),
+        truebot_daily_runs=max(1, min(10000, int(os.getenv("TRUEBOT_DAILY_RUNS", "50")))),
+        truebot_concurrent_runs=max(1, min(20, int(os.getenv("TRUEBOT_CONCURRENT_RUNS", "2")))),
         polar_access_token=os.getenv("POLAR_ACCESS_TOKEN", ""),
         polar_webhook_secret=os.getenv("POLAR_WEBHOOK_SECRET", ""),
         polar_api_url=os.getenv("POLAR_API_URL", "https://api.polar.sh").rstrip("/"),

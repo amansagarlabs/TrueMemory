@@ -12,12 +12,12 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "test:backend": "python -m pytest backend/tests -q",
-    "test:mcp:external": "python backend/scripts/memory_mcp_external_client.py",
-    "test:node": "node --import tsx --test tests/web-intel-cache.test.ts tests/web-intel-agent.test.ts tests/web-intel-routes.test.ts tests/web-intel-security.test.ts tests/usage-counter-refresh.test.ts tests/middleware-auth.test.ts",
-    "test:e2e": "playwright test",
-    "test:e2e:browser-compat": "node scripts/run-browser-compat.mjs",
-    "test:evaluation": "python backend/evaluation/run_evals.py"
+    "test:backend": "cd .. && python -m pytest -c pytest.ini backend/tests -q",
+    "test:mcp:external": "cd .. && python backend/scripts/memory_mcp_external_client.py",
+    "test:node": "cd .. && node scripts/run-node-tests.mjs",
+    "test:e2e": "cd .. && playwright test --config playwright.config.ts",
+    "test:e2e:browser-compat": "cd .. && node scripts/run-browser-compat.mjs",
+    "test:evaluation": "cd .. && python backend/evaluation/run_evals.py"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",

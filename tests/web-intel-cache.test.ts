@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { cacheService } from "../lib/cache/cache-service";
-import { cacheKeys } from "../lib/cache/keys";
-import { TTL, classifyFreshness } from "../lib/cache/ttl";
+import { cacheService } from "../frontend/lib/cache/cache-service";
+import { cacheKeys } from "../frontend/lib/cache/keys";
+import { TTL, classifyFreshness } from "../frontend/lib/cache/ttl";
 
 test("cache service stores and returns values in memory fallback", async () => {
   const key = cacheKeys.search("TrueMemory search", 3);
